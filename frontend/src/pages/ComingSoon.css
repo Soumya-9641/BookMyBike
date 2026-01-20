@@ -1,0 +1,126 @@
+/* ---------- Background ---------- */
+.coming-soon-root {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url("/images/coming-soon-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.coming-soon-root::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- Paper ---------- */
+.coming-soon-paper {
+  position: relative;
+  max-width: 1000px;
+  width: 100%;
+  padding: 48px;
+  border-radius: 16px;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 600px) {
+  .coming-soon-paper {
+    padding: 24px;
+  }
+}
+
+/* ---------- Headings ---------- */
+.coming-soon-title {
+  font-size: 2.7rem;
+  font-weight: 800;
+  color: #2e7d32;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .coming-soon-title {
+    font-size: 1.9rem;
+  }
+}
+
+/* ---------- Email Form ---------- */
+.email-input {
+  width: 375px;
+}
+
+.email-input .MuiInputBase-root {
+  height: 51px;
+  background-color: #fff;
+  border-radius: 8px 0 0 8px;
+}
+
+@media (max-width: 600px) {
+  .email-input {
+    width: 100%;
+  }
+
+  .email-input .MuiInputBase-root {
+    border-radius: 8px;
+  }
+}
+
+.notify-button {
+  height: 51px;
+  padding: 0 32px;
+  background-color: #2e7d32 !important;
+  border-radius: 0 8px 8px 0;
+  white-space: nowrap;
+}
+
+.notify-button:hover {
+  background-color: #1b5e20 !important;
+}
+
+@media (max-width: 600px) {
+  .notify-button {
+    border-radius: 8px;
+  }
+}
+
+/* ---------- Icon Circle ---------- */
+.icon-circle-wrapper {
+  text-align: center;
+  width: 160px;
+}
+
+.icon-circle {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  border: 4px solid #2e7d32;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/* ---------- Arrow ---------- */
+.step-arrow {
+  color: #2e7d32;
+  font-size: 20px;
+  transform: translateY(-14px);
+}
+
+@media (max-width: 600px) {
+  .step-arrow {
+    display: none;
+  }
+}

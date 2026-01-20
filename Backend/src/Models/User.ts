@@ -1,0 +1,104 @@
+import mongoose, { Schema, Document } from "mongoose";
+
+export interface IUser extends Document {
+  email: string;
+  password: string;
+  systemRole: "user" | "admin";
+
+   emailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
+resetPasswordToken?:string;
+resetPasswordExpires?:Date;
+
+  personalProfile: {
+    firstName?: string;
+    lastName?: string;
+    address?: string;
+    phone?: string;
+    isVerified: boolean;
+    stripeIdentityId?: string;
+  };
+
+  businessProfile?: {
+    businessName?: string;
+    orgNumber?: string;
+    location?: string;
+    phone?: string;
+    isVerified: boolean;
+    stripeIdentityId?: string;
+    isActive: boolean;
+  };
+
+  isBlocked: boolean;
+  memberSince: Date;
+}
+
+const UserSchema = new Schema<IUser>({
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+
+  password: {
+    type: String,
+    required: true
+  },
+
+  systemRole: {
+    type: String,
+    enum: ["user", "admin"],
+    default: "user"
+  },
+ emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: {
+    type: String
+  },
+  emailVerificationExpires: {
+    type: Date
+  },
+  resetPasswordToken: {
+  type: String
+},
+resetPasswordExpires: {
+  type: Date
+},
+  personalProfile: {
+    firstName: String,
+    lastName: String,
+    address: String,
+    phone: {
+    type: String,
+    unique: true,
+    sparse: true   // IMPORTANT
+  },
+    isVerified: { type: Boolean, default: false },
+    stripeIdentityId: String
+  },
+
+  businessProfile: {
+    businessName: String,
+    orgNumber: String,
+    location: String,
+    phone: String,
+    isVerified: { type: Boolean, default: false },
+    stripeIdentityId: String,
+    isActive: { type: Boolean, default: false }
+  },
+
+  isBlocked: {
+    type: Boolean,
+    default: false
+  },
+
+  memberSince: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+export default mongoose.model<IUser>("User", UserSchema);
