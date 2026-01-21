@@ -4,83 +4,92 @@ import {
   Stack,
   TextField,
   Button,
-  MenuItem,
 } from "@mui/material";
+import { useState } from "react";
+import dayjs, { Dayjs } from "dayjs";
+import DateTimeDialog from "./DateTimeDialog";
 
 const SearchPanel = () => {
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const [startDateTime, setStartDateTime] = useState<Dayjs>(
+    dayjs().add(1, "hour")
+  );
+  const [endDateTime, setEndDateTime] = useState<Dayjs>(
+    dayjs().add(5, "hour")
+  );
+
   return (
     <Box
       sx={{
-        bgcolor: "#22a652",
-        color: "#fff",
+        bgcolor: "#fff",
         p: 3,
-        borderRadius: 1,
-        width: 340,
+        borderRadius: 2,
+        width: 360,
+        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
       }}
     >
-      <Typography variant="h6" fontWeight={600} mb={2}>
+      <Typography variant="h6" fontWeight={700} mb={2}>
         Search for Bike Rentals
       </Typography>
 
       <Stack spacing={2}>
+        {/* City */}
         <TextField
-          select
+          label="City"
+          value="Kolkata"
           size="small"
-          label="Category"
-          InputProps={{ sx: { bgcolor: "#eafff1" } }}
-        >
-          <MenuItem value="">Categories select</MenuItem>
-        </TextField>
-
-        <Stack direction="row" spacing={2}>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="City"
-            InputProps={{ sx: { bgcolor: "#eafff1" } }}
-          >
-            <MenuItem value="">Select city</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="#"
-            defaultValue="1"
-            InputProps={{ sx: { bgcolor: "#eafff1" } }}
-          >
-            <MenuItem value="1">1</MenuItem>
-          </TextField>
-        </Stack>
-
-        <TextField
-          size="small"
-          label="Trip start"
-          placeholder="MM/DD/YYYY"
-          InputProps={{ sx: { bgcolor: "#eafff1" } }}
         />
 
+        {/* Location */}
         <TextField
+          label="Location"
           size="small"
-          label="Trip end"
-          placeholder="MM/DD/YYYY"
-          InputProps={{ sx: { bgcolor: "#eafff1" } }}
+          value="Ground Floor, Motor Vehicles"
+        />
+
+        {/* Trip Start */}
+        <TextField
+          label="Trip Starts"
+          size="small"
+          value={startDateTime.format("DD MMM YY, hh:mm A")}
+          onClick={() => setOpenDialog(true)}
+          InputProps={{ readOnly: true }}
+        />
+
+        {/* Trip End */}
+        <TextField
+          label="Trip Ends"
+          size="small"
+          value={endDateTime.format("DD MMM YY, hh:mm A")}
+          onClick={() => setOpenDialog(true)}
+          InputProps={{ readOnly: true }}
         />
 
         <Button
           fullWidth
           variant="contained"
           sx={{
-            bgcolor: "#fff",
-            color: "#22a652",
+            bgcolor: "#22a652",
             fontWeight: 600,
           }}
         >
-          Search Bikes
+          SEARCH
         </Button>
       </Stack>
+
+      {/* Date & Time Dialog */}
+      <DateTimeDialog
+        open={openDialog}
+        startDateTime={startDateTime}
+        endDateTime={endDateTime}
+        onClose={() => setOpenDialog(false)}
+        onApply={(start, end) => {
+          setStartDateTime(start);
+          setEndDateTime(end);
+          setOpenDialog(false);
+        }}
+      />
     </Box>
   );
 };
