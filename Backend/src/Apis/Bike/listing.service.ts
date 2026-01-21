@@ -1,6 +1,7 @@
 import { ObjectId } from "mongoose";
 import Listing from "../../Models/Listing";
 import { Types } from "mongoose";
+import Booking from "../../Models/Booking";
 interface CreateListingInput {
   ownerId:Types.ObjectId;
 
@@ -24,10 +25,11 @@ interface CreateListingInput {
 
   depositAmount: number;
 
-  location: {
+ location: {
+    type: "Point";
+    coordinates: [number, number]; // [lng, lat]
     address?: string;
-    lat: number;
-    lng: number;
+    city: string;
   };
 }
 
@@ -185,4 +187,53 @@ export const filterListingsService = async (payload: FilterPayload) => {
     limit,
     results: listings
   };
+};
+
+
+
+export const searchAvailableBikesService = async ({
+  lat,
+  lng,
+  startDate,
+  endDate
+}: {
+  lat: number;
+  lng: number;
+  startDate: string;
+  endDate: string;
+}) => {
+
+  const unavailableBikeIds = await Booking.find({
+    status: "confirmed",
+    startDate: { $lte: new Date(endDate) },
+    endDate: { $gte: new Date(startDate) }
+  }).distinct("bikeId");
+
+  // 2️⃣ Geo + availability query
+  const bikes = await Listing.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: "Point",
+          coordinates: [lng, lat]
+        },
+        distanceField: "distance",
+        maxDistance: 8000, 
+        spherical: true
+      }
+    },
+    {
+      $match: {
+        _id: { $nin: unavailableBikeIds },
+        isPublished: true
+      }
+    },
+    {
+      $addFields: {
+        distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] }
+      }
+    }
+  ]);
+
+  return bikes;
 };
