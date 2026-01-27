@@ -101,17 +101,16 @@ const Header = () => {
                 >
                   Sign Up
                 </Button>
-
-                <Button
+              </>
+            ) : (
+              <>
+               <Button
                   variant="contained"
                   component={RouterLink}
                   to="/create-listing"
                 >
                   Create Listing
                 </Button>
-              </>
-            ) : (
-              <>
                 <IconButton onClick={openAccountMenu}>
                   <AccountCircleIcon />
                 </IconButton>

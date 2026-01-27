@@ -9,9 +9,12 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useCreateListingMutation } from "../services/listingApi";
+import { toast } from "react-hot-toast";
 
-const accessories = [
+const accessoriesList = [
   "Helmet",
   "Led Lights",
   "Bike Lock",
@@ -24,180 +27,211 @@ const accessories = [
 ];
 
 const CreateListing = () => {
+  const navigate = useNavigate();
+  const [createListing, { isLoading }] = useCreateListingMutation();
+
+  // ===================== FORM STATE =====================
+  const [form, setForm] = useState({
+    title: "",
+    brand: "",
+    modelbike: "",
+    category: "",
+    size: "",
+    description: "",
+    location: "",
+    depositAmount: "",
+    rates: {
+      hourly: "",
+      daily: "",
+      weekly: "",
+      monthly: "",
+    },
+  });
+
+  const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [preview, setPreview] = useState<string[]>([]);
+
+  // ===================== HANDLERS =====================
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({
+      ...form,
+      rates: { ...form.rates, [e.target.name]: e.target.value },
+    });
+  };
+
+  const handleAccessoryToggle = (item: string) => {
+    setSelectedAccessories((prev) =>
+      prev.includes(item)
+        ? prev.filter((i) => i !== item)
+        : [...prev, item]
+    );
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    const files = Array.from(e.target.files).slice(0, 6);
+    setPhotos(files);
+    setPreview(files.map((file) => URL.createObjectURL(file)));
+  };
+
+  // ===================== VALIDATION =====================
+  const validateForm = () => {
+    if (
+      !form.title ||
+      !form.brand ||
+      !form.modelbike ||
+      !form.size ||
+      !form.category ||
+      !form.depositAmount ||
+      !form.location
+    ) {
+      toast.error("Please fill all required fields");
+      return false;
+    }
+
+    if (
+      !form.rates.hourly &&
+      !form.rates.daily &&
+      !form.rates.weekly &&
+      !form.rates.monthly
+    ) {
+      toast.error("At least one rate is required");
+      return false;
+    }
+
+    if (!photos.length) {
+      toast.error("Please upload at least one photo");
+      return false;
+    }
+
+    return true;
+  };
+
+  // ===================== SUBMIT =====================
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      // Only include allowed rate fields
+      const rates: { hourly?: number; daily?: number } = {};
+      if (form.rates.hourly) rates.hourly = Number(form.rates.hourly);
+      if (form.rates.daily) rates.daily = Number(form.rates.daily);
+
+      await createListing({
+        title: form.title,
+        description: form.description,
+        brand: form.brand,
+        modelbike: form.modelbike,
+        size: form.size,
+        category: form.category,
+        depositAmount: Number(form.depositAmount),
+        accessories: selectedAccessories,
+        rates,
+        location: {
+          address: form.location,
+          city: "abc", // TODO: Set city value appropriately
+          country: "", // TODO: Set country value appropriately
+          lat: 0,
+          lng: 0,
+        },
+        photos,
+      }).unwrap();
+
+      toast.success("Bike listed successfully 🚲");
+      navigate("/browse-bikes");
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to create listing");
+    }
+  };
+
+  // ===================== UI =====================
   return (
     <Box>
-      {/* ================= Breadcrumb ================= */}
       <Box maxWidth="lg" mx="auto" px={2} mt={3}>
         <Typography variant="body2" color="text.secondary">
-          Home &nbsp;›&nbsp;
-          <Box component="span" color="#22a652">
-            Create listing
-          </Box>
+          Home › <Box component="span" color="#22a652">Create listing</Box>
         </Typography>
       </Box>
 
-      {/* ================= Page Header ================= */}
       <Box maxWidth="lg" mx="auto" px={2} mt={2}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", sm: "center" }}
-          spacing={2}
-        >
-          <Box>
-            <Typography variant="h5" fontWeight={700} color="#22a652">
-              List Your Bike
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mt={0.5}>
-              Share your bikes with the community and earn money while helping
-              others explore.
-            </Typography>
-          </Box>
-
-          <Button
-            component={RouterLink}
-            to="/browse-bikes"
-            variant="contained"
-            sx={{
-              bgcolor: "#22a652",
-              "&:hover": { bgcolor: "#1e8e4a" },
-            }}
-          >
+        <Stack direction="row" justifyContent="space-between">
+          <Typography variant="h5" fontWeight={700} color="#22a652">
+            List Your Bike
+          </Typography>
+          <Button component={RouterLink} to="/browse-bikes" variant="contained">
             Back to Listing
           </Button>
         </Stack>
       </Box>
 
-      {/* ================= FORM ================= */}
       <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
         <Stack spacing={4}>
-          {/* ===== Basic Information ===== */}
-          <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
-            <Typography fontWeight={700} mb={2}>
-              Basic Information
-            </Typography>
-
+          <Paper variant="outlined" sx={{ p: 3 }}>
             <Stack spacing={2}>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField label="Listing Title *" fullWidth />
-                <TextField label="Brand" fullWidth />
-              </Stack>
-
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField label="Model" fullWidth />
-                <TextField label="Category *" fullWidth />
-              </Stack>
-
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField label="Size *" fullWidth />
-                <TextField label="Condition *" fullWidth />
-              </Stack>
-
-              <TextField label="Location *" fullWidth />
-              <TextField
-                label="Description"
-                multiline
-                rows={4}
-                fullWidth
-              />
+              <TextField label="Listing Title *" name="title" onChange={handleChange} />
+              <TextField label="Brand *" name="brand" onChange={handleChange} />
+              <TextField label="Model *" name="modelbike" onChange={handleChange} />
+              <TextField label="Category *" name="category" onChange={handleChange} />
+              <TextField label="Size *" name="size" onChange={handleChange} />
+              <TextField label="Location *" name="location" onChange={handleChange} />
+              <TextField label="Description" name="description" multiline rows={3} onChange={handleChange} />
             </Stack>
           </Paper>
 
-          {/* ===== Pricing ===== */}
-          <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
-            <Typography fontWeight={700} mb={2}>
-              Pricing (SEK)
-            </Typography>
-
+          <Paper variant="outlined" sx={{ p: 3 }}>
             <Stack spacing={2}>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField label="Hourly Rate *" fullWidth />
-                <TextField label="Daily Rate *" fullWidth />
-              </Stack>
-
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField label="Weekly Rate" fullWidth />
-                <TextField label="Monthly Rate *" fullWidth />
-              </Stack>
-
-              <TextField label="Security Deposit" fullWidth />
+              <TextField label="Hourly Rate" name="hourly" onChange={handleRateChange} />
+              <TextField label="Daily Rate" name="daily" onChange={handleRateChange} />
+              <TextField label="Weekly Rate" name="weekly" onChange={handleRateChange} />
+              <TextField label="Monthly Rate" name="monthly" onChange={handleRateChange} />
+              <TextField label="Deposit Amount *" name="depositAmount" onChange={handleChange} />
             </Stack>
           </Paper>
 
-          {/* ===== Accessories ===== */}
-          <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
-            <Typography fontWeight={700} mb={2}>
-              Included Accessories
-            </Typography>
-
-            <Stack
-              direction="row"
-              flexWrap="wrap"
-              rowGap={1}
-              columnGap={3}
-            >
-              {accessories.map((item) => (
+          <Paper variant="outlined" sx={{ p: 3 }}>
+            <Stack direction="row" flexWrap="wrap">
+              {accessoriesList.map((item) => (
                 <FormControlLabel
                   key={item}
-                  control={<Checkbox />}
+                  control={
+                    <Checkbox
+                      checked={selectedAccessories.includes(item)}
+                      onChange={() => handleAccessoryToggle(item)}
+                    />
+                  }
                   label={item}
                 />
               ))}
             </Stack>
           </Paper>
 
-          {/* ===== Photos ===== */}
-          <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
-            <Typography fontWeight={700} mb={2}>
-              Photos
-            </Typography>
+          <Paper variant="outlined" sx={{ p: 3 }}>
+            <Button component="label" variant="outlined" startIcon={<CloudUploadOutlinedIcon />}>
+              Upload Photos
+              <input hidden multiple type="file" accept="image/*" onChange={handlePhotoUpload} />
+            </Button>
 
-            <Box
-              sx={{
-                border: "1px dashed #cfcfcf",
-                borderRadius: 1,
-                p: 4,
-                textAlign: "center",
-              }}
-            >
-              <CloudUploadOutlinedIcon
-                sx={{ fontSize: 40, color: "#22a652" }}
-              />
-              <Typography mt={1} color="text.secondary">
-                Upload photos of your bike
-              </Typography>
-
-              <Button
-                variant="outlined"
-                sx={{
-                  mt: 2,
-                  borderColor: "#22a652",
-                  color: "#22a652",
-                  "&:hover": {
-                    borderColor: "#1e8e4a",
-                    bgcolor: "rgba(34,166,82,0.05)",
-                  },
-                }}
-              >
-                Browse Files
-              </Button>
-            </Box>
+            <Stack direction="row" mt={2} spacing={2}>
+              {preview.map((src) => (
+                <img key={src} src={src} width={80} height={80} style={{ borderRadius: 6 }} />
+              ))}
+            </Stack>
           </Paper>
 
-          {/* ===== Submit ===== */}
-          <Box textAlign="center">
-            <Button
-              variant="contained"
-              size="large"
-              sx={{
-                px: 6,
-                bgcolor: "#22a652",
-                "&:hover": { bgcolor: "#1e8e4a" },
-              }}
-            >
-              List My Bike
-            </Button>
-          </Box>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? "Submitting..." : "List My Bike"}
+          </Button>
         </Stack>
       </Box>
     </Box>

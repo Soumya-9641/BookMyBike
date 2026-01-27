@@ -150,12 +150,14 @@ const ComingSoon: React.FC = () => {
         </Typography>
 
         <Typography fontWeight={600} mb={1} fontSize={22}>
-          Our website is currently undergoing scheduled maintenance.
+          Discover Smart Bike Sharing on Your Terms, Whenever. Wherever
         </Typography>
 
+        <Typography mb={1} fontSize={18}>
+          On Demand bike sharing on your terms flexible, accessible, and sustainable
+        </Typography>
         <Typography mb={4} fontSize={18}>
-          We’ll be back shortly! Sign up now to receive early notifications of
-          our launch date.
+          Sign up now to receive early notifications of our launch date.
         </Typography>
 
         {/* Email Form */}
@@ -261,7 +263,7 @@ const ComingSoon: React.FC = () => {
         >
           <Stack direction="row" alignItems="center" spacing={2}>
             <IconCircle
-              text="Visit Website"
+              text="Sign up & verify your identity(Stripe-secured)"
               icon={<LanguageIcon fontSize="large" />}
             />
             <ArrowForwardIcon
@@ -278,8 +280,8 @@ const ComingSoon: React.FC = () => {
             <IconCircle
               text={
                 segment === "renter"
-                  ? "Search for bike and book"
-                  : "List your bike"
+                  ? "Browse and book a bike"
+                  : "List your bike(s)"
               }
               icon={<SearchIcon fontSize="large" />}
             />
@@ -295,7 +297,11 @@ const ComingSoon: React.FC = () => {
 
           <Stack direction="row" alignItems="center" spacing={2}>
             <IconCircle
-              text="Verify your profile"
+              text={
+                segment === "renter"
+                  ? "Pick up, ride & enjoy"
+                  : "Approve bookings & hand over your bike"
+              }
               icon={<VerifiedIcon fontSize="large" />}
             />
             <ArrowForwardIcon
@@ -309,7 +315,11 @@ const ComingSoon: React.FC = () => {
           </Stack>
 
           <IconCircle
-            text="Get ready for your trip"
+            text={
+                segment === "renter"
+                  ? "Return on time in the same condition - repeat!"
+                  : "Confirm return, get paid - repeat!"
+              }
             icon={<DirectionsBikeIcon fontSize="large" />}
           />
         </Stack>
