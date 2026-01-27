@@ -1,9 +1,9 @@
 // src/apis/user/auth.api.ts
-import { Router,Request, Response } from "express";
+import { Router, Request, Response } from "express";
 
 import { authMiddleware } from "../../Middlewares/auth.middleware";
 
-import { createListingService,searchListingsService,getFirstFourBikesService,filterListingsService } from "./listing.service";
+import { createListingService, searchListingsService, getFirstFourBikesService, filterListingsService, searchAvailableBikesService } from "./listing.service";
 import { uploadBikeImages } from "../../Middlewares/upload.middleware";
 import { AuthRequest } from "../../types/auth-request";
 
@@ -16,7 +16,7 @@ router.post(
   authMiddleware,
 
   uploadBikeImages.array("photos", 6), // max 6 images
-  async (req:AuthRequest, res: Response) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const {
         title,
@@ -48,11 +48,11 @@ router.post(
         });
       }
 
-      
+
       const photos = files.map(
         file => `/uploads/bikes/${file.filename}`
       );
-
+      const parsedLocation = JSON.parse(location);
       const listing = await createListingService({
         ownerId: req.user!.userId,
         title,
@@ -65,8 +65,17 @@ router.post(
         accessories: accessories ? JSON.parse(accessories) : [],
         rates: rates ? JSON.parse(rates) : {},
         depositAmount,
-        location: JSON.parse(location)
+        location: {
+          type: "Point",
+          coordinates: [
+            parsedLocation.lng,
+            parsedLocation.lat
+          ],
+          address: parsedLocation.address,
+          city: parsedLocation.city
+        }
       });
+
 
       res.status(201).json({
         message: "Listing created successfully",
@@ -102,7 +111,7 @@ router.get(
 // router.get(
 //   "/listings",
 //   async (req: Request, res: Response) => {
-  
+
 //     try {
 //       const {
 //       city,
@@ -169,5 +178,19 @@ router.post("/filter", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/search", async (req: Request, res: Response) => {
+  try {
+    const bikes = await searchAvailableBikesService(req.body);
+
+    res.status(200).json({
+      count: bikes.length,
+      bikes
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      message: error.message || "Search failed"
+    });
+  }
+});
 
 export default router;
