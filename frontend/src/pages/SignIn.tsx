@@ -55,7 +55,7 @@ const SignIn = () => {
           user: { email },
         })
       );
-localStorage.setItem("token", res.token);
+      localStorage.setItem("token", res.token);
       if (rememberMe) {
         localStorage.setItem("token", res.token);
       } else {
