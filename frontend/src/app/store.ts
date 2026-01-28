@@ -3,15 +3,17 @@ import { configureStore } from "@reduxjs/toolkit";
 import { authApi } from "../services/authApi";
 import authReducer from "../features/auth/authSlice";
 import { waitlistApi } from "../services/waitlistAPI";
+import { baseApi } from "../services/baseApi";
 
 export const store = configureStore({
   reducer: {
     [authApi.reducerPath]: authApi.reducer,
+    [baseApi.reducerPath]: baseApi.reducer,
     [waitlistApi.reducerPath]: waitlistApi.reducer,
     auth: authReducer
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(authApi.middleware,waitlistApi.middleware),
+    getDefaultMiddleware().concat(authApi.middleware,waitlistApi.middleware,baseApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
