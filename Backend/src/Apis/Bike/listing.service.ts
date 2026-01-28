@@ -244,3 +244,14 @@ export const getAllListingsService = async () => {
     .sort({ createdAt: -1 })
     .lean();
 };
+
+export const getListingByIdService = async (listingId: string) => {
+  if (!Types.ObjectId.isValid(listingId)) {
+    return null;
+  }
+
+  return await Listing.findOne({
+    _id: listingId,
+    isPublished: true
+  }).lean();
+};
