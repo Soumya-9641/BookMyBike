@@ -2,6 +2,7 @@ import { ObjectId } from "mongoose";
 import Listing from "../../Models/Listing";
 import { Types } from "mongoose";
 import Booking from "../../Models/Booking";
+import { haversineDistance } from "../../Utils/haversine";
 interface CreateListingInput {
   ownerId:Types.ObjectId;
 
@@ -203,37 +204,43 @@ export const searchAvailableBikesService = async ({
   endDate: string;
 }) => {
 
-  const unavailableBikeIds = await Booking.find({
+   const unavailableBikeIds = await Booking.find({
     status: "confirmed",
     startDate: { $lte: new Date(endDate) },
     endDate: { $gte: new Date(startDate) }
   }).distinct("bikeId");
 
-  // 2️⃣ Geo + availability query
-  const bikes = await Listing.aggregate([
-    {
-      $geoNear: {
-        near: {
-          type: "Point",
-          coordinates: [lng, lat]
-        },
-        distanceField: "distance",
-        maxDistance: 8000, 
-        spherical: true
-      }
-    },
-    {
-      $match: {
-        _id: { $nin: unavailableBikeIds },
-        isPublished: true
-      }
-    },
-    {
-      $addFields: {
-        distanceInKm: { $round: [{ $divide: ["$distance", 1000] }, 2] }
-      }
-    }
-  ]);
+  // 2️⃣ Fetch candidate bikes (DB-level filtering)
+  const bikes = await Listing.find({
+    isPublished: true,
+    _id: { $nin: unavailableBikeIds }
+  }).lean(); // lean() = faster, plain JS objects
 
-  return bikes;
+  // 3️⃣ Apply Haversine distance filtering
+  const availableBikes = bikes
+    .map(bike => {
+      const [bikeLng, bikeLat] = bike.location.coordinates;
+
+      const distanceKm = haversineDistance(
+        lat,
+        lng,
+        bikeLat,
+        bikeLng
+      );
+
+      return {
+        ...bike,
+        distanceInKm: Number(distanceKm.toFixed(2))
+      };
+    })
+    .filter(bike => bike.distanceInKm <= 8)
+    .sort((a, b) => a.distanceInKm - b.distanceInKm);
+
+  return availableBikes;
+};
+
+export const getAllListingsService = async () => {
+  return await Listing.find({ isPublished: true })
+    .sort({ createdAt: -1 })
+    .lean();
 };

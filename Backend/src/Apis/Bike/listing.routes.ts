@@ -3,7 +3,7 @@ import { Router, Request, Response } from "express";
 
 import { authMiddleware } from "../../Middlewares/auth.middleware";
 
-import { createListingService, searchListingsService, getFirstFourBikesService, filterListingsService, searchAvailableBikesService } from "./listing.service";
+import { createListingService, searchListingsService, getFirstFourBikesService, filterListingsService, searchAvailableBikesService, getAllListingsService } from "./listing.service";
 import { uploadBikeImages } from "../../Middlewares/upload.middleware";
 import { AuthRequest } from "../../types/auth-request";
 
@@ -192,5 +192,19 @@ router.post("/search", async (req: Request, res: Response) => {
     });
   }
 });
+
+router.post("/getall",async(req:Request, res:Response)=>{
+  try{
+      const bikes=await getAllListingsService();
+      res.status(200).json({
+        count: bikes.length,
+        bikes
+      });
+  }catch(error:any){
+    res.status(500).json({
+      message: error.message || "fetch failed"
+    });
+  }
+})
 
 export default router;
