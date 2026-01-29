@@ -302,7 +302,7 @@ const ComingSoon: React.FC = () => {
                   ? "Pick up, ride & enjoy"
                   : "Approve bookings & hand over your bike"
               }
-              icon={<VerifiedIcon fontSize="large" />}
+              icon={<DirectionsBikeIcon  fontSize="large" />}
             />
             <ArrowForwardIcon
               sx={{
@@ -317,10 +317,10 @@ const ComingSoon: React.FC = () => {
           <IconCircle
             text={
                 segment === "renter"
-                  ? "Return on time in the same condition - repeat!"
+                  ? "Return on time in the same condition-repeat!"
                   : "Confirm return, get paid - repeat!"
               }
-            icon={<DirectionsBikeIcon fontSize="large" />}
+            icon={<VerifiedIcon fontSize="large" />}
           />
         </Stack>
       </Paper>

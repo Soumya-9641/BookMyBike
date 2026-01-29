@@ -6,7 +6,7 @@ import {
   Stack,
 } from "@mui/material";
 import { DateCalendar, TimePicker } from "@mui/x-date-pickers";
-import dayjs, { Dayjs } from "dayjs";
+import { Dayjs } from "dayjs";
 import { useState } from "react";
 
 interface Props {
