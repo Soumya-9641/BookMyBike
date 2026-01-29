@@ -3,7 +3,7 @@ import { Router, Request, Response } from "express";
 
 import { authMiddleware } from "../../Middlewares/auth.middleware";
 
-import { createListingService, searchListingsService, getFirstFourBikesService, filterListingsService, searchAvailableBikesService } from "./listing.service";
+import { createListingService, searchListingsService, getFirstFourBikesService, filterListingsService, searchAvailableBikesService, getAllListingsService, getListingByIdService } from "./listing.service";
 import { uploadBikeImages } from "../../Middlewares/upload.middleware";
 import { AuthRequest } from "../../types/auth-request";
 
@@ -193,4 +193,39 @@ router.post("/search", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/getall",async(req:Request, res:Response)=>{
+  try{
+      const bikes=await getAllListingsService();
+      res.status(200).json({
+        count: bikes.length,
+        bikes
+      });
+  }catch(error:any){
+    res.status(500).json({
+      message: error.message || "fetch failed"
+    });
+  }
+})
+
+
+router.get("/:id", async (req, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const listing = await getListingByIdService(id);
+
+    if (!listing) {
+      return res.status(404).json({
+        message: "Bike not found"
+      });
+    }
+
+    res.json(listing);
+  } catch (error: any) {
+    res.status(500).json({
+      message: "Failed to fetch bike",
+      error: error.message
+    });
+  }
+});
 export default router;
