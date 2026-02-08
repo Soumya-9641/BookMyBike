@@ -1,11 +1,30 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IBooking extends Document {
-  bikeId: Types.ObjectId;        // Reference to Listing
-  userId: Types.ObjectId;        // Who booked
+  bikeId: Types.ObjectId;        // Listing reference
+  renterId: Types.ObjectId;      // Who booked
+  ownerId: Types.ObjectId;       // Bike owner
+
   startDate: Date;
   endDate: Date;
-  status: "confirmed" | "cancelled";
+
+  rentalAmount: number;
+  depositAmount: number;
+  platformFee: number;
+  totalAmount: number;
+
+  stripePaymentIntentId: string;
+  stripeRefundId?: string;
+  ownerPaid?: boolean;
+  ownerPayoutId?: string;
+depositRefunded?: boolean;
+  status:
+    | "pending"
+    | "confirmed"
+    | "completed"
+    | "cancelled"
+    | "disputed";
+
   createdAt: Date;
 }
 
@@ -18,10 +37,18 @@ const BookingSchema: Schema<IBooking> = new Schema(
       index: true
     },
 
-    userId: {
+    renterId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
+      index: true
+    },
+
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
     },
 
     startDate: {
@@ -36,11 +63,58 @@ const BookingSchema: Schema<IBooking> = new Schema(
       index: true
     },
 
+    rentalAmount: {
+      type: Number,
+      required: true
+    },
+
+    depositAmount: {
+      type: Number,
+      required: true
+    },
+
+    platformFee: {
+      type: Number,
+      required: true
+    },
+
+    totalAmount: {
+      type: Number,
+      required: true
+    },
+
+    stripePaymentIntentId: {
+      type: String,
+      required: true,
+      index: true
+    },
+
+    stripeRefundId: {
+      type: String
+    },
+
     status: {
       type: String,
-      enum: ["confirmed", "cancelled"],
-      default: "confirmed",
+      enum: [
+        "pending",
+        "confirmed",
+        "completed",
+        "cancelled",
+        "disputed"
+      ],
+      default: "pending",
       index: true
+    },
+    depositRefunded: {
+      type: Boolean,
+      default: false
+    },
+    ownerPaid: {
+      type: Boolean,
+      default: false
+    },
+    ownerPayoutId: {
+      type: String
     },
 
     createdAt: {
@@ -53,7 +127,7 @@ const BookingSchema: Schema<IBooking> = new Schema(
   }
 );
 
-// 🚀 Composite index for fast availability checks
+
 BookingSchema.index({
   bikeId: 1,
   startDate: 1,
@@ -62,3 +136,5 @@ BookingSchema.index({
 });
 
 export default mongoose.model<IBooking>("Booking", BookingSchema);
+
+

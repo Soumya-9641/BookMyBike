@@ -23,12 +23,18 @@ export const authMiddleware = (
       process.env.JWT_SECRET as string
     ) as {
       userId: string;
+       email: string;
+      name: string;
       systemRole: "user" | "admin";
+      
     };
 
     req.user = {
       userId: new Types.ObjectId(decoded.userId),
-      systemRole: decoded.systemRole
+      systemRole: decoded.systemRole,
+       email: decoded.email,
+      name: decoded.name,
+
     };
 
     next();
