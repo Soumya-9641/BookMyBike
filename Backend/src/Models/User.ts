@@ -28,10 +28,12 @@ resetPasswordExpires?:Date;
     isVerified: boolean;
     stripeIdentityId?: string;
     isActive: boolean;
+    
   };
 
   isBlocked: boolean;
   memberSince: Date;
+  stripeCustomerId?: string;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -40,7 +42,7 @@ const UserSchema = new Schema<IUser>({
     required: true,
     unique: true
   },
-
+stripeCustomerId: { type: String },
   password: {
     type: String,
     required: true
@@ -88,6 +90,8 @@ resetPasswordExpires: {
     isVerified: { type: Boolean, default: false },
     stripeIdentityId: String,
     isActive: { type: Boolean, default: false }
+     
+   
   },
 
   isBlocked: {

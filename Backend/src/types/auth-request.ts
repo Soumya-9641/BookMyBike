@@ -5,5 +5,7 @@ export interface AuthRequest extends Request {
  user?: {
     userId: Types.ObjectId;
     systemRole: "user" | "admin";
+     email: string;
+      name: string;
   };
 }

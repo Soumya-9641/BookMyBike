@@ -91,15 +91,15 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    if (!user.emailVerified) {
-      return res.status(400).json({
-        message: "Please verify your email before logging in"
-      });
-    }
+    // if (!user.emailVerified) {
+    //   return res.status(400).json({
+    //     message: "Please verify your email before logging in"
+    //   });
+    // }
 
-    if (user.isBlocked) {
-      return res.status(400).json({ message: "Account blocked" });
-    }
+    // if (user.isBlocked) {
+    //   return res.status(400).json({ message: "Account blocked" });
+    // }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -258,7 +258,7 @@ router.post("/reset-password", async (req: Request, res: Response) => {
 });
 
 
-router.post("/send-otp",authMiddleware,async (req:AuthRequest, res:Response)=>{
+router.post("/send-otp",async (req:AuthRequest, res:Response)=>{
 
     try{
 
