@@ -86,7 +86,9 @@ const Header = () => {
               About
             </Button>
 
-            <Button>Browse Bikes</Button>
+            <Button component={RouterLink} to="/browse-bikes">
+              Browse Bikes
+            </Button>
 
             {!isLoggedIn ? (
               <>
@@ -104,7 +106,7 @@ const Header = () => {
               </>
             ) : (
               <>
-               <Button
+                <Button
                   variant="contained"
                   component={RouterLink}
                   to="/create-listing"
@@ -186,7 +188,8 @@ const Header = () => {
               About
             </Button>
 
-            <Button onClick={() => setDrawerOpen(false)}>
+            <Button component={RouterLink}
+              to="/browse-bikes" onClick={() => setDrawerOpen(false)}>
               Browse Bikes
             </Button>
 

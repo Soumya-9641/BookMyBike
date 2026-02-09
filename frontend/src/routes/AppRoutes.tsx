@@ -9,6 +9,8 @@ import CreateListing from "../pages/CreateListing";
 import VerifyEmail from "../pages/VerifyEmail";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
+import BrowseBikes from "../pages/BrowseBikes";
+import BikeDetails from "../components/BikeDetailsPage";
 const AppRoutes = () => {
   return (
     <Routes>
@@ -20,6 +22,8 @@ const AppRoutes = () => {
         <Route path="/create-listing" element={<CreateListing />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/browse-bikes" element={<BrowseBikes />} />
+        <Route path="/bikes/:id" element={<BikeDetails />} />
         <Route
           path="/reset-password/:token"
           element={<ResetPassword />}
