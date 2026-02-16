@@ -11,7 +11,7 @@ export const waitlistApi = createApi({
       { email: string }
     >({
       query: (body) => ({
-        url: "/api/comingsoon",
+        url: "/comingsoon",
         method: "POST",
         body,
       }),
