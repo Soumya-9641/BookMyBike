@@ -51,7 +51,7 @@ const IconCircle = ({
     <Typography
       fontSize="0.95rem"
       fontWeight={500}
-      sx={{ height: 40 }}
+      sx={{ height: 42 }}
     >
       {text}
     </Typography>
@@ -161,11 +161,11 @@ const ComingSoon: React.FC = () => {
         </Typography>
 
         <Typography fontWeight={600} mb={1} fontSize={22}>
-          Discover Smart Bike Sharing on Your Terms, Whenever. Wherever
+          Discover Smart Bike Sharing on Your Terms. Whenever. Wherever
         </Typography>
 
         <Typography mb={1} fontSize={18}>
-          On Demand bike sharing on your terms flexible, accessible, and sustainable
+          On Demand bike sharing on your terms-flexible, accessible, and sustainable
         </Typography>
         <Typography mb={4} fontSize={18}>
           Sign up now to receive early notifications of our launch date.
@@ -376,7 +376,7 @@ const ComingSoon: React.FC = () => {
         width="100%"
         mt="auto"
       >
-        <Typography variant="body2" color="#ffffff">
+        <Typography variant="body2" color="#ffffff" fontSize={12}>
           RentMyBike™ © 2025 | All rights reserved. Org.nr: 559542-5843
         </Typography>
       </Box>
