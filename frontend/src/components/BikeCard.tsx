@@ -5,12 +5,12 @@ import {
   IconButton,
 } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import type { Bike } from "../types/listing";
+import { useNavigate } from "react-router-dom";
 
-interface BikeCardProps {
-  city: string;
-}
 
-const BikeCard = ({ city }: BikeCardProps) => {
+const BikeCard = ({ bike }: { bike: Bike }) => {
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -26,8 +26,8 @@ const BikeCard = ({ city }: BikeCardProps) => {
       {/* Bike Image */}
       <Box
         component="img"
-        src="/images/icons/product.png"
-        alt="Bike"
+        src={`${import.meta.env.VITE_API_BASE_URL}${bike.photos?.[0]}`}
+        alt={bike.title}
         sx={{
           width: "100%",
           height: 160,
@@ -40,13 +40,13 @@ const BikeCard = ({ city }: BikeCardProps) => {
       {/* Content */}
       <Stack spacing={0.5} flexGrow={1}>
         <Typography variant="body2" sx={{ color: "#22a652", fontWeight: 600 }}>
-          Smart Bike details
+         {bike.title}
         </Typography>
 
         <Typography variant="body2">
           Price :{" "}
           <Box component="span" sx={{ color: "#22a652", fontWeight: 600 }}>
-            $19.99
+           ${bike.rates?.hourly}
           </Box>{" "}
           <Box component="span" sx={{ fontSize: 12, color: "#22a652" }}>
             (Per hour)
@@ -62,9 +62,10 @@ const BikeCard = ({ city }: BikeCardProps) => {
           justifyContent="space-between"
           mt={1}
         >
-          <Typography variant="body2">City : {city}</Typography>
+          <Typography variant="body2">City : {bike.location?.city}</Typography>
 
           <IconButton
+          onClick={() => navigate(`/bikes/${bike._id}`)}
             sx={{
               width: 32,
               height: 32,

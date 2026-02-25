@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import type { CreateListingPayload } from "../types/listing";
+import type { Bike, CreateListingPayload, GetAllBikesResponse } from "../types/listing";
 
 export const listingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -31,7 +31,33 @@ export const listingApi = baseApi.injectEndpoints({
       },
       invalidatesTags: ["Listing"],
     }),
+    getAllBikes: builder.query<GetAllBikesResponse, void>({
+      query: () => ({
+        url: "/bike/listing/getall",
+        method: "POST",
+      }),
+      providesTags: ["Listing"],
+    }),
+
+    filterBikes: builder.mutation<any, any>({
+      query: (payload) => ({
+        url: "/bike/listing/filter",
+        method: "POST",
+        body: payload,
+      }),
+    }),
+    getHomeBikes: builder.query<
+      { count: number; bikes: any[] },
+      void
+    >({
+      query: () => "/bike/listing/bikes/home",
+      providesTags: ["Listing"],
+    }),
+    getBikeById: builder.query<Bike, string>({
+      query: (id) => `/bike/listing/${id}`,
+    }),
   }),
 });
 
-export const { useCreateListingMutation } = listingApi;
+export const { useCreateListingMutation, useGetAllBikesQuery,
+  useFilterBikesMutation, useGetHomeBikesQuery, useGetBikeByIdQuery, } = listingApi;

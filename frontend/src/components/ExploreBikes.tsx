@@ -1,71 +1,54 @@
-import { Box, Typography, Stack, IconButton } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { Box, Typography, Stack, CircularProgress } from "@mui/material";
+import { useGetHomeBikesQuery } from "../services/listingApi";
 import BikeCard from "./BikeCard";
 
 const ExploreBikes = () => {
-  return (
-    <Box maxWidth="lg" mx="auto" px={{ xs: 2, md: 3 }} mt={8} mb={10}>
-      {/* Header */}
-      <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        mb={3}
-        flexWrap="wrap"
-        gap={2}
-      >
-        <Typography variant="h5" sx={{ color: "#22a652", fontWeight: 600 }}>
-          Explore our bikes
+  const { data, isLoading, isError } = useGetHomeBikesQuery();
+
+  if (isLoading) {
+    return (
+      <Box textAlign="center" py={6}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <Box textAlign="center" py={6}>
+        <Typography color="error">
+          Failed to load bikes
         </Typography>
-
-        <Stack direction="row" spacing={1}>
-          <IconButton
-            size="small"
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              border: "1px solid #22a652",
-              color: "#22a652",
-            }}
-          >
-            <ArrowBackIcon fontSize="small" />
-          </IconButton>
-
-          <IconButton
-            size="small"
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              border: "1px solid #22a652",
-              color: "#22a652",
-            }}
-          >
-            <ArrowForwardIcon fontSize="small" />
-          </IconButton>
-        </Stack>
       </Box>
+    );
+  }
 
-      {/* Cards */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(2, 1fr)",
-            md: "repeat(4, 1fr)",
-          },
-          gap: 3,
-        }}
+  return (
+    <Box maxWidth="lg" mx="auto" px={2} py={6}>
+      <Typography
+        variant="h4"
+        fontWeight={700}
+        textAlign="center"
+        mb={4}
+        color="#22a652"
       >
-        {["Uppsala", "Stockholm", "Gothenburg", "Stockholm"].map(
-          (city, index) => (
-            <BikeCard key={index} city={city} />
-          )
-        )}
-      </Box>
+        Explore Bikes
+      </Typography>
+
+      <Stack
+        direction="row"
+        flexWrap="wrap"
+        gap={3}
+      >
+        {data.bikes.map((bike) => (
+          <Box
+            key={bike._id}
+            width={{ xs: "100%", sm: "48%", md: "23%" }}
+          >
+            <BikeCard bike={bike} />
+          </Box>
+        ))}
+      </Stack>
     </Box>
   );
 };
