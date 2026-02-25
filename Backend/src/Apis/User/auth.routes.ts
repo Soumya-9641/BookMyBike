@@ -270,20 +270,21 @@ router.post("/send-otp",async (req:AuthRequest, res:Response)=>{
         "personalProfile.phone": phoneNumber
       });
 
-      if (existingUser) {
-        return res.status(400).json({
-          message: "Phone number already in use"
-        });
-      }
-       await User.findByIdAndUpdate(
-        req.user!.userId,
-        {
-          $set: {
-            "personalProfile.phone": phoneNumber,
-            "personalProfile.isVerified": false
-          }
-        }
-      );
+      // if (existingUser) {
+      //   return res.status(400).json({
+      //     message: "Phone number already in use"
+      //   });
+      // }
+
+      //  await User.findByIdAndUpdate(
+      //   req.user!.userId,
+      //   {
+      //     $set: {
+      //       "personalProfile.phone": phoneNumber,
+      //       "personalProfile.isVerified": false
+      //     }   
+      //   }
+      // );
          await client.verify.v2
       .services(process.env.TWILIO_VERIFY_SERVICE_SID as string)
       .verifications.create({

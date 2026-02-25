@@ -12,6 +12,9 @@ import connectDB from "./db";
 
 connectDB();
 
+import { fileURLToPath } from "url";
+
+
 const PORT = process.env.PORT || 5000;
 app.get("/api/test", (req, res) => {
   res.json({ message: "API working" });
