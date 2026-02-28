@@ -46,6 +46,7 @@ const DateTimeDialog = ({
             />
             <TimePicker
               value={start}
+              minutesStep={30}
               onChange={(time) => time && setStart(time)}
             />
           </Stack>
@@ -63,6 +64,7 @@ const DateTimeDialog = ({
             <TimePicker
               value={end}
               minTime={start}
+              minutesStep={30}
               onChange={(time) => time && setEnd(time)}
             />
           </Stack>

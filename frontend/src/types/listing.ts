@@ -53,3 +53,32 @@ export interface GetAllBikesResponse {
   bikes: Bike[];
 }
 
+// types/bike.ts
+export interface BikeLocation {
+  type: "Point";
+  coordinates: [number, number];
+  address: string;
+  city: string;
+}
+
+export interface BikeRates {
+  daily: number;
+}
+
+export interface BikeDetails {
+  _id: string;
+  ownerId: string;
+  title: string;
+  description: string;
+  photos: string[];
+  brand: string;
+  modelbike: string;
+  size: string;
+  category: string;
+  accessories: string[];
+  rates: BikeRates;
+  depositAmount: number;
+  location: BikeLocation;
+  isPublished: boolean;
+  createdAt: string;
+}

@@ -20,7 +20,7 @@ export const bookingApi = baseApi.injectEndpoints({
       CreateBookingPayload
     >({
       query: (body) => ({
-        url: "/bookings/create",
+        url: "/checkout/create",
         method: "POST",
         body,
       }),

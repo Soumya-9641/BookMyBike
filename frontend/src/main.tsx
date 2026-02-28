@@ -8,6 +8,10 @@ import { Provider } from "react-redux";
 import { store } from "./app/store";
 import { LocalizationProvider } from '@mui/x-date-pickers-pro/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LoadScript } from '@react-google-maps/api';
+const GOOGLE_LIBRARIES: (
+  | "places"
+)[] = ["places"];
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -15,7 +19,12 @@ createRoot(document.getElementById('root')!).render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <App />
+          <LoadScript
+            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            libraries={GOOGLE_LIBRARIES}
+          >
+            <App />
+          </LoadScript>
         </LocalizationProvider>
       </ThemeProvider>
     </Provider>
