@@ -15,6 +15,9 @@ import { useCreateListingMutation } from "../services/listingApi";
 import { toast } from "react-hot-toast";
 import LocationAutocomplete from "../components/LocationAutocomplete";
 import CategorySelector from "../components/create-listing/CategorySelector";
+import { useEffect } from "react";
+import { useAuth } from "../features/auth/useAuth"; // your auth hook
+
 const accessoriesList = [
   "Helmet",
   "Led Lights",
@@ -59,7 +62,18 @@ const CreateListing = () => {
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [preview, setPreview] = useState<string[]>([]);
+  const { isAuthenticated, user } = useAuth();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in first");
+      navigate("/signin", { replace: true });
+      return;
+    }
 
+    if (!user?.businessProfile?.stripeIdentityId) {
+      navigate("/verify-profile", { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
