@@ -5,11 +5,11 @@ export interface IUser extends Document {
   password: string;
   systemRole: "user" | "admin";
 
-   emailVerified: boolean;
+  emailVerified: boolean;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
-resetPasswordToken?:string;
-resetPasswordExpires?:Date;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
 
   personalProfile: {
     firstName?: string;
@@ -17,6 +17,7 @@ resetPasswordExpires?:Date;
     address?: string;
     phone?: string;
     isVerified: boolean;
+    city?: string;
     stripeIdentityId?: string;
   };
 
@@ -28,7 +29,7 @@ resetPasswordExpires?:Date;
     isVerified: boolean;
     stripeIdentityId?: string;
     isActive: boolean;
-    
+
   };
 
   isBlocked: boolean;
@@ -42,7 +43,7 @@ const UserSchema = new Schema<IUser>({
     required: true,
     unique: true
   },
-stripeCustomerId: { type: String },
+  stripeCustomerId: { type: String },
   password: {
     type: String,
     required: true
@@ -53,10 +54,10 @@ stripeCustomerId: { type: String },
     enum: ["user", "admin"],
     default: "user"
   },
- emailVerified: {
+  emailVerified: {
     type: Boolean,
     default: false
-  },
+  }, 
   emailVerificationToken: {
     type: String
   },
@@ -64,22 +65,23 @@ stripeCustomerId: { type: String },
     type: Date
   },
   resetPasswordToken: {
-  type: String
-},
-resetPasswordExpires: {
-  type: Date
-},
+    type: String
+  },
+  resetPasswordExpires: {
+    type: Date
+  },
   personalProfile: {
     firstName: String,
     lastName: String,
     address: String,
     phone: {
-    type: String,
-    unique: true,
-    sparse: true   // IMPORTANT
-  },
+      type: String,
+      unique: true,
+      sparse: true   // IMPORTANT
+    },
     isVerified: { type: Boolean, default: false },
-    stripeIdentityId: String
+    stripeIdentityId: String,
+    city: String
   },
 
   businessProfile: {
@@ -90,8 +92,8 @@ resetPasswordExpires: {
     isVerified: { type: Boolean, default: false },
     stripeIdentityId: String,
     isActive: { type: Boolean, default: false }
-     
-   
+
+
   },
 
   isBlocked: {

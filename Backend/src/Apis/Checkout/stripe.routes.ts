@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import stripe from "../../Utils/stripe";
-import { authMiddleware } from "../../Middlewares/auth.middleware";
+import { authMiddleware, isBikeOwner } from "../../Middlewares/auth.middleware";
 import {
   createBookingPaymentService,
   completeRideService,   // NEW
@@ -111,7 +111,7 @@ router.get("/connect/onboard", authMiddleware, async (req: AuthRequest, res: Res
 // Call this when the ride ends. Does BOTH:
 //   - refunds deposit to renter
 //   - transfers rental to owner
-router.post("/:id/complete-ride", authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post("/:id/complete-ride", authMiddleware, isBikeOwner,async (req: AuthRequest, res: Response) => {
   try {
     const result = await completeRideService(req.params.id);
     res.json(result);
@@ -120,9 +120,9 @@ router.post("/:id/complete-ride", authMiddleware, async (req: AuthRequest, res: 
   }
 });
 
-// ── KEPT — for cancellations only ─────────────────────────
+// ── KEPT — for cancellations only ──────────────────────--------
 // Only call this if ride is cancelled before it starts
-router.post("/:id/refund-deposit", authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post("/:id/refund-deposit", authMiddleware,isBikeOwner, async (req: AuthRequest, res: Response) => {
   try {
     const result = await refundDepositService(req.params.id);
     res.json(result);

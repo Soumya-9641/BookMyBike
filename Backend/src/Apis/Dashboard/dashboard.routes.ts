@@ -6,7 +6,8 @@ import { authMiddleware } from "../../Middlewares/auth.middleware";
 import { AuthRequest } from "../../types/auth-request";
 import Booking from "../../Models/Booking";
 import User from "../../Models/User";
-import { getOwnerBookingsService, getOwnerListingsService, getRefundedBookingsService, getRenterBookingsService } from "./dashboard.service";
+import { getOwnerBookingsService,getOwnerListingsService, getRefundedBookingsService, getRenterBookingsService} from "./dashboard.service";
+import { Types } from "mongoose";
 const router = Router();
 
 
@@ -98,4 +99,25 @@ router.get(
   }
 );
 
+
+router.get("/profile", authMiddleware, async (req:AuthRequest, res:Response) => {
+  try {
+    const userId = req.user!.userId;
+    const profile = await getUserProfile(userId);
+
+    return res.status(200).json({
+      success: true,
+      data: profile,
+    });
+  } catch (error: any) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+});
 export default router;
+
+function getUserProfile(userId: Types.ObjectId) {
+  throw new Error("Function not implemented.");
+}

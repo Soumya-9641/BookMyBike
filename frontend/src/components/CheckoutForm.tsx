@@ -9,7 +9,7 @@ const CheckoutForm = () => {
   const stripe = useStripe();
   const elements = useElements();
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: unknown) => {
     e.preventDefault();
 
     if (!stripe || !elements) return;

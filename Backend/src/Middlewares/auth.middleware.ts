@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/auth-request";
 
 import { Types } from "mongoose";
+import Bike from "../Models/Booking";
 export const authMiddleware = (
   req: AuthRequest,
   res: Response,
@@ -40,5 +41,53 @@ export const authMiddleware = (
     next();
   } catch {
     return res.status(401).json({ message: "Invalid or expired token" });
+  }
+};
+export const isBikeOwner = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const bikeId = req.params.id;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized: No user found in request",
+      });
+      return;
+    }
+
+    const bike = await Bike.findById(bikeId).lean();
+
+    if (!bike) {
+      res.status(404).json({
+        success: false,
+        message: "Bike not found",
+      });
+      return;
+    }
+
+    // Compare bike owner with logged-in user
+    if (bike.ownerId.toString() !== userId.toString()) {
+      res.status(403).json({
+        success: false,
+        message: "Forbidden: You are not the owner of this bike",
+      });
+      return;
+    }
+
+    // Attach bike to request for downstream use (optional but useful)
+    (req as any).bike = bike;
+
+    next();
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
   }
 };

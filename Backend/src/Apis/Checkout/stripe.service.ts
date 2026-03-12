@@ -24,8 +24,10 @@ export const createBookingPaymentService = async ({
 
   const user = await User.findById(renterId);
   if (!user) throw new Error("User not found");
+  const hourlyRate = listing.rates?.hourly;
+  if (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
 
-  const rentalAmount = hours * 1;
+  const rentalAmount = hours * hourlyRate;
   const depositAmount = listing.depositAmount;
   const platformFee = Math.round(rentalAmount * 0.18);
   const totalAmount = rentalAmount + depositAmount + platformFee;

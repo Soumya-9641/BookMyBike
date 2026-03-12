@@ -1,6 +1,8 @@
 import { Types } from "mongoose";
 import Booking from "../../Models/Booking";
 import Listing from "../../Models/Listing";
+import User from "../../Models/User";
+
 
 
 export const getRenterBookingsService = async ( userId: Types.ObjectId) => {
@@ -48,3 +50,26 @@ export const getRefundedBookingsService = async (
 
   return bookings;
 };
+
+export const getUserProfile = async (userId: Types.ObjectId) => {
+  const user = await User.findById(userId).select("-password -__v").lean();
+
+  if (!user) {
+    const error = new Error("User not found");
+  
+    throw error;
+  }
+
+  return {
+    id: user._id,
+    first_name: user.personalProfile.firstName,
+    last_name: user.personalProfile.lastName,
+    email: user.email,
+    phone: user.personalProfile.phone,
+    city: user.personalProfile.city,
+    address: user.personalProfile.address,
+   
+  };
+};
+
+
