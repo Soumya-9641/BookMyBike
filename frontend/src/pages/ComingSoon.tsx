@@ -51,7 +51,7 @@ const IconCircle = ({
     <Typography
       fontSize="0.95rem"
       fontWeight={500}
-      sx={{ height: 42 }}
+      sx={{ height: 45 }}
     >
       {text}
     </Typography>
@@ -161,11 +161,11 @@ const ComingSoon: React.FC = () => {
         </Typography>
 
         <Typography fontWeight={600} mb={1} fontSize={22}>
-          Discover Smart Bike Sharing on Your Terms. Whenever. Wherever
+          Discover Smart Bike Sharing on Your Terms. Whenever. Wherever.
         </Typography>
 
         <Typography mb={1} fontSize={18}>
-          On Demand bike sharing on your terms-flexible, accessible, and sustainable
+          On Demand bike sharing on your terms-flexible, accessible, and sustainable.
         </Typography>
         <Typography mb={4} fontSize={18}>
           Sign up now to receive early notifications of our launch date.

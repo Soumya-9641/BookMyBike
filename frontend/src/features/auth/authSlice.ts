@@ -1,12 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
+interface BusinessProfile {
+  stripeIdentityId?: string;
+  isVerified?: boolean;
+}
+
 interface AuthState {
   token: string | null;
   user: {
     firstName?: string;
     lastName?: string;
     email?: string;
+    businessProfile?: BusinessProfile;
   } | null;
 }
 

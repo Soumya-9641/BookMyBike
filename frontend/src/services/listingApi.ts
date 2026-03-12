@@ -1,6 +1,16 @@
 import { baseApi } from "./baseApi";
 import type { Bike, CreateListingPayload, GetAllBikesResponse } from "../types/listing";
+export interface SearchPayload {
+  lat: number;
+  lng: number;
+  startDate: string;
+  endDate: string;
+}
 
+export interface SearchResponse {
+  count: number;
+  bikes: any[];
+}
 export const listingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createListing: builder.mutation<any, CreateListingPayload>({
@@ -56,8 +66,15 @@ export const listingApi = baseApi.injectEndpoints({
     getBikeById: builder.query<Bike, string>({
       query: (id) => `/bike/listing/${id}`,
     }),
+    searchBikes: builder.mutation<SearchResponse, SearchPayload>({
+      query: (body) => ({
+        url: "/bike/listing/search",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
 export const { useCreateListingMutation, useGetAllBikesQuery,
-  useFilterBikesMutation, useGetHomeBikesQuery, useGetBikeByIdQuery, } = listingApi;
+  useFilterBikesMutation, useGetHomeBikesQuery, useGetBikeByIdQuery,useSearchBikesMutation  } = listingApi;

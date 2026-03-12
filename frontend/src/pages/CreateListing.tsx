@@ -13,6 +13,10 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useCreateListingMutation } from "../services/listingApi";
 import { toast } from "react-hot-toast";
+import LocationAutocomplete from "../components/LocationAutocomplete";
+import CategorySelector from "../components/create-listing/CategorySelector";
+import { useEffect } from "react";
+import { useAuth } from "../features/auth/useAuth"; // your auth hook
 
 const accessoriesList = [
   "Helmet",
@@ -29,8 +33,8 @@ const accessoriesList = [
 const CreateListing = () => {
   const navigate = useNavigate();
   const [createListing, { isLoading }] = useCreateListingMutation();
-
-  // ===================== FORM STATE =====================
+  const [mainCategory, setMainCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
   const [form, setForm] = useState({
     title: "",
     brand: "",
@@ -38,7 +42,6 @@ const CreateListing = () => {
     category: "",
     size: "",
     description: "",
-    location: "",
     depositAmount: "",
     rates: {
       hourly: "",
@@ -48,11 +51,29 @@ const CreateListing = () => {
     },
   });
 
+  const [location, setLocation] = useState({
+    address: "",
+    city: "",
+    country: "",
+    lat: 0,
+    lng: 0,
+  });
+
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [preview, setPreview] = useState<string[]>([]);
+  const { isAuthenticated, user } = useAuth();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in first");
+      navigate("/signin", { replace: true });
+      return;
+    }
 
-  // ===================== HANDLERS =====================
+    if (!user?.businessProfile?.stripeIdentityId) {
+      navigate("/verify-profile", { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -66,30 +87,25 @@ const CreateListing = () => {
 
   const handleAccessoryToggle = (item: string) => {
     setSelectedAccessories((prev) =>
-      prev.includes(item)
-        ? prev.filter((i) => i !== item)
-        : [...prev, item]
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-
     const files = Array.from(e.target.files).slice(0, 6);
     setPhotos(files);
     setPreview(files.map((file) => URL.createObjectURL(file)));
   };
 
-  // ===================== VALIDATION =====================
   const validateForm = () => {
     if (
       !form.title ||
       !form.brand ||
       !form.modelbike ||
-      !form.size ||
       !form.category ||
-      !form.depositAmount ||
-      !form.location
+      !form.size ||
+      !location.address
     ) {
       toast.error("Please fill all required fields");
       return false;
@@ -113,7 +129,6 @@ const CreateListing = () => {
     return true;
   };
 
-  // ===================== SUBMIT =====================
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -129,17 +144,11 @@ const CreateListing = () => {
         brand: form.brand,
         modelbike: form.modelbike,
         size: form.size,
-        category: form.category,
+        category: `${mainCategory} > ${subCategory}`,
         depositAmount: Number(form.depositAmount),
         accessories: selectedAccessories,
         rates,
-        location: {
-          address: form.location,
-          city: "abc", // TODO: Set city value appropriately
-          country: "", // TODO: Set country value appropriately
-          lat: 0,
-          lng: 0,
-        },
+        location,
         photos,
       }).unwrap();
 
@@ -150,7 +159,6 @@ const CreateListing = () => {
     }
   };
 
-  // ===================== UI =====================
   return (
     <Box>
       <Box maxWidth="lg" mx="auto" px={2} mt={3}>
@@ -177,9 +185,20 @@ const CreateListing = () => {
               <TextField label="Listing Title *" name="title" onChange={handleChange} />
               <TextField label="Brand *" name="brand" onChange={handleChange} />
               <TextField label="Model *" name="modelbike" onChange={handleChange} />
-              <TextField label="Category *" name="category" onChange={handleChange} />
+              <Paper variant="outlined" sx={{ p: 3 }}>
+                <CategorySelector
+                  mainCategory={mainCategory}
+                  subCategory={subCategory}
+                  onMainChange={setMainCategory}
+                  onSubChange={setSubCategory}
+                />
+              </Paper>
               <TextField label="Size *" name="size" onChange={handleChange} />
-              <TextField label="Location *" name="location" onChange={handleChange} />
+              <LocationAutocomplete
+                label="Location *"
+                value={location.address}
+                onSelect={setLocation}
+              />
               <TextField label="Description" name="description" multiline rows={3} onChange={handleChange} />
             </Stack>
           </Paper>
