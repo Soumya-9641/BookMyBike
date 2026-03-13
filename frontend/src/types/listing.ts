@@ -82,3 +82,54 @@ export interface BikeDetails {
   isPublished: boolean;
   createdAt: string;
 }
+
+export interface Booking {
+  _id: string;
+  startDate: string;
+  endDate: string;
+  rentalAmount: number;
+  status: "in_progress" | "completed" | "refunded";
+  bikeId: {
+    title: string;
+    photos: string[];
+  };
+  renterId?: {
+    email: string;
+    personalProfile?: {
+      firstName?: string;
+      lastName?: string;
+    };
+  };
+  ownerId?: {
+    email: string;
+    personalProfile?: {
+      firstName?: string;
+      lastName?: string;
+    };
+  };
+}
+
+export interface CreateBookingPayload {
+  listingId: string;
+  startDate: string;
+  endDate: string;
+  hours: number;
+}
+
+export interface CreateBookingResponse {
+  bookingId: string;
+  clientSecret: string;
+  customerId: string;
+}
+
+export interface UserProfile {
+  personalProfile: {
+    firstName: string;
+    middleName?: string;
+    lastName: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+  };
+  email: string;
+}

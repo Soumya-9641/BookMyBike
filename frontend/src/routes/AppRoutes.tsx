@@ -17,6 +17,9 @@ import OnboardingSuccess from "../pages/onboarding/success";
 import OnboardingRefresh from "../pages/onboarding/refresh";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import CompleteRideButton from "../components/CompleteRideButton";
+import OwnerBookings from "../pages/OwnerBookings";
+import MyBookings from "../pages/MyBooking";
+import MyProfile from "../pages/MyProfile";
 
 const AppRoutes = () => {
   return (
@@ -28,8 +31,10 @@ const AppRoutes = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/create-listing" element={<CreateListing />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/verify-profile" element={<VerifyProfile />} />
+        <Route path="/verify-profile" element={<VerifyProfile />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/owner-bookings" element={<OwnerBookings />} />
         <Route path="/my-bookings/:bookingId" element={<CompleteRideButton />} />
         <Route path="/browse-bikes" element={<BrowseBikes />} />
         <Route path="/bikes/:id" element={<BikeDetails />} />
@@ -37,6 +42,7 @@ const AppRoutes = () => {
         <Route path="/onboardRefresh" element={<OnboardingRefresh />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/my-account" element={<MyProfile />} />
         <Route
           path="/reset-password/:token"
           element={<ResetPassword />}

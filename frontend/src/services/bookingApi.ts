@@ -1,17 +1,5 @@
 import { baseApi } from "./baseApi";
-
-export interface CreateBookingPayload {
-  listingId: string;
-  startDate: string;
-  endDate: string;
-  hours: number;
-}
-
-export interface CreateBookingResponse {
-  bookingId: string;
-  clientSecret: string;
-  customerId: string;
-}
+import type { Booking, CreateBookingResponse, CreateBookingPayload, UserProfile } from "../types/listing";
 
 export const bookingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -25,7 +13,23 @@ export const bookingApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+    getMyBookings: builder.query<{ count: number; bookings: Booking[] }, void>({
+      query: () => "/mybookings",
+      providesTags: ["Listing"],
+    }),
+
+    getOwnerBookings: builder.query<{ count: number; bookings: Booking[] }, void>({
+      query: () => "/ownerbookings",
+      providesTags: ["Listing"],
+    }),
+    getProfile: builder.query<{ success: boolean; data: UserProfile }, void>({
+      query: () => ({
+        url: "/profile",
+        method: "GET",
+      }),
+    }),
   }),
 });
 
-export const { useCreateBookingMutation } = bookingApi;
+export const { useCreateBookingMutation, useGetMyBookingsQuery,
+  useGetOwnerBookingsQuery, useGetProfileQuery } = bookingApi;

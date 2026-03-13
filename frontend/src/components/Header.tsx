@@ -130,7 +130,7 @@ const Header = () => {
                 >
                   <MenuItem
                     component={RouterLink}
-                    to="/account"
+                    to="/my-account"
                     onClick={closeAccountMenu}
                   >
                     My Account
@@ -138,7 +138,7 @@ const Header = () => {
 
                   <MenuItem
                     component={RouterLink}
-                    to="/bookings"
+                    to="/my-bookings"
                     onClick={closeAccountMenu}
                   >
                     My Bookings
