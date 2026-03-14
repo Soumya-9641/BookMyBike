@@ -3,10 +3,17 @@ import Booking from "../../Models/Booking";
 import Listing from "../../Models/Listing";
 import User from "../../Models/User";
 import { Types } from "mongoose";
+import Payment from "../../Models/Payment";
 
 // ─────────────────────────────────────────────────────────────
 // UNCHANGED from your original
 // ─────────────────────────────────────────────────────────────
+
+const PLATFORM_FEE_RATE = 0.18; // 18% of rental amount
+const VAT_RATE = 0.25; // 25% Swedish VAT , included in the 18%
+
+
+
 export const createBookingPaymentService = async ({
   listingId,
   renterId,
@@ -28,10 +35,23 @@ export const createBookingPaymentService = async ({
   const hourlyRate = listing.rates?.hourly;
   if (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
 
-  const rentalAmount = hours * hourlyRate;
-  const depositAmount = listing.depositAmount;
-  const platformFee = Math.round(rentalAmount * 0.18);
-  const totalAmount = rentalAmount + depositAmount + platformFee;
+  // ── Amount Calculations ──────────────────────────────────────
+  const rentalAmount = Math.round(hours * hourlyRate);           // e.g. 100 kr
+  const depositAmount = Math.round(listing.depositAmount ?? 0);   // e.g. 100 kr
+
+  // Renter pays: rental + deposit only (fee is taken from rental internally)
+  const chargeAmount = rentalAmount + depositAmount;             // e.g. 200 kr
+
+  // Platform fee: 18% of rental (VAT included, NOT added on top)
+  const platformFee = Math.round(rentalAmount * PLATFORM_FEE_RATE); // e.g. 18 kr
+
+  // VAT portion inside the platform fee (reverse VAT calculation)
+  // vatAmount = platformFee - (platformFee / 1.25)
+  const vatAmount = Math.round(platformFee - platformFee / (1 + VAT_RATE)); // e.g. 3.60 kr → 4 kr rounded
+  const platformNet = platformFee - vatAmount;                  // e.g. 14 kr (net revenue excl. VAT)
+
+  // Owner receives rental minus platform fee
+  const ownerPayout = rentalAmount - platformFee;
 
   let stripeCustomerId = user.stripeCustomerId;
   if (!stripeCustomerId) {
@@ -44,9 +64,9 @@ export const createBookingPaymentService = async ({
     await user.save();
   }
 
-  // No transfer_data — money stays on platform until ride ends
+  // Money stays on platform until ride ends (no transfer_data yet)
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: totalAmount * 100,
+    amount: chargeAmount * 100,       // Stripe uses smallest unit (öre)
     currency: "sek",
     customer: stripeCustomerId,
     automatic_payment_methods: {
@@ -60,6 +80,12 @@ export const createBookingPaymentService = async ({
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       hours: hours.toString(),
+      rentalAmount: rentalAmount.toString(),
+      depositAmount: depositAmount.toString(),
+      platformFee: platformFee.toString(),
+      vatAmount: vatAmount.toString(),
+      platformNet: platformNet.toString(),
+      ownerPayout: ownerPayout.toString(),
     },
   });
 
@@ -69,18 +95,48 @@ export const createBookingPaymentService = async ({
     ownerId: listing.ownerId,
     startDate,
     endDate,
-    rentalAmount,
-    depositAmount,
-    platformFee,
-    totalAmount,
-    stripePaymentIntentId: paymentIntent.id,
-    status: "pending",
+    totalDays: Math.ceil(hours / 24) || 1,
+    pricePerDay: hourlyRate * 24,
+    totalAmount: chargeAmount,
+    securityDeposit: depositAmount,
+    currency: "SEK",
+    status: "upcoming",
   });
+  // ── Create Payment record ────────────────────────────────────
+  const payment = await Payment.create({
+    bookingId: booking._id,
+    payerId: renterId,
+    payeeId: listing.ownerId,
+    type: "booking",
+    method: "card",
+    status: "pending",
+    amount: chargeAmount,     // total charged to renter (rental + deposit)
+    currency: "SEK",
+    platformFee,                              // 18 kr  — kept by platform
+    vatAmount,                                // 3.60 kr — VAT portion inside platformFee
+    platformNet,                              // 14.40 kr — platform revenue excl. VAT
+    ownerPayout,                              // 82 kr  — transferred to owner after ride
+    depositAmount,                            // 100 kr — refunded to renter after ride
+    stripePaymentIntentId: paymentIntent.id,
+    description: `Rental payment for listing ${listingId} — ${hours}h`,
+  });
+  booking.paymentId = payment._id as Types.ObjectId;
+  await booking.save();
 
   return {
     bookingId: booking._id,
+    paymentId: payment._id,
     clientSecret: paymentIntent.client_secret,
     customerId: stripeCustomerId,
+    breakdown: {
+      rentalAmount,
+      depositAmount,
+      chargeAmount,   // what renter actually pays now
+      platformFee,
+      vatAmount,
+      platformNet,
+      ownerPayout,    // what owner receives after ride
+    },
   };
 };
 
@@ -107,67 +163,80 @@ export const completeRideService = async (bookingId: string) => {
   if (!booking) throw new Error("Booking not found");
   if (booking.status === "completed") throw new Error("Ride already completed");
 
+  const payment = await Payment.findOne({
+    bookingId: booking._id,
+    type: "booking",
+  });
+
+   if (!payment) throw new Error("Payment record not found for this booking");
+  if (!payment.stripePaymentIntentId) throw new Error("Stripe PaymentIntent ID missing on payment record");
+ 
+  // ── Verify Stripe PaymentIntent ──
   const paymentIntent = await stripe.paymentIntents.retrieve(
-    booking.stripePaymentIntentId
+    payment.stripePaymentIntentId
   );
 
   if (paymentIntent.status !== "succeeded") {
     throw new Error("Payment has not been confirmed yet");
   }
-
+ 
   if (!paymentIntent.latest_charge) {
     throw new Error("No charge found on this payment");
   }
+
 
   const owner = await User.findById(booking.ownerId);
   if (!owner?.businessProfile?.stripeIdentityId) {
     throw new Error("Owner Stripe account missing");
   }
-
-  const ownerAccount = await stripe.accounts.retrieve(
+   const ownerAccount = await stripe.accounts.retrieve(
     owner.businessProfile.stripeIdentityId
   );
   if (!ownerAccount.payouts_enabled) {
     throw new Error("Owner has not completed KYC verification");
   }
-
-  // STEP 1: Refund deposit to renter (only depositAmount, not full charge)
+   const depositAmount  = payment.depositAmount  ?? 0;  // refunded to renter
+  const ownerPayout    = payment.ownerPayout    ?? 0;  // transferred to owner
+ 
   const refund = await stripe.refunds.create({
-    payment_intent: booking.stripePaymentIntentId,
-    amount: booking.depositAmount * 100,
+    payment_intent: payment.stripePaymentIntentId,
+    amount: depositAmount * 100,        // convert to öre
     reason: "requested_by_customer",
   });
-
-  // STEP 2: Transfer rental to owner
-  // source_transaction = the charge ID from the original payment
-  // This is what fixes the insufficient balance error
-  const ownerAmount = booking.rentalAmount - booking.platformFee;
-  const transfer = await stripe.transfers.create({
-    amount: ownerAmount * 100,
+ const transfer = await stripe.transfers.create({
+    amount: ownerPayout * 100,          // convert to öre
     currency: "sek",
     destination: owner.businessProfile.stripeIdentityId,
     source_transaction: paymentIntent.latest_charge as string, // 🔑 THE FIX
     metadata: {
       bookingId: booking._id.toString(),
+      paymentId: payment._id.toString(),
     },
   });
 
-  // STEP 3: Mark booking complete
-  booking.status = "completed";
-  booking.depositRefunded = true;
-  booking.ownerPaid = true;
-  booking.ownerPayoutId = transfer.id;
-  await booking.save();
 
-  return {
+ payment.status           = "succeeded";
+  payment.stripeChargeId   = paymentIntent.latest_charge as string;
+  payment.stripeRefundId   = refund.id;
+  payment.refundAmount     = depositAmount;
+  payment.refundReason     = "Deposit returned after ride completion";
+  payment.refundedAt       = new Date();
+  payment.paidAt           = new Date();
+  await payment.save();
+ 
+  // STEP 4: Update Booking record
+  booking.status          = "completed";
+  booking.actualEndTime   = new Date();
+  await booking.save();
+   return {
     message: "Ride completed. Deposit refunded to renter, rental sent to owner.",
     depositRefund: {
       refundId: refund.id,
-      amount: booking.depositAmount,
+      amount:   depositAmount,
     },
     ownerPayout: {
       transferId: transfer.id,
-      amount: ownerAmount,
+      amount:     ownerPayout,
     },
   };
 };
@@ -177,30 +246,57 @@ export const completeRideService = async (bookingId: string) => {
 // Refunds deposit only. Owner gets nothing.
 // ─────────────────────────────────────────────────────────────
 export const refundDepositService = async (bookingId: string) => {
+  // ── Fetch Booking ──
   const booking = await Booking.findById(bookingId);
   if (!booking) throw new Error("Booking not found");
-  if (booking.depositRefunded) throw new Error("Deposit already refunded");
-
+ 
+  // ── Fetch linked Payment record ──
+  const payment = await Payment.findOne({
+    bookingId: booking._id,
+    type: "booking",
+  });
+  if (!payment) throw new Error("Payment record not found for this booking");
+  if (!payment.stripePaymentIntentId) throw new Error("Stripe PaymentIntent ID missing on payment record");
+ 
+  // ── Guard: already refunded ──
+  if (payment.stripeRefundId) throw new Error("Deposit already refunded");
+ 
+  // ── Verify charge exists ──
   const paymentIntent = await stripe.paymentIntents.retrieve(
-    booking.stripePaymentIntentId
+    payment.stripePaymentIntentId
   );
-
+ 
   if (!paymentIntent.latest_charge) {
     throw new Error("No charge found for this payment");
   }
-
+ 
+  const depositAmount = payment.depositAmount ?? 0;
+ 
+  // STEP 1: Refund deposit → renter
   const refund = await stripe.refunds.create({
-    payment_intent: paymentIntent.id,
-    amount: booking.depositAmount * 100,
+    payment_intent: payment.stripePaymentIntentId,
+    amount: depositAmount * 100,        // convert to öre
   });
-
-  booking.depositRefunded = true;
+ 
+  // STEP 2: Update Payment record
+  payment.status       = "refunded";
+  payment.stripeRefundId = refund.id;
+  payment.refundAmount = depositAmount;
+  payment.refundReason = "Booking cancelled before ride started";
+  payment.refundedAt   = new Date();
+  await payment.save();
+ 
+  // STEP 3: Update Booking record
+  booking.status             = "cancelled";
+  booking.cancelledBy        = "renter";
+  booking.cancellationReason = "Cancelled before ride started";
+  booking.cancelledAt        = new Date();
   await booking.save();
-
+ 
   return {
     message: "Deposit refunded successfully",
     refundId: refund.id,
-    amount: booking.depositAmount,
+    amount:   depositAmount,
   };
 };
 

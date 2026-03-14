@@ -92,7 +92,9 @@ export const getUserProfile = async (userId: Types.ObjectId) => {
     phone: user.personalProfile.phone,
     city: user.personalProfile.city,
     address: user.personalProfile.address,
-   
+    mobile: user.personalProfile.phone,
+    isVerified: user.businessProfile?.isVerified || false
+    
   };
 };
 export const checkStripeOnboardingStatus = async (userId: Types.ObjectId) => {
