@@ -135,7 +135,7 @@ router.post("/:id/refund-deposit", authMiddleware,isBikeOwner, async (req: AuthR
 // This caused the insufficient balance error.
 // Owner payout now happens inside /:id/complete-ride above.
 
-// ── Dev only ───────────────────────────────────────────────
+// ── Dev only ─────────────────────────────────────────────
 router.post("/dev/complete-payment", async (req: Request, res: Response) => {
   if (process.env.NODE_ENV === "production") {
     return res.status(403).json({ message: "Disabled in production" });
