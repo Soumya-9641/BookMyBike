@@ -49,9 +49,17 @@ export const isBikeOwner = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const bikeId = req.params.id;
+    const bookingId = req.params.id;
     const userId = req.user?.userId;
-
+    const booking= await Bike.findById(bookingId).lean();
+    if (!booking) {
+      res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+      return;
+    }
+    const bikeId = booking.bikeId;
     if (!userId) {
 
       res.status(401).json({
@@ -61,18 +69,18 @@ export const isBikeOwner = async (
       return;
     }
 
-    const bike = await Bike.findById(bikeId).lean();
+    // const bike = await Bike.findById(bikeId).lean();
 
-    if (!bike) {
-      res.status(404).json({
-        success: false,
-        message: "Bike not found",
-      });
-      return;
-    }
+    // if (!bike) {
+    //   res.status(404).json({
+    //     success: false,
+    //     message: "Bike not found",
+    //   });
+    //   return;
+    // }
 
     // Compare bike owner with logged-in user
-    if (bike.ownerId.toString() !== userId.toString()) {
+    if (booking.ownerId.toString() !== userId.toString()) {
       res.status(403).json({
         success: false,
         message: "Forbidden: You are not the owner of this bike",
@@ -81,7 +89,7 @@ export const isBikeOwner = async (
     }
 
     // Attach bike to request for downstream use (optional but useful)
-    (req as any).bike = bike;
+    (req as any).bike = booking;
 
     next();
   } catch (error: any) {

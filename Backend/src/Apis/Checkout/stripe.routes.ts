@@ -10,6 +10,7 @@ import {
 import { AuthRequest } from "../../types/auth-request";
 import Booking from "../../Models/Booking";
 import User from "../../Models/User";
+import Payment from "../../Models/Payment";
 
 const router = Router();
 
@@ -114,7 +115,7 @@ router.get("/connect/onboard", authMiddleware, async (req: AuthRequest, res: Res
 // Call this when the ride ends. Does BOTH:
 //   - refunds deposit to renter
 //   - transfers rental to owner
-router.post("/:id/complete-ride", authMiddleware, isBikeOwner,async (req: AuthRequest, res: Response) => {
+router.post("/:id/complete-ride", authMiddleware, isBikeOwner, async (req: AuthRequest, res: Response) => {
   try {
     const result = await completeRideService(req.params.id);
     res.json(result);
@@ -125,7 +126,7 @@ router.post("/:id/complete-ride", authMiddleware, isBikeOwner,async (req: AuthRe
 
 // ── KEPT — for cancellations only ──────────────────────--------
 // Only call this if ride is cancelled before it starts
-router.post("/:id/refund-deposit", authMiddleware,isBikeOwner, async (req: AuthRequest, res: Response) => {
+router.post("/:id/refund-deposit", authMiddleware, isBikeOwner, async (req: AuthRequest, res: Response) => {
   try {
     const result = await refundDepositService(req.params.id);
     res.json(result);
@@ -148,10 +149,13 @@ router.post("/dev/complete-payment", async (req: Request, res: Response) => {
     const { bookingId } = req.body;
     const booking = await Booking.findById(bookingId);
     if (!booking) throw new Error("Booking not found");
-
+    const payment = await Payment.findOne({ bookingId: booking._id });
+    if (!payment) throw new Error("Payment not found");
     const user = await User.findById(booking.renterId);
     if (!user?.stripeCustomerId) throw new Error("Stripe customer missing");
-
+    if (!payment.stripePaymentIntentId) {
+      throw new Error("Stripe PaymentIntent ID missing on payment record");
+    }
     const paymentMethod = await stripe.paymentMethods.create({
       type: "card",
       card: { token: "tok_visa" },
@@ -161,7 +165,7 @@ router.post("/dev/complete-payment", async (req: Request, res: Response) => {
       customer: user.stripeCustomerId,
     });
 
-    const intent = await stripe.paymentIntents.confirm(booking.stripePaymentIntentId, {
+    const intent = await stripe.paymentIntents.confirm(payment.stripePaymentIntentId, {
       payment_method: paymentMethod.id,
     });
 

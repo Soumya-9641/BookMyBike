@@ -130,23 +130,23 @@ router.get("/profile", authMiddleware, async (req:AuthRequest, res:Response) => 
 router.put("/profile", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const { firstName, middleName, lastName, phone, city, address, email, ...rest } = req.body; // ✅ added middleName
+    const { firstName, middleName, lastName, phone, city, address, email, ...rest } = req.body; 
 
     if (email) {
       return res.status(400).json({ success: false, message: "Email cannot be changed" });
     }
 
-    const allowedFields = ["firstName", "middleName", "lastName", "phone", "city", "address"]; // ✅ added
+    const allowedFields = ["firstName", "middleName", "lastName", "phone", "city", "address"]; 
     const unknownFields = Object.keys(rest).filter((f) => !allowedFields.includes(f));
     if (unknownFields.length > 0) {
       return res.status(400).json({ success: false, message: `Fields not allowed: ${unknownFields.join(", ")}` });
     }
 
-    if (!firstName && !middleName && !lastName && !phone && !city && !address) { // ✅ added
+    if (!firstName && !middleName && !lastName && !phone && !city && !address) { 
       return res.status(400).json({ success: false, message: "At least one field is required to update" });
     }
 
-    const updated = await updateUserProfile(userId, { firstName, middleName, lastName, phone, city, address }); // ✅ added
+    const updated = await updateUserProfile(userId, { firstName, middleName, lastName, phone, city, address });
 
     return res.status(200).json({ success: true, message: "Profile updated successfully", data: updated });
   } catch (error: any) {
