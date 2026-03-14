@@ -6,7 +6,7 @@ import { authMiddleware } from "../../Middlewares/auth.middleware";
 import { AuthRequest } from "../../types/auth-request";
 import Booking from "../../Models/Booking";
 import User from "../../Models/User";
-import { getOwnerBookingsService,getOwnerListingsService, getRefundedBookingsService, getRenterBookingsService} from "./dashboard.service";
+import { checkStripeOnboardingStatus, getOwnerBookingsService,getOwnerListingsService, getRefundedBookingsService, getRenterBookingsService,getUserProfile, updateUserProfile} from "./dashboard.service";
 import { Types } from "mongoose";
 const router = Router();
 
@@ -104,10 +104,20 @@ router.get("/profile", authMiddleware, async (req:AuthRequest, res:Response) => 
   try {
     const userId = req.user!.userId;
     const profile = await getUserProfile(userId);
-
+    const status = await checkStripeOnboardingStatus(req.user!.userId);
+    console.log("Stripe onboarding status:", status); // Debug log to check the Stripe onboarding status
+    if (status.isOnboarded) {
+      await User.findByIdAndUpdate(userId, {
+        $set: {
+          "businessProfile.isVerified": true,
+          "businessProfile.isActive": true,
+        },
+      });
+    }
     return res.status(200).json({
       success: true,
       data: profile,
+     isStripeConnected: status.isOnboarded
     });
   } catch (error: any) {
     return res.status(error.statusCode || 500).json({
@@ -116,8 +126,33 @@ router.get("/profile", authMiddleware, async (req:AuthRequest, res:Response) => 
     });
   }
 });
+
+router.put("/profile", authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { firstName, middleName, lastName, phone, city, address, email, ...rest } = req.body; // ✅ added middleName
+
+    if (email) {
+      return res.status(400).json({ success: false, message: "Email cannot be changed" });
+    }
+
+    const allowedFields = ["firstName", "middleName", "lastName", "phone", "city", "address"]; // ✅ added
+    const unknownFields = Object.keys(rest).filter((f) => !allowedFields.includes(f));
+    if (unknownFields.length > 0) {
+      return res.status(400).json({ success: false, message: `Fields not allowed: ${unknownFields.join(", ")}` });
+    }
+
+    if (!firstName && !middleName && !lastName && !phone && !city && !address) { // ✅ added
+      return res.status(400).json({ success: false, message: "At least one field is required to update" });
+    }
+
+    const updated = await updateUserProfile(userId, { firstName, middleName, lastName, phone, city, address }); // ✅ added
+
+    return res.status(200).json({ success: true, message: "Profile updated successfully", data: updated });
+  } catch (error: any) {
+    return res.status(error.statusCode || 500).json({ success: false, message: error.message || "Internal server error" });
+  }
+});
+
 export default router;
 
-function getUserProfile(userId: Types.ObjectId) {
-  throw new Error("Function not implemented.");
-}
