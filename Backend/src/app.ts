@@ -22,7 +22,7 @@ app.use("/api/user", userRoutes);
 app.use("/api", comingSoonRoutes);
 app.use("/api/bike", bikeRoutes);
 app.use("/api/checkout", checkoutRoutes);
-app.use("/api/dasboard",DasboardRoutes);
+app.use("/api/dashboard",DasboardRoutes);
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "..", "uploads"))
