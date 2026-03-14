@@ -4,7 +4,8 @@ import { authMiddleware, isBikeOwner } from "../../Middlewares/auth.middleware";
 import {
   createBookingPaymentService,
   completeRideService,   // NEW
-  refundDepositService,  // kept for cancellations only
+  refundDepositService,
+  checkStripeOnboardingStatus,  // kept for cancellations only
 } from "./stripe.service";
 import { AuthRequest } from "../../types/auth-request";
 import Booking from "../../Models/Booking";
@@ -78,6 +79,8 @@ router.post("/create-connect-account", authMiddleware, async (req: AuthRequest, 
     });
 
     user.businessProfile!.stripeIdentityId = account.id;
+    user.businessProfile!.isActive = true; // Mark as active immediately for testing; in production, wait until onboarding complete
+    user.businessProfile!.isVerified = false; // Will be updated after Stripe onboarding and KY
     await user.save();
 
     res.json({ accountId: account.id });
@@ -175,4 +178,12 @@ router.get("/:id", authMiddleware, async (req: Request, res: Response) => {
   res.json(booking);
 });
 
+router.get("/connect/status", authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const status = await checkStripeOnboardingStatus(req.user!.userId);
+    return res.status(200).json({ success: true, data: status });
+  } catch (err: any) {
+    return res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+});
 export default router;

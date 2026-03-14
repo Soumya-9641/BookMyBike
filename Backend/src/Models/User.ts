@@ -13,6 +13,7 @@ export interface IUser extends Document {
 
   personalProfile: {
     firstName?: string;
+    middlename?: string;
     lastName?: string;
     address?: string;
     phone?: string;
@@ -72,7 +73,9 @@ const UserSchema = new Schema<IUser>({
   },
   personalProfile: {
     firstName: String,
+    middlename: String,
     lastName: String,
+
     address: String,
     phone: {
       type: String,

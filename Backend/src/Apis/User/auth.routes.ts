@@ -9,6 +9,7 @@ import twilio from "twilio";
 import dotenv from "dotenv";
 import { authMiddleware } from "../../Middlewares/auth.middleware";
 import { AuthRequest } from "../../types/auth-request";
+import { Types } from "mongoose";
 dotenv.config();
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
@@ -348,5 +349,49 @@ router.post("/verify-otp",async(req:Request,res:Response)=>{
       res.status(500).json({ message: error.message });
   }
 })
+
+router.put("/change-password", authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { newPassword, confirmPassword } = req.body;
+
+    if (!newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: "Passwords do not match" });
+    }
+
+   
+    await changeUserPassword(req.user!.userId, newPassword);
+
+    return res.status(200).json({ success: true, message: "Password changed successfully" });
+  } catch (error: any) {
+    return res.status(error.statusCode || 500).json({ success: false, message: error.message || "Internal server error" });
+  }
+});
+
+const changeUserPassword = async (
+  userId: Types.ObjectId,
+  newPassword: string
+): Promise<void> => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const error: any = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Prevent reusing same password
+  const isSame = await bcrypt.compare(newPassword, user.password);
+  if (isSame) {
+    const error: any = new Error("New password must be different from current password");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  await user.save();
+};
 
 export default router;

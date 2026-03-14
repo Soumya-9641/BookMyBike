@@ -2,6 +2,7 @@ import stripe from "../../Utils/stripe";
 import Booking from "../../Models/Booking";
 import Listing from "../../Models/Listing";
 import User from "../../Models/User";
+import { Types } from "mongoose";
 
 // ─────────────────────────────────────────────────────────────
 // UNCHANGED from your original
@@ -206,3 +207,42 @@ export const refundDepositService = async (bookingId: string) => {
 // NOTE: payoutToOwnerService has been removed.
 // Owner payout now happens inside completeRideService above.
 // This prevents the insufficient balance error caused by missing source_transaction.
+
+export const checkStripeOnboardingStatus = async (userId: Types.ObjectId) => {
+  const user = await User.findById(userId);
+  if (!user) throw { statusCode: 404, message: "User not found" };
+
+  const stripeAccountId = user.businessProfile?.stripeIdentityId;
+  if (!stripeAccountId) {
+    return {
+      isOnboarded: false,
+      message: "No Stripe account found",
+    };
+  }
+
+  // 🔍 Fetch account details from Stripe using stripeIdentityId
+  const account = await stripe.accounts.retrieve(stripeAccountId);
+
+  const isOnboarded =
+    account.charges_enabled &&
+    account.payouts_enabled &&
+    account.details_submitted;
+
+  // Sync DB if status changed
+  if (isOnboarded && !user.businessProfile!.isVerified) {
+    user.businessProfile!.isVerified = true;
+    user.businessProfile!.isActive = true;
+    await user.save();
+  }
+
+  return {
+    isOnboarded: !!isOnboarded,
+    charges_enabled: account.charges_enabled,
+    payouts_enabled: account.payouts_enabled,
+    details_submitted: account.details_submitted,
+    // Stripe tells you exactly what's still missing
+    currently_due: account.requirements?.currently_due ?? [],
+    eventually_due: account.requirements?.eventually_due ?? [],
+    disabled_reason: account.requirements?.disabled_reason ?? null,
+  };
+};
