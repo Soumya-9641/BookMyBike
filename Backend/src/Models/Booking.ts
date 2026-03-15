@@ -72,7 +72,7 @@ const BookingSchema = new Schema<IBooking>(
     },
     bikeId: {
       type: Schema.Types.ObjectId,
-      ref: "Bike",
+      ref: "Listing",
       required: true,
       index: true,
     },
