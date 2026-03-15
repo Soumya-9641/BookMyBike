@@ -158,11 +158,22 @@ export const createBookingPaymentService = async ({
 //                   → Stripe pulls from THAT specific charge directly
 //                   → no dependency on available balance → WORKS ✅
 // ─────────────────────────────────────────────────────────────
-export const completeRideService = async (bookingId: string) => {
+export const completeRideService = async (bookingId: string,  status: "inprogress" | "completed") => {
   const booking = await Booking.findById(bookingId);
   if (!booking) throw new Error("Booking not found");
   if (booking.status === "completed") throw new Error("Ride already completed");
 
+    if (status === "inprogress") {
+    booking.status = "inprogress";           // marks ride as started/in-progress
+    booking.actualStartTime = new Date();
+    await booking.save();
+ 
+    return {
+      message: "Ride marked as in progress.",
+      bookingId: booking._id,
+      status: booking.status,
+    };
+  }
   const payment = await Payment.findOne({
     bookingId: booking._id,
     type: "booking",
