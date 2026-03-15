@@ -26,26 +26,224 @@ export interface ProfileResponse {
   } | null;
 }
 
-export const getRenterBookingsService = async ( userId: Types.ObjectId) => {
-  const bookings = await Booking.find({
-    renterId: userId
-  })
-    .populate("bikeId")
-    .populate("ownerId", "email personalProfile.firstName personalProfile.lastName")
-    .sort({ createdAt: -1 });
 
-  return bookings;
+export const getRenterBookingsService = async (userId: Types.ObjectId) => {
+  const bookings = await Booking.find({ renterId: userId })
+    .populate("bikeId")
+    .populate("ownerId", "email personalProfile.firstName personalProfile.lastName personalProfile.phone")
+    .populate(
+      "paymentId",
+      "status amount currency depositAmount platformFee vatAmount platformNet ownerPayout stripePaymentIntentId refundAmount refundReason refundedAt paidAt"
+    )
+    .sort({ createdAt: -1 })
+    .lean();
+ 
+  return bookings.map((booking) => {
+    const owner   = booking.ownerId   as any;
+    const bike    = booking.bikeId    as any;
+    const payment = booking.paymentId as any;
+ 
+    return {
+      // ── Booking Core ──
+      bookingId: booking._id,
+      status:    booking.status,
+      startDate: booking.startDate,
+      endDate:   booking.endDate,
+      totalDays: booking.totalDays,
+      notes:     booking.notes ?? null,
+      createdAt: booking.createdAt,
+ 
+      // ── Pricing Snapshot ──
+      pricing: {
+        pricePerDay:     booking.pricePerDay,
+        totalAmount:     booking.totalAmount,
+        securityDeposit: booking.securityDeposit ?? 0,
+        currency:        booking.currency,
+      },
+ 
+      // ── Ride Info ──
+      ride: {
+        actualStartTime: booking.actualStartTime ?? null,
+        actualEndTime:   booking.actualEndTime   ?? null,
+        penaltyAmount:   booking.penaltyAmount   ?? 0,
+        penaltyReason:   booking.penaltyReason   ?? null,
+      },
+ 
+      // ── Cancellation (only if cancelled) ──
+      ...(booking.status === "cancelled" && {
+        cancellation: {
+          cancelledBy:        booking.cancelledBy        ?? null,
+          cancellationReason: booking.cancellationReason ?? null,
+          cancelledAt:        booking.cancelledAt        ?? null,
+        },
+      }),
+ 
+      // ── Rejection (only if rejected) ──
+      ...(booking.status === "rejected" && {
+        rejection: {
+          rejectedReason: booking.rejectedReason ?? null,
+        },
+      }),
+ 
+      // ── Owner Info ──
+      owner: owner
+        ? {
+            ownerId:   owner._id,
+            email:     owner.email,
+            firstName: owner.personalProfile?.firstName ?? null,
+            lastName:  owner.personalProfile?.lastName  ?? null,
+            phone:     owner.personalProfile?.phone     ?? null,
+          }
+        : null,
+ 
+      // ── Listing (Bike) Info ──
+      bike: bike
+        ? {
+            bikeId:        bike._id,
+            title:         bike.title         ?? null,
+            photos:        bike.photos        ?? [],
+            brand:         bike.brand         ?? null,
+            modelbike:     bike.modelbike      ?? null,
+            category:      bike.category      ?? null,
+            size:          bike.size          ?? null,
+            rates:         bike.rates         ?? null,
+            depositAmount: bike.depositAmount ?? 0,
+            location: {
+              address:     bike.location?.address     ?? null,
+              city:        bike.location?.city        ?? null,
+              coordinates: bike.location?.coordinates ?? null,
+            },
+          }
+        : null,
+ 
+      // ── Payment Info ──
+      payment: payment
+        ? {
+            paymentId:             payment._id,
+            status:                payment.status,
+            amount:                payment.amount,
+            currency:              payment.currency,
+            depositAmount:         payment.depositAmount  ?? 0,
+            platformFee:           payment.platformFee    ?? 0,
+            vatAmount:             payment.vatAmount      ?? 0,
+            platformNet:           payment.platformNet    ?? 0,
+            ownerPayout:           payment.ownerPayout    ?? 0,
+            stripePaymentIntentId: payment.stripePaymentIntentId ?? null,
+            refundAmount:          payment.refundAmount   ?? null,
+            refundReason:          payment.refundReason   ?? null,
+            refundedAt:            payment.refundedAt     ?? null,
+            paidAt:                payment.paidAt         ?? null,
+          }
+        : null,
+    };
+  });
 };
 
-export const getOwnerBookingsService = async (userId: Types.ObjectId) => {
-  const bookings = await Booking.find({
-    ownerId: userId
-  })
-    .populate("bikeId")
-    .populate("renterId", "email personalProfile.firstName personalProfile.lastName")
-    .sort({ createdAt: -1 });
 
-  return bookings;
+export const getOwnerBookingsService = async (userId: Types.ObjectId) => {
+  const bookings = await Booking.find({ ownerId: userId })
+    .populate("bikeId")
+    .populate("renterId", "email personalProfile.firstName personalProfile.lastName personalProfile.phone")
+    .populate(
+      "paymentId",
+      "status amount currency depositAmount platformFee vatAmount platformNet ownerPayout stripePaymentIntentId refundAmount refundReason refundedAt paidAt"
+    )
+    .sort({ createdAt: -1 })
+    .lean();
+ 
+  return bookings.map((booking) => {
+    const renter = booking.renterId as any;
+    const bike   = booking.bikeId   as any;
+    const payment = booking.paymentId as any;
+ 
+    return {
+      // ── Booking Core ──
+      bookingId:    booking._id,
+      status:       booking.status,
+      startDate:    booking.startDate,
+      endDate:      booking.endDate,
+      totalDays:    booking.totalDays,
+      notes:        booking.notes ?? null,
+      createdAt:    booking.createdAt,
+ 
+      // ── Pricing Snapshot ──
+      pricing: {
+        pricePerDay:     booking.pricePerDay,
+        totalAmount:     booking.totalAmount,
+        securityDeposit: booking.securityDeposit ?? 0,
+        currency:        booking.currency,
+      },
+ 
+      // ── Ride Info ──
+      ride: {
+        actualStartTime: booking.actualStartTime ?? null,
+        actualEndTime:   booking.actualEndTime   ?? null,
+        penaltyAmount:   booking.penaltyAmount   ?? 0,
+        penaltyReason:   booking.penaltyReason   ?? null,
+      },
+ 
+      // ── Cancellation / Rejection ──
+      ...(booking.status === "cancelled" && {
+        cancellation: {
+          cancelledBy:        booking.cancelledBy,
+          cancellationReason: booking.cancellationReason ?? null,
+          cancelledAt:        booking.cancelledAt ?? null,
+        },
+      }),
+      ...(booking.status === "rejected" && {
+        rejection: {
+          rejectedReason: booking.rejectedReason ?? null,
+        },
+      }),
+ 
+      // ── Renter Info ──
+      renter: renter
+        ? {
+            renterId:  renter._id,
+            email:     renter.email,
+            firstName: renter.personalProfile?.firstName ?? null,
+            lastName:  renter.personalProfile?.lastName  ?? null,
+            phone:     renter.personalProfile?.phone     ?? null,
+          }
+        : null,
+ 
+      // ── Listing (Bike) Info ──
+      bike: bike
+        ? {
+            bikeId:        bike._id,
+            title:         bike.title         ?? null,
+            photos:        bike.photos        ?? [],
+            brand:         bike.brand         ?? null,
+            modelbike:     bike.modelbike      ?? null,
+            category:      bike.category      ?? null,
+            size:          bike.size          ?? null,
+            rates:         bike.rates         ?? null,
+            depositAmount: bike.depositAmount ?? 0,
+            location:      bike.location      ?? null,
+          }
+        : null,
+ 
+      // ── Payment Info ──
+      payment: payment
+        ? {
+            paymentId:             payment._id,
+            status:                payment.status,
+            amount:                payment.amount,
+            currency:              payment.currency,
+            depositAmount:         payment.depositAmount  ?? 0,
+            platformFee:           payment.platformFee    ?? 0,
+            vatAmount:             payment.vatAmount      ?? 0,
+            platformNet:           payment.platformNet    ?? 0,
+            ownerPayout:           payment.ownerPayout    ?? 0,
+            stripePaymentIntentId: payment.stripePaymentIntentId ?? null,
+            refundAmount:          payment.refundAmount   ?? null,
+            refundReason:          payment.refundReason   ?? null,
+            refundedAt:            payment.refundedAt     ?? null,
+            paidAt:                payment.paidAt         ?? null,
+          }
+        : null,
+    };
+  });
 };
 
 
