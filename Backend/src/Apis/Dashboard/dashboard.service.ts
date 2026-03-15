@@ -3,6 +3,7 @@ import Booking from "../../Models/Booking";
 import Listing from "../../Models/Listing";
 import User from "../../Models/User";
 import stripe from "../../Utils/stripe";
+import Payment from "../../Models/Payment";
 
 export interface ProfileResponse {
   fullName: string;
@@ -248,30 +249,161 @@ export const getOwnerBookingsService = async (userId: Types.ObjectId) => {
 
 
 
-export const getOwnerListingsService = async (
-  ownerId: Types.ObjectId
-) => {
-  const listings = await Listing.find({
-    ownerId: ownerId
-  }).sort({ createdAt: -1 });
-
-  return listings;
+export const getOwnerListingsService = async (ownerId: Types.ObjectId) => {
+  const listings = await Listing.find({ ownerId })
+    .sort({ createdAt: -1 })
+    .lean();
+ 
+  return listings.map((listing) => ({
+    // ── Core ──
+    listingId:   listing._id,
+    title:       listing.title,
+    description: listing.description ?? null,
+    isPublished: listing.isPublished,
+    createdAt:   listing.createdAt,
+ 
+    // ── Bike Details ──
+    bike: {
+      brand:     listing.brand,
+      modelbike: listing.modelbike,
+      size:      listing.size,
+      category:  listing.category,
+    },
+ 
+    // ── Media ──
+    photos: listing.photos ?? [],
+ 
+    // ── Accessories ──
+    accessories: listing.accessories ?? [],
+ 
+    // ── Pricing ──
+    rates: {
+      hourly:  listing.rates?.hourly  ?? null,
+      daily:   listing.rates?.daily   ?? null,
+      weekly:  listing.rates?.weekly  ?? null,
+      monthly: listing.rates?.monthly ?? null,
+    },
+    depositAmount: listing.depositAmount,
+ 
+    // ── Location ──
+    location: {
+      address:     listing.location?.address     ?? null,
+      city:        listing.location?.city        ?? null,
+      coordinates: listing.location?.coordinates ?? null,
+    },
+  }));
 };
 
-export const getRefundedBookingsService = async (
-  userId: Types.ObjectId
-) => {
-  const bookings = await Booking.find({
-    renterId: userId,
-    depositRefunded: { $exists: true, $ne: null }
+export const getRefundedBookingsService = async (userId: Types.ObjectId) => {
+  // ── Step 1: Find all refunded Payment records for this renter ──
+  // Refund happens in two cases:
+  //   - status: "refunded"   → cancelled before ride (full deposit back)
+  //   - status: "succeeded"  → ride completed (deposit returned + owner paid)
+  const refundedPayments = await Payment.find({
+    payerId: userId,
+    status: { $in: ["refunded", "succeeded"] },
+    stripeRefundId: { $exists: true, $ne: null },  // refund actually happened
   })
+    .select("bookingId status amount depositAmount refundAmount refundReason refundedAt paidAt stripeRefundId")
+    .lean();
+ 
+  if (!refundedPayments.length) return [];
+ 
+  // ── Step 2: Extract bookingIds ──
+  const bookingIds = refundedPayments.map((p) => p.bookingId);
+ 
+  // ── Step 3: Fetch matching Bookings ──
+  const bookings = await Booking.find({ _id: { $in: bookingIds } })
     .populate("bikeId")
-    .populate("ownerId", "email personalProfile.firstName personalProfile.lastName")
-    .sort({ createdAt: -1 });
-
-  return bookings;
+    .populate("ownerId", "email personalProfile.firstName personalProfile.lastName personalProfile.phone")
+    .sort({ createdAt: -1 })
+    .lean();
+ 
+  // ── Step 4: Map payment data onto each booking ──
+  const paymentMap = new Map(
+    refundedPayments.map((p) => [p.bookingId.toString(), p])
+  );
+ 
+  return bookings.map((booking) => {
+    const owner   = booking.ownerId as any;
+    const bike    = booking.bikeId  as any;
+    const payment = paymentMap.get(booking._id.toString());
+ 
+    return {
+      // ── Booking Core ──
+      bookingId: booking._id,
+      status:    booking.status,
+      startDate: booking.startDate,
+      endDate:   booking.endDate,
+      totalDays: booking.totalDays,
+      createdAt: booking.createdAt,
+ 
+      // ── Pricing Snapshot ──
+      pricing: {
+        pricePerDay:     booking.pricePerDay,
+        totalAmount:     booking.totalAmount,
+        securityDeposit: booking.securityDeposit ?? 0,
+        currency:        booking.currency,
+      },
+ 
+      // ── Ride Info ──
+      ride: {
+        actualStartTime: booking.actualStartTime ?? null,
+        actualEndTime:   booking.actualEndTime   ?? null,
+      },
+ 
+      // ── Cancellation (if cancelled) ──
+      ...(booking.status === "cancelled" && {
+        cancellation: {
+          cancelledBy:        booking.cancelledBy        ?? null,
+          cancellationReason: booking.cancellationReason ?? null,
+          cancelledAt:        booking.cancelledAt        ?? null,
+        },
+      }),
+ 
+      // ── Owner Info ──
+      owner: owner
+        ? {
+            ownerId:   owner._id,
+            email:     owner.email,
+            firstName: owner.personalProfile?.firstName ?? null,
+            lastName:  owner.personalProfile?.lastName  ?? null,
+            phone:     owner.personalProfile?.phone     ?? null,
+          }
+        : null,
+ 
+      // ── Listing (Bike) Info ──
+      bike: bike
+        ? {
+            bikeId:        bike._id,
+            title:         bike.title         ?? null,
+            photos:        bike.photos        ?? [],
+            brand:         bike.brand         ?? null,
+            modelbike:     bike.modelbike      ?? null,
+            category:      bike.category      ?? null,
+            location: {
+              address:     bike.location?.address     ?? null,
+              city:        bike.location?.city        ?? null,
+            },
+          }
+        : null,
+ 
+      // ── Refund Info (from Payment record) ──
+      refund: payment
+        ? {
+            paymentStatus:  payment.status,
+            amountCharged:  payment.amount,
+            depositAmount:  payment.depositAmount  ?? 0,
+            refundAmount:   payment.refundAmount   ?? 0,
+            refundReason:   payment.refundReason   ?? null,
+            refundedAt:     payment.refundedAt     ?? null,
+            stripeRefundId: payment.stripeRefundId ?? null,
+            paidAt:         payment.paidAt         ?? null,
+          }
+        : null,
+    };
+  });
 };
-
 export const getUserProfile = async (userId: Types.ObjectId) => {
   const user = await User.findById(userId).select("-password -__v").lean();
 
