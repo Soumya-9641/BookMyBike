@@ -9,14 +9,21 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  MenuItem,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
+import { useSignupMutation } from "../services/authApi";
 import {
-  useSignupMutation,
   useSendOtpMutation,
   useVerifyOtpMutation,
 } from "../services/authApi";
 import { useState } from "react";
+
+const countryCodes = [
+  { label: "India (+91)", value: "+91" },
+  { label: "Sweden (+46)", value: "+46" },
+  { label: "USA (+1)", value: "+1" },
+];
 
 const Register = () => {
   const [signup, { isLoading }] = useSignupMutation();
@@ -28,6 +35,7 @@ const Register = () => {
     middleName: "",
     lastName: "",
     email: "",
+    countryCode: "+91",
     phone: "",
     password: "",
   });
@@ -40,9 +48,18 @@ const Register = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
-  /* ---------- Email Validation ---------- */
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isEmailValid = emailRegex.test(formData.email);
+
+  const fullPhoneNumber = `${formData.countryCode}${formData.phone}`;
+
+  const isFormValid =
+    formData.firstName.trim() &&
+    formData.lastName.trim() &&
+    formData.phone.trim() &&
+    formData.password.trim() &&
+    isEmailValid &&
+    otpVerified;
 
   const handleChange =
     (field: keyof typeof formData) =>
@@ -50,10 +67,9 @@ const Register = () => {
       setFormData({ ...formData, [field]: e.target.value });
     };
 
-  /* ---------- OTP HANDLERS ---------- */
   const handleSendOtp = async () => {
     try {
-      await sendOtp({ phoneNumber: formData.phone }).unwrap();
+      await sendOtp({ phoneNumber: fullPhoneNumber }).unwrap();
       setOtpSent(true);
       setDialogMessage("OTP sent successfully");
       setIsSuccess(true);
@@ -67,33 +83,20 @@ const Register = () => {
 
   const handleVerifyOtp = async () => {
     try {
-      const res = await verifyOtp({
-        phoneNumber: formData.phone,
+      await verifyOtp({
+        phoneNumber: fullPhoneNumber,
         otp,
       }).unwrap();
-
-      if (res.verified) {
-        setOtpVerified(true);
-        setDialogMessage("Phone number verified");
-        setIsSuccess(true);
-      } else {
-        throw new Error("Invalid OTP");
-      }
+      setOtpVerified(true);
+      setDialogMessage("Phone number verified successfully");
+      setIsSuccess(true);
+      setDialogOpen(true);
     } catch (err: any) {
       setDialogMessage(err?.data?.message || "Invalid OTP");
       setIsSuccess(false);
-    } finally {
       setDialogOpen(true);
     }
   };
-
-  /* ---------- REGISTER ---------- */
-  const isFormValid =
-    formData.firstName &&
-    formData.lastName &&
-    formData.password &&
-    isEmailValid &&
-    otpVerified;
 
   const handleSubmit = async () => {
     if (!isFormValid) return;
@@ -117,47 +120,107 @@ const Register = () => {
   };
 
   return (
-    <Box maxWidth="lg" mx="auto" mt={5}>
+    <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
       <Paper sx={{ p: 4, maxWidth: 600, mx: "auto" }}>
-        <Typography variant="h5" fontWeight={700} mb={3}>
-          Create Your Account
+        <Typography fontWeight={700} mb={3}>
+          Create Account
         </Typography>
 
         <Stack spacing={2}>
-          <TextField label="First Name *" fullWidth value={formData.firstName} onChange={handleChange("firstName")} />
-          <TextField label="Last Name *" fullWidth value={formData.lastName} onChange={handleChange("lastName")} />
-          <TextField label="Email *" fullWidth value={formData.email} onChange={handleChange("email")} />
-          <TextField label="Phone *" fullWidth value={formData.phone} onChange={handleChange("phone")} />
+          <TextField
+            label="First Name"
+            fullWidth
+            value={formData.firstName}
+            onChange={handleChange("firstName")}
+          />
 
-          {!otpSent && (
-            <Button variant="outlined" onClick={handleSendOtp} disabled={!formData.phone || sendingOtp}>
-              {sendingOtp ? "Sending OTP..." : "Send OTP"}
+          <TextField
+            label="Last Name"
+            fullWidth
+            value={formData.lastName}
+            onChange={handleChange("lastName")}
+          />
+
+          <TextField
+            label="Email"
+            fullWidth
+            value={formData.email}
+            onChange={handleChange("email")}
+            error={!isEmailValid && formData.email.length > 0}
+          />
+
+          {/* PHONE */}
+          <Stack direction="row" spacing={2}>
+            <TextField
+              select
+              label="Country"
+              value={formData.countryCode}
+              onChange={handleChange("countryCode")}
+              sx={{ width: 160 }}
+            >
+              {countryCodes.map((c) => (
+                <MenuItem key={c.value} value={c.value}>
+                  {c.label}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              label="Phone Number"
+              fullWidth
+              value={formData.phone}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  phone: e.target.value.replace(/\D/g, ""),
+                })
+              }
+            />
+          </Stack>
+
+          {!otpSent ? (
+            <Button
+              variant="outlined"
+              onClick={handleSendOtp}
+              disabled={!formData.phone || sendingOtp}
+            >
+              Send OTP
             </Button>
-          )}
-
-          {otpSent && !otpVerified && (
+          ) : !otpVerified ? (
             <>
-              <TextField label="Enter OTP" fullWidth value={otp} onChange={(e) => setOtp(e.target.value)} />
-              <Button variant="outlined" onClick={handleVerifyOtp} disabled={!otp || verifyingOtp}>
-                {verifyingOtp ? "Verifying..." : "Verify OTP"}
+              <TextField
+                label="Enter OTP"
+                fullWidth
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+              />
+              <Button
+                variant="contained"
+                onClick={handleVerifyOtp}
+                disabled={!otp || verifyingOtp}
+              >
+                Verify OTP
               </Button>
             </>
-          )}
-
-          {otpVerified && (
-            <Typography color="success.main" fontWeight={600}>
-              Phone number verified ✔
+          ) : (
+            <Typography color="success.main">
+              Phone Verified ✔
             </Typography>
           )}
 
-          <TextField label="Password *" type="password" fullWidth value={formData.password} onChange={handleChange("password")} />
+          <TextField
+            label="Password"
+            type="password"
+            fullWidth
+            value={formData.password}
+            onChange={handleChange("password")}
+          />
 
           <Button
             variant="contained"
-            size="large"
             disabled={!isFormValid || isLoading}
-            sx={{ bgcolor: "#22a652" }}
             onClick={handleSubmit}
+            sx={{ bgcolor: "#22a652" }}
           >
             Register
           </Button>
@@ -169,9 +232,10 @@ const Register = () => {
         </Stack>
       </Paper>
 
-      {/* Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle>{isSuccess ? "Success" : "Error"}</DialogTitle>
+        <DialogTitle color={isSuccess ? "success.main" : "error.main"}>
+          {isSuccess ? "Success" : "Error"}
+        </DialogTitle>
         <DialogContent>
           <Typography>{dialogMessage}</Typography>
         </DialogContent>
