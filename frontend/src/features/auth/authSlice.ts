@@ -1,18 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-interface BusinessProfile {
-  stripeIdentityId?: string;
-  isVerified?: boolean;
-}
-
 interface AuthState {
   token: string | null;
-  user: {
-    firstName?: string;
-    lastName?: string;
+ user: {
     email?: string;
-    businessProfile?: BusinessProfile;
+    hasBusinessProfile: boolean; // 🔥 single flag
   } | null;
 }
 
@@ -20,9 +13,13 @@ const initialState: AuthState = {
   token:
     localStorage.getItem("token") ||
     sessionStorage.getItem("token"),
-  user: null,
+  user: localStorage.getItem("hasBusinessProfile")
+    ? {
+        hasBusinessProfile:
+          localStorage.getItem("hasBusinessProfile") === "true",
+      }
+    : null,
 };
-
 const authSlice = createSlice({
   name: "auth",
   initialState,

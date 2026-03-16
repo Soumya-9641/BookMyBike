@@ -1,75 +1,96 @@
 import {
   Table, TableHead, TableRow, TableCell,
-  TableBody, Button, Select, MenuItem
+  TableBody, Button, Select, MenuItem,
 } from "@mui/material";
+import { useState } from "react";
 import type { Booking } from "../types/listing";
+import BookingDetailsModal from "./BookingDetailsModal";
+import CompleteRideButton from "./CompleteRideButton";
 
 interface Props {
   bookings: Booking[];
-  editable?: boolean;
-  onStatusChange?: (id: string, status: "completed" | "refunded") => void;
+  editable?: boolean; // owner flag
 }
 
-const BookingTable = ({ bookings, editable, onStatusChange }: Props) => {
+const BookingTable = ({ bookings, editable }: Props) => {
+  const [open, setOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
+  const handleViewDetails = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setOpen(true);
+  };
+
   return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableCell>Date</TableCell>
-          <TableCell>Bike</TableCell>
-          <TableCell>Amount</TableCell>
-          <TableCell>Status</TableCell>
-          {editable && <TableCell>Action</TableCell>}
-        </TableRow>
-      </TableHead>
+    <>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Start Date</TableCell>
+            <TableCell>End Date</TableCell>
+            <TableCell>Bike</TableCell>
+            <TableCell>Total Amount</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Details</TableCell>
+            {editable && <TableCell>Action</TableCell>}
+          </TableRow>
+        </TableHead>
 
-      <TableBody>
-        {bookings.map((b) => (
-          <TableRow key={b._id}>
-            <TableCell>
-              {new Date(b.startDate).toLocaleDateString()}
-            </TableCell>
+        <TableBody>
+          {bookings.map((b) => (
+            <TableRow key={b.bookingId}>
+              <TableCell>{new Date(b.startDate).toLocaleString()}</TableCell>
+              <TableCell>{new Date(b.endDate).toLocaleString()}</TableCell>
+              <TableCell>{b.bike.title}</TableCell>
+              <TableCell>SEK {b.pricing.totalAmount}</TableCell>
 
-            <TableCell>{b.bikeId?.title}</TableCell>
-
-            <TableCell>₹{b.rentalAmount}</TableCell>
-
-            <TableCell>
-              {editable ? (
-                <Select
-                  size="small"
-                  value={b.status}
-                  onChange={(e) =>
-                    onStatusChange?.(
-                      b._id,
-                      e.target.value as "completed" | "refunded"
-                    )
-                  }
-                >
+              {/* STATUS (READ-ONLY) */}
+              <TableCell>
+                <Select size="small" value={b.status} disabled>
+                  <MenuItem value="pending">Pending</MenuItem>
                   <MenuItem value="in_progress">In Progress</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>
                   <MenuItem value="refunded">Refunded</MenuItem>
                 </Select>
-              ) : (
-                b.status
-              )}
-            </TableCell>
+              </TableCell>
 
-            {editable && (
+              {/* VIEW DETAILS */}
               <TableCell>
                 <Button
-                  variant="contained"
                   size="small"
-                  disabled={b.status !== "completed"}
+                  variant="outlined"
+                  onClick={() => handleViewDetails(b)}
                 >
-                  Complete Ride
+                  View Details
                 </Button>
               </TableCell>
-            )}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+
+              {/* COMPLETE RIDE */}
+              {editable && (
+                <TableCell>
+                  {b.status === "in_progress" ? (
+                    <CompleteRideButton bookingId={b.bookingId} />
+                  ) : (
+                    <Button size="small" disabled>
+                      Complete Ride
+                    </Button>
+                  )}
+                </TableCell>
+              )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* DETAILS MODAL */}
+      {selectedBooking && (
+        <BookingDetailsModal
+          open={open}
+          booking={selectedBooking}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
   );
 };
 

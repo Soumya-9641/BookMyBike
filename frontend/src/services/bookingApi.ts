@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import type { Booking, CreateBookingResponse, CreateBookingPayload, UserProfile } from "../types/listing";
+import type { Booking, CreateBookingResponse, CreateBookingPayload , UserProfileUpdatePayload, ProfileForm } from "../types/listing";
 
 export const bookingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -14,22 +14,33 @@ export const bookingApi = baseApi.injectEndpoints({
       }),
     }),
     getMyBookings: builder.query<{ count: number; bookings: Booking[] }, void>({
-      query: () => "/mybookings",
+      query: () => "/dashboard/mybookings",
       providesTags: ["Listing"],
     }),
 
     getOwnerBookings: builder.query<{ count: number; bookings: Booking[] }, void>({
-      query: () => "/ownerbookings",
+      query: () => "/dashboard/ownerbookings",
       providesTags: ["Listing"],
     }),
-    getProfile: builder.query<{ success: boolean; data: UserProfile }, void>({
-      query: () => ({
-        url: "/profile",
-        method: "GET",
+   getProfile: builder.query<
+      { success: boolean; data: ProfileForm; isStripeConnected: boolean },
+      void
+    >({
+      query: () => "/dashboard/profile",
+    }),
+
+    updateProfile: builder.mutation<
+      { success: boolean; data: ProfileForm },
+      UserProfileUpdatePayload
+    >({
+      query: (body) => ({
+        url: "/dashboard/profile",
+        method: "PUT",
+        body,
       }),
     }),
   }),
 });
 
 export const { useCreateBookingMutation, useGetMyBookingsQuery,
-  useGetOwnerBookingsQuery, useGetProfileQuery } = bookingApi;
+  useGetOwnerBookingsQuery, useGetProfileQuery, useUpdateProfileMutation } = bookingApi;

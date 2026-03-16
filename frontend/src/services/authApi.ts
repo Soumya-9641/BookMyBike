@@ -77,7 +77,21 @@ resetPassword: builder.mutation<
         method: "POST",
         body
       })
-    })
+    }),
+    changePassword: builder.mutation<
+      { success: boolean; message: string },
+      {
+        currentPassword: string;
+        newPassword: string;
+        confirmPassword: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/change-password",
+        method: "PUT",
+        body,
+      }),
+    }),
   })
 });
 
@@ -88,4 +102,5 @@ export const {
   useResendVerificationMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useChangePasswordMutation,
 } = authApi;

@@ -19,11 +19,10 @@ import type { RootState } from "../app/store";
 
 const Header = () => {
   const dispatch = useDispatch();
+  const { token, user } = useSelector((state: RootState) => state.auth);
 
-  const { token } = useSelector(
-    (state: RootState) => state.auth
-  );
-
+  const canCreateListing =
+    Boolean(token) && user?.hasBusinessProfile;
   const isLoggedIn = Boolean(token);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,23 +59,23 @@ const Header = () => {
           }}
         >
           {/* ---------------- Logo ---------------- */}
-            <Box
+          <Box
             component={RouterLink}
             to="/"
             display="flex"
             alignItems="center"
             sx={{ textDecoration: "none", cursor: "pointer" }}
-            >
+          >
             <img
               src="/images/icons/logo_main.png"
               alt="RentMyBike"
               style={{
-              height: 42,
-              width: "auto",
-              objectFit: "contain",
+                height: 42,
+                width: "auto",
+                objectFit: "contain",
               }}
             />
-            </Box>
+          </Box>
 
           {/* ---------------- Desktop Navigation ---------------- */}
           <Box
@@ -88,7 +87,7 @@ const Header = () => {
               Home
             </Button>
 
-            <Button component={RouterLink} to="/coming-soon">
+            <Button component={RouterLink} to="/about">
               About
             </Button>
 
@@ -112,13 +111,15 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Button
-                  variant="contained"
-                  component={RouterLink}
-                  to="/create-listing"
-                >
-                  Create Listing
-                </Button>
+                {canCreateListing && (
+                  <Button
+                    variant="contained"
+                    component={RouterLink}
+                    to="/create-listing"
+                  >
+                    Create Listing
+                  </Button>
+                )}
                 <IconButton onClick={openAccountMenu}>
                   <AccountCircleIcon />
                 </IconButton>
@@ -138,7 +139,7 @@ const Header = () => {
 
                   <MenuItem
                     component={RouterLink}
-                    to="/my-bookings"
+                    to={canCreateListing ? "/owner-bookings" : "/my-bookings"}
                     onClick={closeAccountMenu}
                   >
                     My Bookings
@@ -146,10 +147,10 @@ const Header = () => {
 
                   <MenuItem
                     component={RouterLink}
-                    to="/refunds"
+                    to="/change-password"
                     onClick={closeAccountMenu}
                   >
-                    My Refunds
+                    Change Password
                   </MenuItem>
 
                   <MenuItem onClick={handleLogout}>
@@ -188,7 +189,7 @@ const Header = () => {
 
             <Button
               component={RouterLink}
-              to="/coming-soon"
+              to="/about"
               onClick={() => setDrawerOpen(false)}
             >
               About
@@ -222,7 +223,7 @@ const Header = () => {
               <>
                 <Button
                   component={RouterLink}
-                  to="/account"
+                  to="/my-account"
                   onClick={() => setDrawerOpen(false)}
                 >
                   My Account
@@ -230,7 +231,7 @@ const Header = () => {
 
                 <Button
                   component={RouterLink}
-                  to="/bookings"
+                  to={canCreateListing ? "/owner-bookings" : "/my-bookings"}
                   onClick={() => setDrawerOpen(false)}
                 >
                   My Bookings
@@ -242,14 +243,15 @@ const Header = () => {
               </>
             )}
 
-            <Button
-              variant="contained"
-              component={RouterLink}
-              to="/create-listing"
-              onClick={() => setDrawerOpen(false)}
-            >
-              Create Listing
-            </Button>
+            {canCreateListing && (
+              <Button
+                variant="contained"
+                component={RouterLink}
+                to="/create-listing"
+              >
+                Create Listing
+              </Button>
+            )}
           </Stack>
         </Box>
       </Drawer>

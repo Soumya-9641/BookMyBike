@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate} from "react-router-dom";
 import {
   Box,
   Typography,
@@ -29,11 +29,9 @@ const BikeDetails = () => {
 
   if (isLoading) return <CircularProgress />;
   if (!data) return <Typography>Bike not found</Typography>;
-
   /** ---------------- Booking ---------------- */
   const handleBookNow = async () => {
     if (!startDateTime || !endDateTime) return;
-
     const hours = endDateTime.diff(startDateTime, "hour");
 
     try {

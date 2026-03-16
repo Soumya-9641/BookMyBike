@@ -3,8 +3,12 @@ import {
   useCreateConnectAccountMutation,
   useLazyStartStripeOnboardingQuery,
 } from "../services/stripeApi";
+import { useDispatch, useSelector } from "react-redux";
+import { setCredentials } from "../features/auth/authSlice";
 
 const VerifyProfile = () => {
+  const dispatch = useDispatch();
+  const auth = useSelector((state: any) => state.auth);
   const [createAccount, { isLoading: creating }] =
     useCreateConnectAccountMutation();
 
@@ -21,6 +25,15 @@ const VerifyProfile = () => {
 
       // 3️⃣ Redirect to Stripe-hosted onboarding
       window.location.href = res.url;
+    dispatch(
+      setCredentials({
+        token: auth.token,
+        user: {
+          ...auth.user,
+          hasBusinessProfile: true, // 🔥 KEY STEP
+        },
+      })
+    );
     } catch (err) {
       console.error(err);
       alert("Stripe verification failed");

@@ -84,28 +84,44 @@ export interface BikeDetails {
 }
 
 export interface Booking {
-  _id: string;
+  bookingId: string;
+  status: "pending" | "in_progress" | "completed" | "refunded";
   startDate: string;
   endDate: string;
-  rentalAmount: number;
-  status: "in_progress" | "completed" | "refunded";
-  bikeId: {
+  createdAt: string;
+
+  pricing: {
+    totalAmount: number;
+    securityDeposit: number;
+  };
+
+  payment: {
+    status?: string;
+  } | null;
+
+  bike: {
+    bikeId: string;
     title: string;
+    modelbike: string;
     photos: string[];
-  };
-  renterId?: {
-    email: string;
-    personalProfile?: {
-      firstName?: string;
-      lastName?: string;
+    brand: string;
+    category: string;
+    size: string;
+    location: {
+      address: string;
+      city: string;
     };
   };
-  ownerId?: {
+  ride: {
+    actualStartTime: string | null;
+    actualEndTime: string | null;
+    penaltyAmount: number;
+    penaltyReason: string | null;
+  },
+  owner?: {
+    firstName: string;
+    lastName: string;
     email: string;
-    personalProfile?: {
-      firstName?: string;
-      lastName?: string;
-    };
   };
 }
 
@@ -122,14 +138,22 @@ export interface CreateBookingResponse {
   customerId: string;
 }
 
-export interface UserProfile {
-  personalProfile: {
-    firstName: string;
-    middleName?: string;
-    lastName: string;
-    phone?: string;
-    address?: string;
-    city?: string;
-  };
+export interface ProfileForm {
+  first_name: string;
+  last_name: string;
   email: string;
+  address: string;
+  city: string;
+  phone: string;
+  isVerified: boolean;
+  isStripeConnected: boolean;
+}
+
+export interface UserProfileUpdatePayload {
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
 }
