@@ -79,7 +79,7 @@ const UserSchema = new Schema<IUser>({
     address: String,
     phone: {
       type: String,
-      unique: true,
+    
       sparse: true   // IMPORTANT
     },
     isVerified: { type: Boolean, default: false },
