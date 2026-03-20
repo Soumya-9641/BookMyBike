@@ -19,7 +19,7 @@ const router = Router();
 
 router.post("/signup", async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName , phoneNumber} = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -39,7 +39,8 @@ router.post("/signup", async (req: Request, res: Response) => {
       personalProfile: {
         firstName,
         lastName,
-        isVerified: false
+        isVerified: false,
+        phone: phoneNumber
       }
     });
 console.log("Saved token:", user.emailVerificationToken);
