@@ -103,9 +103,13 @@ router.get(
 router.get("/profile", authMiddleware, async (req:AuthRequest, res:Response) => {
   try {
     const userId = req.user!.userId;
-    const profile = await getUserProfile(userId);
     const status = await checkStripeOnboardingStatus(req.user!.userId);
-    console.log("Stripe onboarding status:", status); // Debug log to check the Stripe onboarding status
+    //console.log("Stripe onboarding status for user", userId, ":", status); // Debug log to check the Stripe onboarding status
+
+    const profile = await getUserProfile(userId);
+   // console.log("User profile data:", profile); // Debug log to check the user profile data
+    
+   // console.log("Stripe onboarding status:", status); // Debug log to check the Stripe onboarding status
     if (status.isOnboarded) {
       await User.findByIdAndUpdate(userId, {
         $set: {
