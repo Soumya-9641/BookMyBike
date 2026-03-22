@@ -9,16 +9,19 @@ import {
   Switch,
   FormControlLabel,
 } from "@mui/material";
-import { useGetProfileQuery } from "../services/bookingApi";
+import { useGetProfileQuery, useUpdateProfileMutation } from "../services/bookingApi";
 import { useState, useEffect } from "react";
-import type { ProfileForm } from "../types/listing";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import AccountTabs from "../components/AccountTabs";
+import type { ProfileForm } from "../types/listing";
 
 const MyProfile = () => {
   const navigate = useNavigate();
+
   const { data, isLoading } = useGetProfileQuery();
+  const [updateProfile, { isLoading: isSaving }] = useUpdateProfileMutation();
+
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState<ProfileForm | null>(null);
 
@@ -31,34 +34,59 @@ const MyProfile = () => {
     }
   }, [data]);
 
-  if (isLoading) return
-  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
-    <CircularProgress />
-  </Box>;
-  if (!data?.success || !form)
-    return <Typography>Error loading profile</Typography>;
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", minHeight: 400 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-  const handleChange = (e: any) => {
+  if (!data?.success || !form) {
+    return <Typography>Error loading profile</Typography>;
+  }
+
+  /* -------------------- Helpers -------------------- */
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const isBusinessReady =
-    data?.data?.isVerified && data?.isStripeConnected;
+    data.data.isVerified && data.isStripeConnected;
+
   const handleStripeConnect = () => {
     if (isBusinessReady) return;
-    navigate("/verify-profile", { replace: true });
-    toast.success("Stripe connected successfully");
-  }
+    navigate("/verify-profile");
+  };
+
+  /* -------------------- SAVE PROFILE -------------------- */
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfile({
+        firstName: form.first_name,
+        lastName: form.last_name,
+        phone: form.phone,
+        city: form.city,
+        address: form.address,
+      }).unwrap();
+
+      toast.success("Profile updated successfully");
+      setEditMode(false);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update profile");
+    }
+  };
+
   return (
     <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
       <AccountTabs />
+
       <Typography variant="h4" fontWeight={700} color="#22a652">
         Hi, {form.first_name}
       </Typography>
 
-      <Stack direction={{ xs: "column", md: "row" }} spacing={4} mt={4}>
-        {/* Profile Form */}
-        <Paper sx={{ p: 3, flex: 1 }}>
+      <Stack mt={4}>
+        <Paper sx={{ p: 3 }}>
           <Typography fontWeight={700} mb={2}>
             Profile Details
           </Typography>
@@ -70,7 +98,7 @@ const MyProfile = () => {
                 name="first_name"
                 value={form.first_name || ""}
                 disabled={!editMode}
-                onChange={handleChange as React.ChangeEventHandler<HTMLInputElement>}
+                onChange={handleChange}
                 fullWidth
               />
               <TextField
@@ -78,7 +106,7 @@ const MyProfile = () => {
                 name="last_name"
                 value={form.last_name || ""}
                 disabled={!editMode}
-                onChange={handleChange as React.ChangeEventHandler<HTMLInputElement>}
+                onChange={handleChange}
                 fullWidth
               />
             </Stack>
@@ -90,7 +118,7 @@ const MyProfile = () => {
                 name="phone"
                 value={form.phone || ""}
                 disabled={!editMode}
-                onChange={handleChange as React.ChangeEventHandler<HTMLInputElement>}
+                onChange={handleChange}
                 fullWidth
               />
               <TextField
@@ -98,7 +126,7 @@ const MyProfile = () => {
                 name="city"
                 value={form.city || ""}
                 disabled={!editMode}
-                onChange={handleChange as React.ChangeEventHandler<HTMLInputElement>}
+                onChange={handleChange}
                 fullWidth
               />
             </Stack>
@@ -108,11 +136,11 @@ const MyProfile = () => {
               name="address"
               value={form.address || ""}
               disabled={!editMode}
-              onChange={handleChange as React.ChangeEventHandler<HTMLInputElement>}
+              onChange={handleChange}
               fullWidth
             />
 
-            {/* Role Toggle */}
+            {/* Lister Toggle */}
             <FormControlLabel
               control={
                 <Switch
@@ -126,6 +154,7 @@ const MyProfile = () => {
             />
           </Stack>
 
+          {/* ACTION BUTTONS */}
           <Stack direction="row" spacing={2} mt={3}>
             {!editMode ? (
               <Button
@@ -137,14 +166,23 @@ const MyProfile = () => {
               </Button>
             ) : (
               <>
-                <Button variant="contained" sx={{ bgcolor: "#22a652" }}>
-                  Save
+                <Button
+                  variant="contained"
+                  sx={{ bgcolor: "#22a652" }}
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving..." : "Save"}
                 </Button>
+
                 <Button
                   variant="outlined"
                   onClick={() => {
                     setEditMode(false);
-                    setForm(data.data);
+                    setForm({
+                      ...data.data,
+                      isStripeConnected: data.isStripeConnected,
+                    });
                   }}
                 >
                   Cancel

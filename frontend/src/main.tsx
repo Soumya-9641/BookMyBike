@@ -9,6 +9,7 @@ import { store } from "./app/store";
 import { LocalizationProvider } from '@mui/x-date-pickers-pro/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LoadScript } from '@react-google-maps/api';
+import { VITE_GOOGLE_MAPS_API_KEY } from './constant/bikecategories.ts';
 const GOOGLE_LIBRARIES: (
   | "places"
 )[] = ["places"];
@@ -20,7 +21,7 @@ createRoot(document.getElementById('root')!).render(
         <CssBaseline />
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <LoadScript
-            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            googleMapsApiKey={VITE_GOOGLE_MAPS_API_KEY}
             libraries={GOOGLE_LIBRARIES}
           >
             <App />
