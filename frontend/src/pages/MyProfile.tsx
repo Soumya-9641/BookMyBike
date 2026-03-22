@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import type { ProfileForm } from "../types/listing";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import AccountTabs from "../components/AccountTabs";
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -30,7 +31,10 @@ const MyProfile = () => {
     }
   }, [data]);
 
-  if (isLoading) return <CircularProgress sx={{ mt: 5 }} />;
+  if (isLoading) return
+  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+    <CircularProgress />
+  </Box>;
   if (!data?.success || !form)
     return <Typography>Error loading profile</Typography>;
 
@@ -46,7 +50,8 @@ const MyProfile = () => {
     toast.success("Stripe connected successfully");
   }
   return (
-    <Box maxWidth="lg" mx="auto" mt={4} mb={8}>
+    <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
+      <AccountTabs />
       <Typography variant="h4" fontWeight={700} color="#22a652">
         Hi, {form.first_name}
       </Typography>

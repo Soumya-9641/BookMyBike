@@ -11,7 +11,7 @@ import {
   DialogActions,
   MenuItem,
 } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Navigate, Link as RouterLink, useNavigate } from "react-router-dom";
 import { useSignupMutation } from "../services/authApi";
 import {
   useSendOtpMutation,
@@ -29,6 +29,7 @@ const Register = () => {
   const [signup, { isLoading }] = useSignupMutation();
   const [sendOtp, { isLoading: sendingOtp }] = useSendOtpMutation();
   const [verifyOtp, { isLoading: verifyingOtp }] = useVerifyOtpMutation();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -63,9 +64,9 @@ const Register = () => {
 
   const handleChange =
     (field: keyof typeof formData) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData({ ...formData, [field]: e.target.value });
-    };
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({ ...formData, [field]: e.target.value });
+      };
 
   const handleSendOtp = async () => {
     try {
@@ -107,11 +108,13 @@ const Register = () => {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
+        phoneNumber: fullPhoneNumber,
       }).unwrap();
 
       setDialogMessage(res.message || "Registration successful");
       setIsSuccess(true);
       setDialogOpen(true);
+      navigate("/login");
     } catch (err: any) {
       setDialogMessage(err?.data?.message || "Registration failed");
       setIsSuccess(false);

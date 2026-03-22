@@ -1,4 +1,4 @@
-import { useParams, useNavigate} from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -27,7 +27,9 @@ const BikeDetails = () => {
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(null);
   const [endDateTime, setEndDateTime] = useState<Dayjs | null>(null);
 
-  if (isLoading) return <CircularProgress />;
+  if (isLoading) return <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+    <CircularProgress />
+  </Box>;
   if (!data) return <Typography>Bike not found</Typography>;
   /** ---------------- Booking ---------------- */
   const handleBookNow = async () => {
@@ -80,12 +82,14 @@ const BikeDetails = () => {
           </Typography>
 
           <Divider sx={{ my: 2 }} />
-
           <Typography fontSize={18}>
-            ₹{data.rates.daily} / day
+            SEK {data.rates.hourly} / hour
+          </Typography>
+          <Typography fontSize={18}>
+            SEK {data.rates.daily} / day
           </Typography>
           <Typography color="text.secondary">
-            Deposit: ₹{data.depositAmount}
+            Deposit: SEK {data.depositAmount}
           </Typography>
 
           <Divider sx={{ my: 2 }} />

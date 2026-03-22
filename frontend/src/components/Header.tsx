@@ -144,6 +144,24 @@ const Header = () => {
                   >
                     My Bookings
                   </MenuItem>
+                  {!canCreateListing ? (
+                    <MenuItem
+                      component={RouterLink}
+                      to="/my-refunds"
+                      onClick={closeAccountMenu}
+                    >
+                      My Refunds
+                    </MenuItem>
+                  ) :
+                    <MenuItem
+                      component={RouterLink}
+                      to="/my-listings"
+                      onClick={closeAccountMenu}
+                    >
+                      My Listings
+                    </MenuItem>
+                  }
+
 
                   <MenuItem
                     component={RouterLink}
@@ -236,7 +254,21 @@ const Header = () => {
                 >
                   My Bookings
                 </Button>
-
+                {!canCreateListing ? (
+                  <Button
+                    component={RouterLink}
+                    to="/my-refunds"
+                    onClick={closeAccountMenu}
+                  >
+                    My Refunds
+                  </Button>) :
+                  <Button
+                    component={RouterLink}
+                    to="/my-listings"
+                    onClick={closeAccountMenu}
+                  >
+                    My Listings
+                  </Button>}
                 <Button onClick={handleLogout}>
                   Logout
                 </Button>

@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { useChangePasswordMutation } from "../services/authApi";
 import { toast } from "react-hot-toast";
+import AccountTabs from "../components/AccountTabs";
 
 const ChangePassword = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -49,7 +50,8 @@ const ChangePassword = () => {
   };
 
   return (
-    <Box maxWidth="sm" mx="auto" mt={6}>
+    <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
+      <AccountTabs />
       <Paper sx={{ p: 4 }}>
         <Typography variant="h5" fontWeight={700} mb={3}>
           Change Password

@@ -40,16 +40,16 @@ const BikeCard = ({ bike }: { bike: Bike }) => {
       {/* Content */}
       <Stack spacing={0.5} flexGrow={1}>
         <Typography variant="body2" sx={{ color: "#22a652", fontWeight: 600 }}>
-         {bike.title}
+          {bike.title}
         </Typography>
 
         <Typography variant="body2">
           Price :{" "}
           <Box component="span" sx={{ color: "#22a652", fontWeight: 600 }}>
-           ${bike.rates?.hourly}
+            SEK {bike.rates?.hourly || bike.rates?.daily || "0"}
           </Box>{" "}
           <Box component="span" sx={{ fontSize: 12, color: "#22a652" }}>
-            (Per hour)
+            ({bike.rates?.hourly ? "Per hour" : "Per day"})
           </Box>
         </Typography>
 
@@ -65,7 +65,7 @@ const BikeCard = ({ bike }: { bike: Bike }) => {
           <Typography variant="body2">City : {bike.location?.city}</Typography>
 
           <IconButton
-          onClick={() => navigate(`/bikes/${bike._id}`)}
+            onClick={() => navigate(`/bikes/${bike._id}`)}
             sx={{
               width: 32,
               height: 32,

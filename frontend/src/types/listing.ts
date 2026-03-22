@@ -85,7 +85,7 @@ export interface BikeDetails {
 
 export interface Booking {
   bookingId: string;
-  status: "pending" | "in_progress" | "completed" | "refunded";
+  status: "upcoming" | "inprogress" | "completed" | "refunded";
   startDate: string;
   endDate: string;
   createdAt: string;
@@ -93,6 +93,7 @@ export interface Booking {
   pricing: {
     totalAmount: number;
     securityDeposit: number;
+    currency: string;
   };
 
   payment: {

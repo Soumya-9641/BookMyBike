@@ -40,29 +40,20 @@ export const stripeApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
-    
+
+    // services/stripeApi.ts
     completeRide: builder.mutation<
-      {
-        message: string;
-        depositRefund: {
-          refundId: string;
-          amount: number;
-        };
-        ownerPayout: {
-          transferId: string;
-          amount: number;
-        };
-      },
-      string // bookingId
+      { success: boolean },
+      { bookingId: string; status: "inprogress" | "completed" }
     >({
-      query: (bookingId) => ({
-        url: `/checkout/${bookingId}/complete-ride`,
+      query: ({ bookingId, status }) => ({
+        url: `checkout/${bookingId}/complete-ride`,
         method: "POST",
+        body: { status },
       }),
     }),
   }),
-});
-
+})
 export const {
   useCreateStripeCustomerMutation,
   useCreateConnectAccountMutation,

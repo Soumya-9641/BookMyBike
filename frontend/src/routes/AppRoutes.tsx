@@ -23,6 +23,8 @@ import VerifyProfile from "../pages/VerifyProfile";
 import OnboardingSuccess from "../pages/onboarding/success";
 import OnboardingRefresh from "../pages/onboarding/refresh";
 import ComingSoon from "../pages/ComingSoon";
+import MyRefunds from "../pages/MyRefunds";
+import MyListings from "../pages/MyListing";
 
 const AppRoutes = () => {
   return (
@@ -56,6 +58,8 @@ const AppRoutes = () => {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/onboardSuccess" element={<OnboardingSuccess />} />
           <Route path="/onboardRefresh" element={<OnboardingRefresh />} />
+          <Route path="/my-refunds" element={<MyRefunds />} />
+          <Route path="/my-listings" element={<MyListings />} />
         </Route>
       </Route>
 
