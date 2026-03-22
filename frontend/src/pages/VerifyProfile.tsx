@@ -50,7 +50,7 @@ const VerifyProfile = () => {
         To list your bike, we need to verify your identity and bank details.
       </Typography>
 
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={{ mb: 3 }}>
         <Button
           variant="contained"
           size="large"

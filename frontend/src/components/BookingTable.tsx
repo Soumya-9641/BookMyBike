@@ -1,7 +1,7 @@
 import {
   Table, TableHead, TableRow, TableCell,
-  TableBody, Button, Select, MenuItem, IconButton, Stack,
-  Tab
+  TableBody, Button, Select, MenuItem,
+  IconButton, Stack, Chip
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
@@ -11,103 +11,124 @@ import type { Booking } from "../types/listing";
 import BookingDetailsModal from "./BookingDetailsModal";
 import { useCompleteRideMutation } from "../services/stripeApi";
 import { toast } from "react-hot-toast";
+import { statusColorMap } from "../constant/bikecategories";
 
 interface Props {
   bookings: Booking[];
   editable?: boolean;
+  refetch?: () => void; // 🔥 to reload /my-bookings or /owner-bookings
 }
 
-const BookingTable = ({ bookings, editable }: Props) => {
+const BookingTable = ({ bookings, editable, refetch }: Props) => {
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [statusDraft, setStatusDraft] = useState<string>("");
-
+  const [statusDraft, setStatusDraft] = useState("");
   const [open, setOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const [completeRide, { isLoading }] = useCompleteRideMutation();
 
-  const handleEdit = (booking: Booking) => {
-    setEditingId(booking.bookingId);
-    setStatusDraft(booking.status);
-  };
-
-  const handleCancel = () => {
-    setEditingId(null);
-    setStatusDraft("");
-  };
-
-  const handleSave = async (bookingId: string) => {
-    try {
-      await completeRide({
-        bookingId,
-        status: statusDraft === "in_progress" ? "inprogress" : "completed",
-      }).unwrap();
-
-      toast.success("Booking status updated");
-      setEditingId(null);
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to update booking");
-    }
-  };
-
-  const allowedStatuses = (status: string) => {
-    if (status === "upcoming") return ["in_progress"];
+  const allowedNextStatus = (status: string) => {
+    if (status === "upcoming") return ["inprogress"];
     if (status === "inprogress") return ["completed"];
     return [];
   };
+
+const handleSave = async (bookingId: string) => {
+  try {
+    await completeRide({
+      bookingId,
+      status: statusDraft === "in_progress" ? "inprogress" : "completed",
+    }).unwrap();
+
+    toast.success("Booking status updated successfully");
+    setEditingId(null);
+    refetch && refetch(); // Refresh the bookings list after update
+  } catch (err: any) {
+    // 🔥 Proper error extraction
+    const errorMessage =
+      err?.data?.message ||
+      err?.error ||
+      "Failed to complete ride";
+
+    toast.error(errorMessage);
+  }
+};
 
   return (
     <>
       <Table>
         <TableHead>
-          <TableRow sx={{
-            backgroundColor: "#22a652",
-            "& th": {
-              color: "#fff",
-              fontWeight: 600,
-              paddingY: "14px",
-            },
-          }}
+          <TableRow
+            sx={{
+              backgroundColor: "#22a652",
+              "& th": {
+                color: "#fff",
+                fontWeight: 600,
+                py: 2,
+              },
+            }}
           >
-            <TableCell sx={{ color: "#fff" }}>Start Date</TableCell>
-            <TableCell sx={{ color: "#fff" }}>End Date</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Bike</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Price</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Status</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Booking Details</TableCell>
-            {editable && <TableCell sx={{ color: "#fff" }}>Action</TableCell>}
+            <TableCell>Start</TableCell>
+            <TableCell>End</TableCell>
+            <TableCell>Bike</TableCell>
+            <TableCell>Amount</TableCell>
+            <TableCell>Booking Status</TableCell>
+            <TableCell>Payment Status</TableCell>
+            <TableCell>Details</TableCell>
+            {editable && <TableCell>Action</TableCell>}
           </TableRow>
         </TableHead>
 
         <TableBody>
-          {bookings.map((b) => {
+          {bookings.map((b, idx) => {
             const isEditing = editingId === b.bookingId;
+            const paymentStatus = b.payment?.status || "pending";
+            const disableEdit = ["completed", "refunded"].includes(b.status);
 
             return (
-              <TableRow sx={{ '&:nth-child(odd)': { backgroundColor: "#f9f9f9" }, '&:nth-child(even)': { backgroundColor: "#EBEBEB" }, "&td": { paddingY: "16px" } }} key={b.bookingId}>
+              <TableRow
+                key={b.bookingId}
+                sx={{
+                  backgroundColor: idx % 2 === 0 ? "#f9f9f9" : "#ebebeb",
+                  "& td": { py: 2 },
+                }}
+              >
                 <TableCell>{new Date(b.startDate).toLocaleString()}</TableCell>
                 <TableCell>{new Date(b.endDate).toLocaleString()}</TableCell>
-
                 <TableCell>{b.bike.title}</TableCell>
                 <TableCell>SEK {b.pricing.totalAmount}</TableCell>
 
-                {/* STATUS */}
+                {/* BOOKING STATUS */}
                 <TableCell>
-                  <Select
-                    size="small"
-                    value={isEditing ? statusDraft : b.status}
-                    disabled={!isEditing}
-                    onChange={(e) => setStatusDraft(e.target.value)}
-                  >
-                    <MenuItem value={b.status}>{b.status}</MenuItem>
-                    {isEditing &&
-                      allowedStatuses(b.status).map((s) => (
-                        <MenuItem key={s} value={s}>
-                          {s}
-                        </MenuItem>
+                  {!isEditing ? (
+                    <Chip
+                      label={b.status.replace("_", " ").toUpperCase()}
+                      color={statusColorMap[b.status]}
+                      size="small"
+                    />
+                  ) : (
+                    <Select
+                      size="small"
+                      value={statusDraft}
+                      onChange={(e) => setStatusDraft(e.target.value)}
+                    >
+                      <MenuItem value={b.status}>{b.status}</MenuItem>
+                      {allowedNextStatus(b.status).map((s) => (
+                        <MenuItem key={s} value={s}>{s}</MenuItem>
                       ))}
-                  </Select>
+                    </Select>
+                  )}
                 </TableCell>
+
+                {/* PAYMENT STATUS */}
+                <TableCell>
+                  <Chip
+                    label={paymentStatus.replace("_", " ").toUpperCase()}
+                    color={statusColorMap[paymentStatus]}
+                    size="small"
+                  />
+                </TableCell>
+
                 {/* DETAILS */}
                 <TableCell>
                   <Button
@@ -127,8 +148,11 @@ const BookingTable = ({ bookings, editable }: Props) => {
                   <TableCell>
                     {!isEditing ? (
                       <IconButton
-                        disabled={!allowedStatuses(b.status).length}
-                        onClick={() => handleEdit(b)}
+                        disabled={disableEdit || !allowedNextStatus(b.status).length}
+                        onClick={() => {
+                          setEditingId(b.bookingId);
+                          setStatusDraft(b.status);
+                        }}
                       >
                         <EditIcon />
                       </IconButton>
@@ -136,12 +160,12 @@ const BookingTable = ({ bookings, editable }: Props) => {
                       <Stack direction="row" spacing={1}>
                         <IconButton
                           color="success"
-                          onClick={() => handleSave(b.bookingId)}
                           disabled={isLoading}
+                          onClick={() => handleSave(b.bookingId)}
                         >
                           <CheckIcon />
                         </IconButton>
-                        <IconButton color="error" onClick={handleCancel}>
+                        <IconButton color="error" onClick={() => setEditingId(null)}>
                           <CloseIcon />
                         </IconButton>
                       </Stack>

@@ -4,12 +4,12 @@ import BookingTable from "../components/BookingTable";
 import AccountTabs from "../components/AccountTabs";
 
 const OwnerBookings = () => {
-  const { data, isLoading } = useGetOwnerBookingsQuery();
+  const { data, isLoading, refetch } = useGetOwnerBookingsQuery();
 
   if (isLoading) return <CircularProgress />;
 
   return (
-     <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
+    <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
       <AccountTabs />
       <Typography variant="h5" mb={2} fontWeight={700}>
         Owner Bookings
@@ -18,6 +18,7 @@ const OwnerBookings = () => {
       <BookingTable
         bookings={data?.bookings || []}
         editable
+        refetch={refetch}
       />
     </Box>
   );
