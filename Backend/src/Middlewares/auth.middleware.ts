@@ -99,3 +99,29 @@ export const isBikeOwner = async (
     });
   }
 };
+
+/**
+ * Middleware: isAdmin
+ * Must be used AFTER authMiddleware
+ * Checks that req.user.systemRole === "admin"
+ */
+export const isAdmin = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user) {
+    res.status(401).json({ success: false, message: "Unauthorized" });
+    return;
+  }
+ 
+  if (req.user.systemRole !== "admin") {
+    res.status(403).json({
+      success: false,
+      message: "Forbidden: Admin access only",
+    });
+    return;
+  }
+ 
+  next();
+};

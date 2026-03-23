@@ -63,12 +63,11 @@ console.log("Saved token:", user.emailVerificationToken);
 router.get("/verify-email", async (req: Request, res: Response) => {
   try {
     const { token } = req.query;
-    console.log(token)
+
     const user = await User.findOne({
       emailVerificationToken: token
     });
-    //@ts-ignore
-    console.log(user._id);
+    console.log(user);
 
     if (!user) {
       return res.status(400).send("Invalid or expired verification link");

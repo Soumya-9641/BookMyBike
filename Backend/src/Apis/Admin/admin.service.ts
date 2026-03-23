@@ -1,0 +1,191 @@
+import { Types } from "mongoose";
+import bcrypt from "bcryptjs";
+import User from "../../Models/User";
+import Booking from "../../Models/Booking";
+import Payment from "../../Models/Payment";
+import Listing from "../../Models/Listing";
+
+
+// ─────────────────────────────────────────────────────────────
+// 1. GET ALL USERS
+// ─────────────────────────────────────────────────────────────
+export const getAllUsersService = async () => {
+  const users = await User.find()
+    .select("-password -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -__v")
+    .sort({ memberSince: -1 })
+    .lean();
+ 
+  return users.map((user) => ({
+    userId:      user._id,
+    email:       user.email,
+    systemRole:  user.systemRole,
+    emailVerified: user.emailVerified,
+    isBlocked:   user.isBlocked,
+    memberSince: user.memberSince,
+ 
+    personalProfile: {
+      firstName:  user.personalProfile?.firstName  ?? null,
+      middlename: user.personalProfile?.middlename ?? null,
+      lastName:   user.personalProfile?.lastName   ?? null,
+      phone:      user.personalProfile?.phone      ?? null,
+      city:       user.personalProfile?.city       ?? null,
+      address:    user.personalProfile?.address    ?? null,
+      isVerified: user.personalProfile?.isVerified ?? false,
+    },
+ 
+    businessProfile: user.businessProfile
+      ? {
+          businessName: user.businessProfile.businessName ?? null,
+          orgNumber:    user.businessProfile.orgNumber    ?? null,
+          location:     user.businessProfile.location     ?? null,
+          phone:        user.businessProfile.phone        ?? null,
+          isVerified:   user.businessProfile.isVerified   ?? false,
+          isActive:     user.businessProfile.isActive     ?? false,
+        }
+      : null,
+  }));
+};
+
+
+// ─────────────────────────────────────────────────────────────
+// 7. GET ADMIN DASHBOARD STATS
+// ─────────────────────────────────────────────────────────────
+export const getAdminStatsService = async () => {
+  const [
+    totalUsers,
+    blockedUsers,
+    totalListings,
+    publishedListings,
+    totalBookings,
+    bookingsByStatus,
+    totalPayments,
+    totalRevenue,
+  ] = await Promise.all([
+    User.countDocuments({ systemRole: "user" }),
+    User.countDocuments({ isBlocked: true }),
+    Listing.countDocuments(),
+    Listing.countDocuments({ isPublished: true }),
+    Booking.countDocuments(),
+    Booking.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]),
+    Payment.countDocuments({ status: "succeeded" }),
+    Payment.aggregate([
+      { $match: { status: "succeeded" } },
+      { $group: { _id: null, total: { $sum: "$platformNet" } } },
+    ]),
+  ]);
+ 
+  const statusMap = bookingsByStatus.reduce((acc: any, cur: any) => {
+    acc[cur._id] = cur.count;
+    return acc;
+  }, {});
+ 
+  return {
+    users: {
+      total:   totalUsers,
+      blocked: blockedUsers,
+      active:  totalUsers - blockedUsers,
+    },
+    listings: {
+      total:     totalListings,
+      published: publishedListings,
+      draft:     totalListings - publishedListings,
+    },
+    bookings: {
+      total:      totalBookings,
+      upcoming:   statusMap["upcoming"]   ?? 0,
+      inprogress: statusMap["inprogress"] ?? 0,
+      completed:  statusMap["completed"]  ?? 0,
+      cancelled:  statusMap["cancelled"]  ?? 0,
+      rejected:   statusMap["rejected"]   ?? 0,
+    },
+    revenue: {
+      totalTransactions: totalPayments,
+      platformNetRevenue: totalRevenue[0]?.total ?? 0,  // excl. VAT
+      currency: "SEK",
+    },
+  };
+};
+
+// ─────────────────────────────────────────────────────────────
+// 4. DELETE USER ACCOUNT
+// ─────────────────────────────────────────────────────────────
+export const deleteUserService = async (
+  targetUserId: string,
+  adminId: Types.ObjectId
+) => {
+  if (targetUserId === adminId.toString()) {
+    const error: any = new Error("Admin cannot delete their own account");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  const user = await User.findById(targetUserId);
+  if (!user) {
+    const error: any = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+ 
+  if (user.systemRole === "admin") {
+    const error: any = new Error("Cannot delete another admin account");
+    error.statusCode = 403;
+    throw error;
+  }
+ 
+  await User.findByIdAndDelete(targetUserId);
+ 
+  return {
+    message: `User ${user.email} deleted successfully`,
+    userId: targetUserId,
+  };
+};
+
+// ─────────────────────────────────────────────────────────────
+// 5. ADD NEW ADMIN
+// ─────────────────────────────────────────────────────────────
+export const addAdminService = async ({
+  email,
+  password,
+  firstName,
+  lastName,
+}: {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+}) => {
+  const existing = await User.findOne({ email });
+  if (existing) {
+    const error: any = new Error("Email already in use");
+    error.statusCode = 409;
+    throw error;
+  }
+ 
+   const hashedPassword = await bcrypt.hash(password, 12);
+
+    // ── Use new User() + save() to avoid TypeScript overload error with User.create({}) ──
+    const user= await User.create({
+          email,
+          password: hashedPassword,
+          emailVerified: false,
+          
+          systemRole: "admin",
+          emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          personalProfile: {
+  
+            firstName,
+            lastName,
+            isVerified: false
+          }
+        });
+    await user.save();
+ 
+  return {
+    message:  "Admin created successfully",
+    adminId:    user._id,
+    email:    user.email,
+    systemRole: user.systemRole,
+  };
+};
