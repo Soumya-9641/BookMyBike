@@ -16,7 +16,7 @@ export const authApi = createApi({
   endpoints: (builder) => ({
     signup: builder.mutation<
       { message: string },
-      { firstName: string; lastName: string; email: string; password: string }
+      { firstName: string; lastName: string; email: string; password: string, phoneNumber: string }
     >({
       query: (body) => ({
         url: "/signup",
@@ -55,18 +55,16 @@ export const authApi = createApi({
         body,
       }),
     }),
-resetPassword: builder.mutation<
-  { message: string },
-  { token: string; password: string }
->({
-  query: ({ token, password }) => ({
-    url: `/reset-password?token=${token}`,
-    method: "POST",
-    body: { password },
-  }),
-}),
-
-
+    resetPassword: builder.mutation<
+      { message: string },
+      { token: string; password: string }
+    >({
+      query: ({ token, password }) => ({
+        url: `/reset-password?token=${token}`,
+        method: "POST",
+        body: { password },
+      }),
+    }),
 
     resendVerification: builder.mutation<
       { message: string },
@@ -77,7 +75,42 @@ resetPassword: builder.mutation<
         method: "POST",
         body
       })
-    })
+    }),
+    changePassword: builder.mutation<
+      { success: boolean; message: string },
+      {
+        currentPassword: string;
+        newPassword: string;
+        confirmPassword: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/change-password",
+        method: "PUT",
+        body,
+      }),
+    }),
+    sendOtp: builder.mutation<
+      { success: boolean; message: string },
+      { phoneNumber: string }
+    >({
+      query: (body) => ({
+        url: "/send-otp",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    verifyOtp: builder.mutation<
+      { success: boolean; verified: boolean; message: string },
+      { phoneNumber: string; otp: string }
+    >({
+      query: (body) => ({
+        url: "/verify-otp",
+        method: "POST",
+        body,
+      }),
+    }),
   })
 });
 
@@ -88,4 +121,7 @@ export const {
   useResendVerificationMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useChangePasswordMutation,
+  useSendOtpMutation,
+  useVerifyOtpMutation,
 } = authApi;

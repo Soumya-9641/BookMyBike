@@ -62,18 +62,18 @@ const CreateListing = () => {
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [preview, setPreview] = useState<string[]>([]);
-  const { isAuthenticated, user } = useAuth();
-  useEffect(() => {
-    if (!isAuthenticated) {
-      toast.error("Please sign in first");
-      navigate("/signin", { replace: true });
-      return;
-    }
+  // const { isAuthenticated, user } = useAuth();
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     toast.error("Please sign in first");
+  //     navigate("/signin", { replace: true });
+  //     return;
+  //   }
 
-    if (!user?.businessProfile?.stripeIdentityId) {
-      navigate("/verify-profile", { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
+  //   if (!user?.businessProfile?.stripeIdentityId) {
+  //     navigate("/verify-profile", { replace: true });
+  //   }
+  // }, [isAuthenticated, user, navigate]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -98,37 +98,37 @@ const CreateListing = () => {
     setPreview(files.map((file) => URL.createObjectURL(file)));
   };
 
-  const validateForm = () => {
-    if (
-      !form.title ||
-      !form.brand ||
-      !form.modelbike ||
-      !form.category ||
-      !form.size ||
-      !location.address
-    ) {
-      toast.error("Please fill all required fields");
-      return false;
-    }
+const validateForm = () => {
+  if (
+    !form.title ||
+    !form.brand ||
+    !form.modelbike ||
+    !mainCategory ||
+    !subCategory ||
+    !form.size ||
+    !location.address
+  ) {
+    toast.error("Please fill all required fields");
+    return false;
+  }
 
-    if (
-      !form.rates.hourly &&
-      !form.rates.daily &&
-      !form.rates.weekly &&
-      !form.rates.monthly
-    ) {
-      toast.error("At least one rate is required");
-      return false;
-    }
+  if (
+    !form.rates.hourly &&
+    !form.rates.daily &&
+    !form.rates.weekly &&
+    !form.rates.monthly
+  ) {
+    toast.error("At least one rate is required");
+    return false;
+  }
 
-    if (!photos.length) {
-      toast.error("Please upload at least one photo");
-      return false;
-    }
+  if (!photos.length) {
+    toast.error("Please upload at least one photo");
+    return false;
+  }
 
-    return true;
-  };
-
+  return true;
+};
   const handleSubmit = async () => {
     if (!validateForm()) return;
 

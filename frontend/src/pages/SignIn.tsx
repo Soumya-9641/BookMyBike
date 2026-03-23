@@ -52,12 +52,19 @@ const SignIn = () => {
       dispatch(
         setCredentials({
           token: res.token,
-          user: { email },
+          user: {
+            email,
+            hasBusinessProfile: res.hasBusinessProfile, // ✅
+          },
         })
       );
       localStorage.setItem("token", res.token);
+      localStorage.setItem("hasBusinessProfile", res.hasBusinessProfile.toString());
+
+
       if (rememberMe) {
         localStorage.setItem("token", res.token);
+        localStorage.setItem("hasBusinessProfile", res.hasBusinessProfile.toString());
       } else {
         sessionStorage.setItem("token", res.token);
       }

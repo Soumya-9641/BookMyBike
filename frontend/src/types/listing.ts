@@ -82,3 +82,79 @@ export interface BikeDetails {
   isPublished: boolean;
   createdAt: string;
 }
+
+export interface Booking {
+  bookingId: string;
+  status: "upcoming" | "inprogress" | "completed" | "refunded";
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+
+  pricing: {
+    totalAmount: number;
+    securityDeposit: number;
+    currency: string;
+  };
+
+  payment: {
+    status?: string;
+  } | null;
+
+  bike: {
+    bikeId: string;
+    title: string;
+    modelbike: string;
+    photos: string[];
+    brand: string;
+    category: string;
+    size: string;
+    location: {
+      address: string;
+      city: string;
+    };
+  };
+  ride: {
+    actualStartTime: string | null;
+    actualEndTime: string | null;
+    penaltyAmount: number;
+    penaltyReason: string | null;
+  },
+  owner?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}
+
+export interface CreateBookingPayload {
+  listingId: string;
+  startDate: string;
+  endDate: string;
+  hours: number;
+}
+
+export interface CreateBookingResponse {
+  bookingId: string;
+  clientSecret: string;
+  customerId: string;
+}
+
+export interface ProfileForm {
+  first_name: string;
+  last_name: string;
+  email: string;
+  address: string;
+  city: string;
+  phone: string;
+  isVerified: boolean;
+  isStripeConnected: boolean;
+}
+
+export interface UserProfileUpdatePayload {
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+}

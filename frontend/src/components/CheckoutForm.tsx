@@ -9,7 +9,7 @@ const CheckoutForm = () => {
   const stripe = useStripe();
   const elements = useElements();
 
-  const handleSubmit = async (e: unknown) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!stripe || !elements) return;
@@ -32,7 +32,7 @@ const CheckoutForm = () => {
       <Button
         type="submit"
         variant="contained"
-        sx={{ mt: 3 }}
+        sx={{ mt: 3, mb: 3, ml:2 }}
       >
         Pay Now
       </Button>

@@ -1,15 +1,13 @@
 import { Button } from "@mui/material";
-import { useParams } from "react-router-dom";
 import { useCompleteRideMutation } from "../services/stripeApi";
 import { toast } from "react-hot-toast";
 
-const CompleteRideButton = () => {
-  const { bookingId } = useParams<{ bookingId: string }>();
-  const [completeRide, { isLoading }] = useCompleteRideMutation();
+interface Props {
+  bookingId: string;
+}
 
-  if (!bookingId) {
-    return null;
-  }
+const CompleteRideButton = ({ bookingId }: Props) => {
+  const [completeRide, { isLoading }] = useCompleteRideMutation();
 
   const handleCompleteRide = async () => {
     try {
@@ -24,6 +22,7 @@ const CompleteRideButton = () => {
     <Button
       variant="contained"
       color="success"
+      size="small"
       onClick={handleCompleteRide}
       disabled={isLoading}
     >

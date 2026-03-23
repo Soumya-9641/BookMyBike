@@ -28,7 +28,7 @@ const PaymentSuccess = () => {
 
       <Button
         variant="contained"
-        onClick={() => navigate(`/my-bookings/${paymentIntentId}`)}
+        onClick={() => navigate(`/my-bookings`)}
       >
         View My Booking
       </Button>
