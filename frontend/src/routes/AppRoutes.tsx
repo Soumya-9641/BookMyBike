@@ -44,6 +44,7 @@ const AppRoutes = () => {
         <Route path="/home" element={<Home />} />
         <Route path="/browse-bikes" element={<BrowseBikes />} />
         <Route path="/bikes/:id" element={<BikeDetails />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* ---------- Protected Routes ---------- */}
         <Route element={<ProtectedRoute />}>
@@ -55,7 +56,6 @@ const AppRoutes = () => {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/verify-profile" element={<VerifyProfile />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/onboardSuccess" element={<OnboardingSuccess />} />
           <Route path="/onboardRefresh" element={<OnboardingRefresh />} />
           <Route path="/my-refunds" element={<MyRefunds />} />
