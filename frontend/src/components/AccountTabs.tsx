@@ -13,16 +13,15 @@ const AccountTabs = () => {
 
     const tabs = [
         { label: "My Account", path: "/my-account" },
-        { label: "Change Password", path: "/change-password" },
-
+        { label: "My Bookings", path: "/my-bookings" },
         // 🔥 OWNER-ONLY TABS
         ...(canCreateListing
             ? [
-                { label: "Owner Booking", path: "/owner-bookings" },
+                { label: "Owner Bookings", path: "/owner-bookings" },
                 { label: "My Listings", path: "/my-listings" },
             ]
-            : [{ label: "My Orders", path: "/my-bookings" },
-            { label: "My Refunds", path: "/my-refunds" },]),
+            : [{ label: "My Refunds", path: "/my-refunds" }]),
+        { label: "Change Password", path: "/change-password" },
     ];
 
     return (

@@ -83,7 +83,7 @@ const Header = () => {
             alignItems="center"
             gap={2}
           >
-            <Button component={RouterLink} to="/">
+            <Button component={RouterLink} to="/home">
               Home
             </Button>
 
@@ -139,11 +139,19 @@ const Header = () => {
 
                   <MenuItem
                     component={RouterLink}
-                    to={canCreateListing ? "/owner-bookings" : "/my-bookings"}
+                    to="/my-bookings"
                     onClick={closeAccountMenu}
                   >
                     My Bookings
                   </MenuItem>
+                  {canCreateListing && (
+                    <MenuItem
+                      component={RouterLink}
+                      to="/owner-bookings"
+                      onClick={closeAccountMenu}
+                    >
+                      Owner Bookings
+                    </MenuItem>)}
                   {!canCreateListing ? (
                     <MenuItem
                       component={RouterLink}
@@ -199,7 +207,7 @@ const Header = () => {
           <Stack spacing={2}>
             <Button
               component={RouterLink}
-              to="/"
+              to="/home"
               onClick={() => setDrawerOpen(false)}
             >
               Home
@@ -249,11 +257,19 @@ const Header = () => {
 
                 <Button
                   component={RouterLink}
-                  to={canCreateListing ? "/owner-bookings" : "/my-bookings"}
+                  to="/my-bookings"
                   onClick={() => setDrawerOpen(false)}
                 >
                   My Bookings
                 </Button>
+                {canCreateListing && (
+                  <Button
+                    component={RouterLink}
+                    to="/owner-bookings"
+                    onClick={() => setDrawerOpen(false)}
+                  >
+                    Owner Bookings
+                  </Button>)}
                 {!canCreateListing ? (
                   <Button
                     component={RouterLink}

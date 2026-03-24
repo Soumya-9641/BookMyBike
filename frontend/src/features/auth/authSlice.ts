@@ -1,46 +1,51 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-interface AuthState {
-  token: string | null;
- user: {
-    email?: string;
-    hasBusinessProfile: boolean; // 🔥 single flag
-  } | null;
+interface User {
+  email?: string;
+  hasBusinessProfile: boolean;
 }
 
+interface AuthState {
+  token: string | null;
+  user: User | null;
+}
+
+const token = localStorage.getItem("token");
+const tokenExpiry = localStorage.getItem("tokenExpiry");
+
+const isExpired =
+  !tokenExpiry || Date.now() > Number(tokenExpiry);
+
 const initialState: AuthState = {
-  token:
-    localStorage.getItem("token") ||
-    sessionStorage.getItem("token"),
-  user: localStorage.getItem("hasBusinessProfile")
-    ? {
-        hasBusinessProfile:
-          localStorage.getItem("hasBusinessProfile") === "true",
-      }
+  token: !isExpired ? token : null,
+  user: !isExpired && localStorage.getItem("user")
+    ? JSON.parse(localStorage.getItem("user")!)
     : null,
 };
+
+if (isExpired) {
+  localStorage.clear();
+}
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ token: string; user?: any }>
+      action: PayloadAction<{ token: string; user: User }>
     ) => {
       state.token = action.payload.token;
-      state.user = action.payload.user || null;
+      state.user = action.payload.user;
     },
     logout: (state) => {
       state.token = null;
       state.user = null;
-      localStorage.removeItem("token");
-      sessionStorage.removeItem("token");
+      localStorage.clear();
     },
   },
 });
 
-export const { setCredentials, logout } =
-  authSlice.actions;
-
+export const { setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;

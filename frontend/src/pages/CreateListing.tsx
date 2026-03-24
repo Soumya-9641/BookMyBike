@@ -10,13 +10,11 @@ import {
 } from "@mui/material";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCreateListingMutation } from "../services/listingApi";
 import { toast } from "react-hot-toast";
 import LocationAutocomplete from "../components/LocationAutocomplete";
 import CategorySelector from "../components/create-listing/CategorySelector";
-import { useEffect } from "react";
-import { useAuth } from "../features/auth/useAuth"; // your auth hook
 
 const accessoriesList = [
   "Helmet",
@@ -33,13 +31,14 @@ const accessoriesList = [
 const CreateListing = () => {
   const navigate = useNavigate();
   const [createListing, { isLoading }] = useCreateListingMutation();
+
   const [mainCategory, setMainCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
+
   const [form, setForm] = useState({
     title: "",
     brand: "",
     modelbike: "",
-    category: "",
     size: "",
     description: "",
     depositAmount: "",
@@ -51,29 +50,20 @@ const CreateListing = () => {
     },
   });
 
-  const [location, setLocation] = useState({
-    address: "",
-    city: "",
-    country: "",
-    lat: 0,
-    lng: 0,
-  });
+  const [locationText, setLocationText] = useState("");
+  const [location, setLocation] = useState<{
+    address: string;
+    city: string;
+    country: string;
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [preview, setPreview] = useState<string[]>([]);
-  // const { isAuthenticated, user } = useAuth();
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     toast.error("Please sign in first");
-  //     navigate("/signin", { replace: true });
-  //     return;
-  //   }
 
-  //   if (!user?.businessProfile?.stripeIdentityId) {
-  //     navigate("/verify-profile", { replace: true });
-  //   }
-  // }, [isAuthenticated, user, navigate]);
+  /* -------------------- Handlers -------------------- */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -87,7 +77,9 @@ const CreateListing = () => {
 
   const handleAccessoryToggle = (item: string) => {
     setSelectedAccessories((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+      prev.includes(item)
+        ? prev.filter((i) => i !== item)
+        : [...prev, item]
     );
   };
 
@@ -98,45 +90,42 @@ const CreateListing = () => {
     setPreview(files.map((file) => URL.createObjectURL(file)));
   };
 
-const validateForm = () => {
-  if (
-    !form.title ||
-    !form.brand ||
-    !form.modelbike ||
-    !mainCategory ||
-    !subCategory ||
-    !form.size ||
-    !location.address
-  ) {
-    toast.error("Please fill all required fields");
-    return false;
-  }
+  /* -------------------- Validation -------------------- */
+  const isFormValid = useMemo(() => {
+    if (
+      !form.title ||
+      !form.brand ||
+      !form.modelbike ||
+      !form.size ||
+      !mainCategory ||
+      !subCategory ||
+      !location ||
+      !photos.length
+    ) {
+      return false;
+    }
 
-  if (
-    !form.rates.hourly &&
-    !form.rates.daily &&
-    !form.rates.weekly &&
-    !form.rates.monthly
-  ) {
-    toast.error("At least one rate is required");
-    return false;
-  }
+    const hasRate =
+      form.rates.hourly ||
+      form.rates.daily ||
+      form.rates.weekly ||
+      form.rates.monthly;
 
-  if (!photos.length) {
-    toast.error("Please upload at least one photo");
-    return false;
-  }
+    return Boolean(hasRate);
+  }, [form, mainCategory, subCategory, location, photos]);
 
-  return true;
-};
+  /* -------------------- Submit -------------------- */
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!isFormValid || !location) {
+      toast.error("Please complete all required fields");
+      return;
+    }
 
     try {
-      // Only include allowed rate fields
-      const rates: { hourly?: number; daily?: number } = {};
-      if (form.rates.hourly) rates.hourly = Number(form.rates.hourly);
-      if (form.rates.daily) rates.daily = Number(form.rates.daily);
+      const rates: Record<string, number> = {};
+      Object.entries(form.rates).forEach(([k, v]) => {
+        if (v) rates[k] = Number(v);
+      });
 
       await createListing({
         title: form.title,
@@ -153,7 +142,7 @@ const validateForm = () => {
       }).unwrap();
 
       toast.success("Bike listed successfully 🚲");
-      navigate("/browse-bikes");
+      navigate("/my-listings");
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to create listing");
     }
@@ -161,31 +150,36 @@ const validateForm = () => {
 
   return (
     <Box>
+      {/* Breadcrumb */}
       <Box maxWidth="lg" mx="auto" px={2} mt={3}>
         <Typography variant="body2" color="text.secondary">
-          Home › <Box component="span" color="#22a652">Create listing</Box>
+          Home › <Box component="span" color="#22a652">Create Listing</Box>
         </Typography>
       </Box>
 
+      {/* Header */}
       <Box maxWidth="lg" mx="auto" px={2} mt={2}>
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="h5" fontWeight={700} color="#22a652">
             List Your Bike
           </Typography>
-          <Button component={RouterLink} to="/browse-bikes" variant="contained">
-            Back to Listing
+          <Button component={RouterLink} to="/browse-bikes" variant="outlined">
+            Back
           </Button>
         </Stack>
       </Box>
 
+      {/* Form */}
       <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
         <Stack spacing={4}>
+          {/* BASIC INFO */}
           <Paper variant="outlined" sx={{ p: 3 }}>
             <Stack spacing={2}>
               <TextField label="Listing Title *" name="title" onChange={handleChange} />
               <TextField label="Brand *" name="brand" onChange={handleChange} />
               <TextField label="Model *" name="modelbike" onChange={handleChange} />
-              <Paper variant="outlined" sx={{ p: 3 }}>
+
+              <Paper variant="outlined" sx={{ p: 2 }}>
                 <CategorySelector
                   mainCategory={mainCategory}
                   subCategory={subCategory}
@@ -193,16 +187,33 @@ const validateForm = () => {
                   onSubChange={setSubCategory}
                 />
               </Paper>
+
               <TextField label="Size *" name="size" onChange={handleChange} />
+
               <LocationAutocomplete
                 label="Location *"
-                value={location.address}
-                onSelect={setLocation}
+                value={locationText}
+                onChange={(val) => {
+                  setLocationText(val);
+                  setLocation(null); // force dropdown selection
+                }}
+                onSelect={(data) => {
+                  setLocationText(data.address);
+                  setLocation(data);
+                }}
               />
-              <TextField label="Description" name="description" multiline rows={3} onChange={handleChange} />
+
+              <TextField
+                label="Description"
+                name="description"
+                multiline
+                rows={3}
+                onChange={handleChange}
+              />
             </Stack>
           </Paper>
 
+          {/* PRICING */}
           <Paper variant="outlined" sx={{ p: 3 }}>
             <Stack spacing={2}>
               <TextField label="Hourly Rate" name="hourly" onChange={handleRateChange} />
@@ -213,6 +224,7 @@ const validateForm = () => {
             </Stack>
           </Paper>
 
+          {/* ACCESSORIES */}
           <Paper variant="outlined" sx={{ p: 3 }}>
             <Stack direction="row" flexWrap="wrap">
               {accessoriesList.map((item) => (
@@ -230,24 +242,33 @@ const validateForm = () => {
             </Stack>
           </Paper>
 
+          {/* PHOTOS */}
           <Paper variant="outlined" sx={{ p: 3 }}>
             <Button component="label" variant="outlined" startIcon={<CloudUploadOutlinedIcon />}>
-              Upload Photos
+              Upload Photos *
               <input hidden multiple type="file" accept="image/*" onChange={handlePhotoUpload} />
             </Button>
 
             <Stack direction="row" mt={2} spacing={2}>
               {preview.map((src) => (
-                <img key={src} src={src} width={80} height={80} style={{ borderRadius: 6 }} />
+                <img
+                  key={src}
+                  src={src}
+                  width={80}
+                  height={80}
+                  style={{ borderRadius: 6, objectFit: "cover" }}
+                />
               ))}
             </Stack>
           </Paper>
 
+          {/* SUBMIT */}
           <Button
             variant="contained"
             size="large"
+            disabled={!isFormValid || isLoading}
             onClick={handleSubmit}
-            disabled={isLoading}
+            sx={{ bgcolor: "#22a652", fontWeight: 600 }}
           >
             {isLoading ? "Submitting..." : "List My Bike"}
           </Button>
