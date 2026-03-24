@@ -78,9 +78,7 @@ const UserSchema = new Schema<IUser>({
 
     address: String,
     phone: {
-      type: String,
-    
-      sparse: true   // IMPORTANT
+      type: String
     },
     isVerified: { type: Boolean, default: false },
     stripeIdentityId: String,

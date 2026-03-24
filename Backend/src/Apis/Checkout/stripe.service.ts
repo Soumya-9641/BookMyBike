@@ -33,10 +33,28 @@ export const createBookingPaymentService = async ({
   const user = await User.findById(renterId);
   if (!user) throw new Error("User not found");
   const hourlyRate = listing.rates?.hourly;
-  if (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
+  const dailyRate = listing.rates?.daily;
+  let rentalAmount: number;
+let pricePerDay: number;
+let totalDays: number;
+  //Sif (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
 
   // ── Amount Calculations ──────────────────────────────────────
-  const rentalAmount = Math.round(hours * hourlyRate);           // e.g. 100 kr
+ // const rentalAmount = Math.round(hours * hourlyRate);
+ //           // e.g. 100 kr
+ if (hours < 24) {
+  // Charge hourly
+  if (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
+  rentalAmount = Math.round(hours * hourlyRate);
+  pricePerDay = hourlyRate * 24; // informational
+  totalDays = 1;
+} else {
+  // Charge daily — ceil so 25h = 2 days, 48h = 2 days, 49h = 3 days
+  if (!dailyRate) throw new Error("Listing does not have a daily rate set");
+  totalDays = Math.ceil(hours / 24);
+  pricePerDay = dailyRate;
+  rentalAmount = Math.round(totalDays * dailyRate);
+}
   const depositAmount = Math.round(listing.depositAmount ?? 0);   // e.g. 100 kr
 
   // Renter pays: rental + deposit only (fee is taken from rental internally)
@@ -95,8 +113,8 @@ export const createBookingPaymentService = async ({
     ownerId: listing.ownerId,
     startDate,
     endDate,
-    totalDays: Math.ceil(hours / 24) || 1,
-    pricePerDay: hourlyRate * 24,
+    totalDays: totalDays || 1,
+    pricePerDay: pricePerDay,
     totalAmount: chargeAmount,
     securityDeposit: depositAmount,
     currency: "SEK",

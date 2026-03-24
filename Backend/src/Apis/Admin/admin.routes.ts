@@ -1,0 +1,81 @@
+import express, { Response } from "express";
+import { authMiddleware, isAdmin } from "../../Middlewares/auth.middleware";
+import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersService } from "./admin.service";
+import { AuthRequest } from "../../types/auth-request";
+
+
+const router = express.Router();
+ 
+// All admin routes require auth + admin role
+router.use(authMiddleware, isAdmin);
+ 
+/**
+ * @route   GET /api/v1/admin/users
+ * @desc    Get list of all users
+ * @access  Admin
+ */
+router.get("/users", async (req: AuthRequest, res: Response) => {
+  try {
+    const users = await getAllUsersService();
+    res.status(200).json({ success: true, count: users.length, data: users });
+  } catch (err: any) {
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+});
+
+
+/**
+ * @route   GET /api/v1/admin/stats
+ * @desc    Get platform-wide stats (users, listings, bookings, revenue)
+ * @access  Admin
+ */
+router.get("/stats", async (req: AuthRequest, res: Response) => {
+  try {
+    const stats = await getAdminStatsService();
+    res.status(200).json({ success: true, data: stats });
+  } catch (err: any) {
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+});
+
+
+/**
+ * @route   DELETE /api/v1/admin/users/:id
+ * @desc    Delete a user account
+ * @access  Admin
+ */
+router.delete("/users/:id", async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await deleteUserService(req.params.id, req.user!.userId);
+    res.status(200).json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * @route   POST /api/v1/admin/add
+ * @desc    Create a new admin account (from Add Admin form popup)
+ * @access  Admin
+ * @body    { email, password, firstName?, lastName? }
+ */
+router.post("/addAdmin", async (req: AuthRequest, res: Response) => {
+  try {
+    const { email, password, firstName, lastName } = req.body;
+ 
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "email and password are required",
+      });
+    }
+ 
+    const result = await addAdminService({ email, password, firstName, lastName });
+    res.status(201).json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+});
+
+ 
+export default router;
