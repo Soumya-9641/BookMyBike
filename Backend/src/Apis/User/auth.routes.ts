@@ -60,29 +60,74 @@ console.log("Saved token:", user.emailVerificationToken);
     res.status(500).json({ error: error.message });
   }
 });
+// router.get("/verify-email", async (req: Request, res: Response) => {
+//   try {
+//     const { token } = req.query;
+//     console.log(token)
+//     const user = await User.findOne({
+//       emailVerificationToken: token
+//     });
+//     //@ts-ignore
+//     console.log(user._id);
+
+//     if (!user) {
+//       return res.status(400).send("Invalid or expired verification link");
+//     }
+
+//     user.emailVerified = true;
+//     user.emailVerificationToken = undefined;
+//     user.emailVerificationExpires = undefined;
+
+//     await user.save();
+//     return res.status(200).send("Email verified successfully");
+//     //res.redirect(`${process.env.FRONTEND_URL}/login?verified=true`);
+//   } catch (error: any) {
+//     res.status(500).send("Email verification failed");
+//   }
+// });
 router.get("/verify-email", async (req: Request, res: Response) => {
   try {
     const { token } = req.query;
-    console.log(token)
-    const user = await User.findOne({
-      emailVerificationToken: token
-    });
-    //@ts-ignore
-    console.log(user._id);
 
-    if (!user) {
-      return res.status(400).send("Invalid or expired verification link");
+    if (!token) {
+      return res.status(400).json({ message: "Token missing" });
     }
 
+    const user = await User.findOne({
+      emailVerificationToken: token,
+    });
+
+    // ✅ TOKEN ALREADY USED BUT EMAIL VERIFIED
+    if (!user) {
+      const alreadyVerifiedUser = await User.findOne({
+        emailVerified: true,
+      });
+
+      if (alreadyVerifiedUser) {
+        return res
+          .status(200)
+          .json({ message: "Email already verified" });
+      }
+
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired verification link" });
+    }
+
+    // ✅ NORMAL SUCCESS
     user.emailVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationExpires = undefined;
 
     await user.save();
-    return res.status(200).send("Email verified successfully");
-    //res.redirect(`${process.env.FRONTEND_URL}/login?verified=true`);
-  } catch (error: any) {
-    res.status(500).send("Email verification failed");
+
+    return res
+      .status(200)
+      .json({ message: "Email verified successfully" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Email verification failed" });
   }
 });
 router.post("/login", async (req: Request, res: Response) => {
