@@ -195,10 +195,11 @@ router.post("/search", async (req: Request, res: Response) => {
 
 router.post("/getall",async(req:Request, res:Response)=>{
   try{
-      const bikes=await getAllListingsService();
+      const { bikes, filters }=await getAllListingsService();
       res.status(200).json({
         count: bikes.length,
-        bikes
+        bikes,
+        filters
       });
   }catch(error:any){
     res.status(500).json({
