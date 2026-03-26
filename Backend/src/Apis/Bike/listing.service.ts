@@ -240,9 +240,18 @@ export const searchAvailableBikesService = async ({
 };
 
 export const getAllListingsService = async () => {
-  return await Listing.find({ isPublished: true })
+   const bikes=  await Listing.find({ isPublished: true })
     .sort({ createdAt: -1 })
     .lean();
+    const filters = {
+    category:  [...new Set(bikes.map((b) => b.category).filter(Boolean))],
+    brand:     [...new Set(bikes.map((b) => b.brand).filter(Boolean))],
+    modelbike: [...new Set(bikes.map((b) => b.modelbike).filter(Boolean))],
+    city:      [...new Set(bikes.map((b) => b.location?.city).filter(Boolean))],
+  };
+  console.log(bikes);
+
+  return { bikes, filters };
 };
 
 export const getListingByIdService = async (listingId: string) => {
