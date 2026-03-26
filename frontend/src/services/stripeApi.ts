@@ -52,6 +52,27 @@ export const stripeApi = baseApi.injectEndpoints({
         body: { status },
       }),
     }),
+     getStripeStatus: builder.query<
+      {
+        success: boolean;
+        data: {
+          isOnboarded: boolean;
+          charges_enabled: boolean;
+          payouts_enabled: boolean;
+          details_submitted: boolean;
+          currently_due: string[];
+          eventually_due: string[];
+          disabled_reason: string | null;
+        };
+      },
+      void
+    >({
+      query: () => ({
+        url: "/stripe/connect/status",
+        method: "GET",
+      }),
+    }),
+
   }),
 })
 export const {
@@ -59,4 +80,5 @@ export const {
   useCreateConnectAccountMutation,
   useLazyStartStripeOnboardingQuery,
   useCompleteRideMutation,
+  useGetStripeStatusQuery,
 } = stripeApi;

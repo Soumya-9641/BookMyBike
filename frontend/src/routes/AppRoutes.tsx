@@ -25,6 +25,7 @@ import OnboardingRefresh from "../pages/onboarding/refresh";
 import ComingSoon from "../pages/ComingSoon";
 import MyRefunds from "../pages/MyRefunds";
 import MyListings from "../pages/MyListing";
+import OnboardReturn from "../pages/onboarding/onboardReturn";
 
 const AppRoutes = () => {
   return (
@@ -58,6 +59,7 @@ const AppRoutes = () => {
           <Route path="/verify-profile" element={<VerifyProfile />} />
           <Route path="/onboardSuccess" element={<OnboardingSuccess />} />
           <Route path="/onboardRefresh" element={<OnboardingRefresh />} />
+          <Route path="/onboardReturn" element={<OnboardReturn />} />
           <Route path="/my-refunds" element={<MyRefunds />} />
           <Route path="/my-listings" element={<MyListings />} />
         </Route>

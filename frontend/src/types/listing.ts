@@ -51,6 +51,11 @@ export interface Bike {
 export interface GetAllBikesResponse {
   count: number;
   bikes: Bike[];
+  filters: {
+    category: string[];
+    brand: string[];
+    city: string[];
+  };
 }
 
 // types/bike.ts

@@ -36,14 +36,15 @@ export const authApi = createApi({
       })
     }),
 
-    verifyEmail: builder.query<
+    verifyEmail: builder.mutation<
       { message: string },
       string
     >({
       query: (token) => ({
         url: "/verify-email",
-        params: { token }
-      })
+        method: "GET",
+        params: { token },
+      }),
     }),
     forgotPassword: builder.mutation<
       { message: string },
@@ -117,7 +118,7 @@ export const authApi = createApi({
 export const {
   useSignupMutation,
   useLoginMutation,
-  useVerifyEmailQuery,
+  useVerifyEmailMutation,
   useResendVerificationMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
