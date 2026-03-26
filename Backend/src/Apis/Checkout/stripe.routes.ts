@@ -101,7 +101,7 @@ router.get("/connect/onboard", authMiddleware, async (req: AuthRequest, res: Res
     const accountLink = await stripe.accountLinks.create({
       account: user.businessProfile.stripeIdentityId,
       refresh_url: `${process.env.FRONTEND_URL}/onboardRefresh`,
-      return_url: `${process.env.FRONTEND_URL}/onboardSuccess`,
+      return_url: `${process.env.FRONTEND_URL}/onboardReturn`,
       type: "account_onboarding",
     });
 

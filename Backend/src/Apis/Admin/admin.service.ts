@@ -189,3 +189,26 @@ export const addAdminService = async ({
     systemRole: user.systemRole,
   };
 };
+
+//get list of booking particular user as renter and lister
+export const getUserBookingSummaryService = async (userId: string) => {
+  const asRenter = await Booking.find({ renterId: userId })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const asOwner = await Booking.find({ ownerId: userId })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return {
+    userId,
+    asRenter: {
+      count: asRenter.length,
+      bookings: asRenter,
+    },
+    asOwner: {
+      count: asOwner.length,
+      bookings: asOwner,
+    },
+  };
+};

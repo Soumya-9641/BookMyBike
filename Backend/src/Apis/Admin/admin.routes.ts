@@ -1,7 +1,8 @@
 import express, { Response } from "express";
 import { authMiddleware, isAdmin } from "../../Middlewares/auth.middleware";
-import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersService } from "./admin.service";
+import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersService, getUserBookingSummaryService } from "./admin.service";
 import { AuthRequest } from "../../types/auth-request";
+import mongoose from "mongoose";
 
 
 const router = express.Router();
@@ -74,6 +75,29 @@ router.post("/addAdmin", async (req: AuthRequest, res: Response) => {
     res.status(201).json({ success: true, data: result });
   } catch (err: any) {
     res.status(err.statusCode || 500).json({ success: false, message: err.message });
+  }
+});
+
+router.get("/:userId/bookings", async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(400).json({ message: "Invalid userId" });
+      return;
+    }
+
+    const data = await getUserBookingSummaryService(userId);
+
+    res.status(200).json({
+      success: true,
+      ...data,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch user bookings",
+    });
   }
 });
 
