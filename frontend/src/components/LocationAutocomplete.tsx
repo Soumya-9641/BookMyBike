@@ -5,6 +5,8 @@ import { useRef } from "react";
 interface Props {
   label: string;
   value: string;
+  disabled?: boolean;
+  onChange: (value: string) => void; // 👈 NEW
   onSelect: (data: {
     address: string;
     lat: number;
@@ -14,8 +16,15 @@ interface Props {
   }) => void;
 }
 
-const LocationAutocomplete = ({ label, value, onSelect }: Props) => {
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+const LocationAutocomplete = ({
+  label,
+  value,
+  disabled = false,
+  onChange,
+  onSelect,
+}: Props) => {
+  const autocompleteRef =
+    useRef<google.maps.places.Autocomplete | null>(null);
 
   const handleLoad = (autocomplete: google.maps.places.Autocomplete) => {
     autocompleteRef.current = autocomplete;
@@ -50,11 +59,18 @@ const LocationAutocomplete = ({ label, value, onSelect }: Props) => {
       onLoad={handleLoad}
       onPlaceChanged={handlePlaceChanged}
       options={{
-        componentRestrictions: { country: "se" }, // 🇸🇪 Sweden only
+        componentRestrictions: { country: "se" }, // 🇸🇪 Sweden
         types: ["geocode"],
       }}
     >
-      <TextField label={label} size="small" fullWidth value={value} />
+      <TextField
+        label={label}
+        size="small"
+        fullWidth
+        value={value}
+        disabled={disabled}          // ✅ disable support
+        onChange={(e) => onChange(e.target.value)} // ✅ manual typing works
+      />
     </Autocomplete>
   );
 };

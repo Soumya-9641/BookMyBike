@@ -61,3 +61,15 @@ export const BIKE_CATEGORIES = {
 export const VITE_STRIPE_PUBLISHABLE_KEY="pk_test_51T2ZyYFKajzpqrJX6m5igAosXUmy14lf7pvLOVMwn6x5oMQbY6xPzAbN8qRb40HWNQlNNdtfejl1fOgl2lmeEHnh00PdAVWmQV";
 
 export const VITE_GOOGLE_MAPS_API_KEY="AIzaSyAJG-R81cH4goveRZ6Bl3O_J_0vjR_6bIQ";
+
+
+export const statusColorMap: Record<string, "default" | "success" | "warning" | "error" | "info"> = {
+  upcoming: "info",
+  in_progress: "warning",
+  inprogress: "warning",
+  completed: "success",
+  refunded: "error",
+  pending: "warning",
+  paid: "success",
+  succeeded: "success",
+};

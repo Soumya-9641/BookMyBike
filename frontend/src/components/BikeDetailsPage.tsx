@@ -55,7 +55,7 @@ const BikeDetails = () => {
       alert("Booking failed");
     }
   };
-
+console.log("Hourly rate:", data.rates.hourly);
   return (
     <Box maxWidth="lg" mx="auto" px={2} py={4}>
       <Stack direction={{ xs: "column", md: "row" }} spacing={4}>
@@ -82,12 +82,16 @@ const BikeDetails = () => {
           </Typography>
 
           <Divider sx={{ my: 2 }} />
-          <Typography fontSize={18}>
-            SEK {data.rates.hourly} / hour
-          </Typography>
-          <Typography fontSize={18}>
-            SEK {data.rates.daily} / day
-          </Typography>
+          {data?.rates?.hourly !== undefined && (
+            <Typography fontSize={18}>
+              SEK {data?.rates?.hourly} / hour
+            </Typography>
+          )}
+         { data?.rates?.daily !== undefined && (
+            <Typography fontSize={18}>
+              SEK {data?.rates?.daily} / day
+            </Typography>
+          )}
           <Typography color="text.secondary">
             Deposit: SEK {data.depositAmount}
           </Typography>

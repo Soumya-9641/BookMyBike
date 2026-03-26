@@ -25,6 +25,7 @@ import OnboardingRefresh from "../pages/onboarding/refresh";
 import ComingSoon from "../pages/ComingSoon";
 import MyRefunds from "../pages/MyRefunds";
 import MyListings from "../pages/MyListing";
+import OnboardReturn from "../pages/onboarding/onboardReturn";
 
 const AppRoutes = () => {
   return (
@@ -44,6 +45,7 @@ const AppRoutes = () => {
         <Route path="/home" element={<Home />} />
         <Route path="/browse-bikes" element={<BrowseBikes />} />
         <Route path="/bikes/:id" element={<BikeDetails />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* ---------- Protected Routes ---------- */}
         <Route element={<ProtectedRoute />}>
@@ -55,9 +57,9 @@ const AppRoutes = () => {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/verify-profile" element={<VerifyProfile />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/onboardSuccess" element={<OnboardingSuccess />} />
           <Route path="/onboardRefresh" element={<OnboardingRefresh />} />
+          <Route path="/onboardReturn" element={<OnboardReturn />} />
           <Route path="/my-refunds" element={<MyRefunds />} />
           <Route path="/my-listings" element={<MyListings />} />
         </Route>

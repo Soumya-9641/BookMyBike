@@ -1,74 +1,103 @@
 import { Box, Stack, Typography } from "@mui/material";
-import { useSearchParams } from "react-router-dom";
-import { useGetAllBikesQuery, useSearchBikesMutation } from "../services/listingApi";
+import { useGetAllBikesQuery } from "../services/listingApi";
 import BikeCard from "../components/BikeCard";
 import FiltersSidebar from "../components/FiltersSidebar";
 import { useEffect, useState } from "react";
 
 const BrowseBikes = () => {
-  const [searchParams] = useSearchParams();
+  const { data, isLoading } = useGetAllBikesQuery();
 
-  const lat = searchParams.get("lat");
-  const lng = searchParams.get("lng");
-  const start = searchParams.get("start");
-  const end = searchParams.get("end");
+  const [allBikes, setAllBikes] = useState<any[]>([]);
+  const [filteredBikes, setFilteredBikes] = useState<any[]>([]);
 
-  const isSearchMode = !!(lat && lng && start && end);
+  const [filters, setFilters] = useState<{
+    category: string[];
+    brand: string[];
+    city: string[];
+  }>({
+    category: [],
+    brand: [],
+    city: [],
+  });
 
-  // 👉 All bikes (default browse)
-  const { data: allBikesData, isLoading: loadingAll } =
-    useGetAllBikesQuery(undefined, { skip: isSearchMode });
-
-  // 👉 Search bikes
-  const [searchBikes, { isLoading: loadingSearch }] =
-    useSearchBikesMutation();
-
-  const [bikes, setBikes] = useState<any[]>([]);
-
+  /* ---------------- LOAD DATA ---------------- */
   useEffect(() => {
-    if (isSearchMode) {
-      searchBikes({
-        lat: Number(lat),
-        lng: Number(lng),
-        startDate: start!,
-        endDate: end!,
-      })
-        .unwrap()
-        .then((res) => setBikes(res.bikes))
-        .catch(() => setBikes([]));
+    if (data?.bikes) {
+      setAllBikes(data.bikes);
+      setFilteredBikes(data.bikes);
     }
-  }, [isSearchMode, lat, lng, start, end]);
+  }, [data]);
 
-  useEffect(() => {
-    if (!isSearchMode && allBikesData) {
-      setBikes(allBikesData.bikes);
+  /* ---------------- FILTER HANDLERS ---------------- */
+  const handleCheck = (type: string, value: string) => {
+    setFilters((prev: any) => ({
+      ...prev,
+      [type]: prev[type].includes(value)
+        ? prev[type].filter((v: string) => v !== value)
+        : [...prev[type], value],
+    }));
+  };
+
+  const applyFilters = () => {
+    let result = [...allBikes];
+
+    if (filters.category.length) {
+      result = result.filter((bike) =>
+        filters.category.includes(bike.category)
+      );
     }
-  }, [allBikesData, isSearchMode]);
 
-  const isLoading = loadingAll || loadingSearch;
+    if (filters.brand.length) {
+      result = result.filter((bike) =>
+        filters.brand.includes(bike.brand)
+      );
+    }
 
+    if (filters.city.length) {
+      result = result.filter((bike) =>
+        filters.city.includes(bike.location?.city)
+      );
+    }
+
+    setFilteredBikes(result);
+  };
+
+  /* ---------------- UI ---------------- */
   return (
     <Box maxWidth="xl" mx="auto" px={2} py={4}>
-      <Typography variant="h4" textAlign="center" color="#22a652" mb={4}>
-        {isSearchMode ? "Available Bikes Near You" : "Browse our bikes"}
+      <Typography
+        variant="h4"
+        textAlign="center"
+        color="#22a652"
+        fontWeight={700}
+        mb={4}
+      >
+        Browse our bikes
       </Typography>
 
       <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
         {/* Sidebar */}
-        <Box width={{ xs: "100%", md: "25%" }}>
-          <FiltersSidebar />
+        <Box width={{ xs: "100%", md: "22%" }}>
+          {data?.filters && (
+            <FiltersSidebar
+              availableFilters={data.filters}
+              selectedFilters={filters}
+              onChange={handleCheck}
+              onApply={applyFilters}
+            />
+          )}
         </Box>
 
         {/* Bikes */}
-        <Box width={{ xs: "100%", md: "75%" }}>
+        <Box width={{ xs: "100%", md: "78%" }}>
           {isLoading && <Typography>Loading...</Typography>}
 
-          {!isLoading && bikes.length === 0 && (
+          {!isLoading && filteredBikes.length === 0 && (
             <Typography>No bikes found.</Typography>
           )}
 
           <Stack direction="row" flexWrap="wrap" gap={3}>
-            {bikes.map((bike) => (
+            {filteredBikes.map((bike) => (
               <Box
                 key={bike._id}
                 width={{ xs: "100%", sm: "48%", md: "31%" }}

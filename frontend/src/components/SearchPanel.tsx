@@ -29,32 +29,32 @@ const SearchPanel = () => {
 
   const [searchBikes, { isLoading }] = useSearchBikesMutation();
 
-const handleSearch = async () => {
-  if (!coords) {
-    toast.error("Please select a location");
-    return;
-  }
-
-  try {
-    const res = await searchBikes({
-      lat: coords.lat,
-      lng: coords.lng,
-      startDate: startDateTime.toISOString(),
-      endDate: endDateTime.toISOString(),
-    }).unwrap();
-
-    if (res.count === 0) {
-      toast("No bikes found nearby");
+  const handleSearch = async () => {
+    if (!coords) {
+      toast.error("Please select a location");
+      return;
     }
 
-    navigate(
-      `/browse-bikes?lat=${coords.lat}&lng=${coords.lng}&start=${startDateTime.toISOString()}&end=${endDateTime.toISOString()}`
-    );
+    try {
+      const res = await searchBikes({
+        lat: coords.lat,
+        lng: coords.lng,
+        startDate: startDateTime.toISOString(),
+        endDate: endDateTime.toISOString(),
+      }).unwrap();
 
-  } catch (err: any) {
-    toast.error(err?.data?.message || "Search failed");
-  }
-};
+      if (res.count === 0) {
+        toast("No bikes found nearby");
+      }
+
+      navigate(
+        `/browse-bikes?lat=${coords.lat}&lng=${coords.lng}&start=${startDateTime.toISOString()}&end=${endDateTime.toISOString()}`
+      );
+
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Search failed");
+    }
+  };
   return (
     <Box
       sx={{
@@ -78,6 +78,10 @@ const handleSearch = async () => {
         <LocationAutocomplete
           label="Location"
           value={location}
+          onChange={(val) => {
+            setLocation(val);
+            setCoords(null); // ❗ force user to select from dropdown
+          }}
           onSelect={(data) => {
             setLocation(data.address);
             setCoords({ lat: data.lat, lng: data.lng });

@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import AccountTabs from "../components/AccountTabs";
 import type { ProfileForm } from "../types/listing";
+import LocationAutocomplete from "../components/LocationAutocomplete";
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -51,8 +52,7 @@ const MyProfile = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const isBusinessReady =
-    data.data.isVerified && data.isStripeConnected;
+  const isBusinessReady = data.isStripeConnected;
 
   const handleStripeConnect = () => {
     if (isBusinessReady) return;
@@ -131,13 +131,20 @@ const MyProfile = () => {
               />
             </Stack>
 
-            <TextField
+            <LocationAutocomplete
               label="Address"
-              name="address"
               value={form.address || ""}
               disabled={!editMode}
-              onChange={handleChange}
-              fullWidth
+              onChange={(value) =>
+                setForm({ ...form, address: value })
+              }
+              onSelect={(data) => {
+                setForm({
+                  ...form,
+                  address: data.address,
+                  city: data.city || form.city,
+                });
+              }}
             />
 
             {/* Lister Toggle */}

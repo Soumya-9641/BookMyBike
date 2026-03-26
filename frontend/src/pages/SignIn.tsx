@@ -42,31 +42,35 @@ const SignIn = () => {
 
   const isFormValid =
     isEmailValid && password.trim().length > 0;
-
+  const ONE_HOUR = 60 * 60 * 1000;
   const handleLogin = async () => {
     if (!isFormValid) return;
 
     try {
       const res = await login({ email, password }).unwrap();
 
+      const expiresAt = Date.now() + ONE_HOUR;
+
       dispatch(
         setCredentials({
           token: res.token,
           user: {
             email,
-            hasBusinessProfile: res.hasBusinessProfile, // ✅
+            hasBusinessProfile: res.hasBusinessProfile,
           },
         })
       );
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("hasBusinessProfile", res.hasBusinessProfile.toString());
-
-
       if (rememberMe) {
         localStorage.setItem("token", res.token);
-        localStorage.setItem("hasBusinessProfile", res.hasBusinessProfile.toString());
+        localStorage.setItem("tokenExpiry", expiresAt.toString());
+        localStorage.setItem(
+          "hasBusinessProfile",
+          res.hasBusinessProfile.toString()
+        );
       } else {
-        sessionStorage.setItem("token", res.token);
+        localStorage.setItem("token", res.token);
+        localStorage.setItem("hasBusinessProfile", res.hasBusinessProfile.toString());
+        localStorage.setItem("tokenExpiry", expiresAt.toString());
       }
 
       setDialogMessage("Login successful");
@@ -85,9 +89,7 @@ const SignIn = () => {
         return;
       }
 
-      setDialogMessage(
-        err?.data?.message || "Login failed"
-      );
+      setDialogMessage(err?.data?.message || "Login failed");
       setIsSuccess(false);
       setDialogOpen(true);
     }

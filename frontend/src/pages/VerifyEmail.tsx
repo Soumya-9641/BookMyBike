@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -6,24 +6,36 @@ import {
   Button,
   Paper,
 } from "@mui/material";
-import { useVerifyEmailQuery } from "../services/authApi";
+import { useVerifyEmailMutation } from "../services/authApi";
+import { useEffect, useRef, useState } from "react";
 import ResendVerificationDialog from "../components/ResendVerificationDialog";
-import { useState } from "react";
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const navigate = useNavigate();
 
-  const [openDialog, setOpenDialog] =
-    useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [verifyEmail] = useVerifyEmailMutation();
+  const hasRun = useRef(false);
 
-  const {
-    isLoading,
-    isSuccess,
-    isError,
-  } = useVerifyEmailQuery(token!, {
-    skip: !token,
-  });
+  const [status, setStatus] = useState<
+    "loading" | "success" | "error"
+  >("loading");
+
+  useEffect(() => {
+    if (!token || hasRun.current) return;
+    hasRun.current = true;
+
+    verifyEmail(token)
+      .unwrap()
+      .then(() => {
+        setStatus("success");
+      })
+      .catch(() => {
+        setStatus("error");
+      });
+  }, [token, verifyEmail]);
 
   return (
     <Box
@@ -33,17 +45,8 @@ const VerifyEmail = () => {
       justifyContent="center"
       px={2}
     >
-      <Paper
-        elevation={3}
-        sx={{
-          p: 4,
-          maxWidth: 420,
-          width: "100%",
-          textAlign: "center",
-        }}
-      >
-        {/* Loading */}
-        {isLoading && (
+      <Paper sx={{ p: 4, maxWidth: 420, textAlign: "center" }}>
+        {status === "loading" && (
           <>
             <CircularProgress />
             <Typography mt={2}>
@@ -52,8 +55,7 @@ const VerifyEmail = () => {
           </>
         )}
 
-        {/* Success */}
-        {isSuccess && (
+        {status === "success" && (
           <>
             <Typography
               variant="h5"
@@ -63,26 +65,17 @@ const VerifyEmail = () => {
               Email Verified 🎉
             </Typography>
 
-            <Typography mt={1}>
-              Your email has been successfully
-              verified.
-            </Typography>
-
             <Button
-              href="/login"
+              sx={{ mt: 3 }}
               variant="contained"
-              sx={{
-                mt: 3,
-                bgcolor: "#22a652",
-              }}
+              onClick={() => navigate("/login")}
             >
               Go to Login
             </Button>
           </>
         )}
 
-        {/* Error */}
-        {(isError || !token) && !isLoading && (
+        {status === "error" && (
           <>
             <Typography
               variant="h5"
@@ -91,10 +84,8 @@ const VerifyEmail = () => {
             >
               Verification Failed
             </Typography>
-
             <Typography mt={1}>
-              The verification link is invalid or
-              expired.
+              The verification link is invalid or expired.
             </Typography>
 
             <Button
