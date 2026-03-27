@@ -22,10 +22,10 @@ import VerifyEmail from "../pages/VerifyEmail";
 import VerifyProfile from "../pages/VerifyProfile";
 import OnboardingSuccess from "../pages/onboarding/success";
 import OnboardingRefresh from "../pages/onboarding/refresh";
+import OnboardReturn from "../pages/onboarding/onboardReturn";
 import ComingSoon from "../pages/ComingSoon";
 import MyRefunds from "../pages/MyRefunds";
 import MyListings from "../pages/MyListing";
-import OnboardReturn from "../pages/onboarding/onboardReturn";
 
 const AppRoutes = () => {
   return (

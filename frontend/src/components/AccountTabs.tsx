@@ -4,12 +4,8 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../app/store";
 
 const AccountTabs = () => {
-    const { token, user } = useSelector(
-        (state: RootState) => state.auth
-    );
-
-    const canCreateListing =
-        Boolean(token) && user?.hasBusinessProfile;
+    const { token, isOnboarded } = useSelector((state: RootState) => state.auth);
+    const canCreateListing = Boolean(token) && isOnboarded;
 
     const tabs = [
         { label: "My Account", path: "/my-account" },
