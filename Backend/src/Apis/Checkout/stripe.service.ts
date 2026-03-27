@@ -352,7 +352,7 @@ export const checkStripeOnboardingStatus = async (userId: Types.ObjectId) => {
     account.charges_enabled &&
     account.payouts_enabled &&
     account.details_submitted;
-
+console.log(isOnboarded);
   // Sync DB if status changed
   if (isOnboarded && !user.businessProfile!.isVerified) {
     user.businessProfile!.isVerified = true;
@@ -371,3 +371,4 @@ export const checkStripeOnboardingStatus = async (userId: Types.ObjectId) => {
     disabled_reason: account.requirements?.disabled_reason ?? null,
   };
 };
+

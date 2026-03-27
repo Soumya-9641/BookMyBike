@@ -200,4 +200,67 @@ router.get("/connect/status", authMiddleware, async (req: AuthRequest, res: Resp
     return res.status(err.statusCode || 500).json({ success: false, message: err.message });
   }
 });
+router.get(
+  "/verify/:paymentIntentId",
+  //authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { paymentIntentId } = req.params;
+
+      // 1. Find payment in DB using your paymentId
+      // const payment = await Payment.findById(paymentId);
+      // if (!payment) {
+      //   res.status(404).json({ message: "Payment not found" });
+      //   return;
+      // }
+
+      // // 2. Use stripePaymentIntentId from DB to check Stripe
+      // if (!payment.stripePaymentIntentId) {
+      //   res.status(400).json({ message: "Stripe PaymentIntent ID missing" });
+      //   return;
+      // }
+      if (!paymentIntentId) {
+        res.status(400).json({ message: "PaymentIntent ID is required" });
+        return;
+      }
+      const paymentIntent = await stripe.paymentIntents.retrieve(
+        paymentIntentId
+      );
+      const payment = await Payment.findOne({
+        stripePaymentIntentId: paymentIntentId,
+      });
+      if(!payment){
+        res.status(404).json({ message: "Payment record not found for this PaymentIntent ID" });
+        return;
+      }
+
+      // 3. Update DB based on Stripe status
+      if (paymentIntent.status === "succeeded") {
+        await Payment.findByIdAndUpdate(payment._id, { status: "completed" });
+        await Booking.findByIdAndUpdate(payment.bookingId, {
+          status: "upcoming",
+          isPaid: true,
+        });
+      }
+
+      if (paymentIntent.status === "canceled") {
+        await Payment.findByIdAndUpdate(payment._id, { status: "failed" });
+        await Booking.findByIdAndUpdate(payment.bookingId, {
+          status: "cancelled",
+        });
+      }
+
+      // 4. Return updated status
+      res.json({
+        success: true,
+        paymentId: payment._id,
+        stripeStatus: paymentIntent.status,       // raw stripe status
+        isSuccess: paymentIntent.status === "succeeded",
+        bookingId: payment.bookingId,
+      });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  }
+);
 export default router;
