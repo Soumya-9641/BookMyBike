@@ -1,13 +1,19 @@
 import { Box, Typography, Button } from "@mui/material";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useVerifyPaymentQuery } from "../services/stripeApi";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-  // Stripe appends this automatically
-  const params = new URLSearchParams(location.search);
-  const paymentIntentId = params.get("payment_intent");
+  const paymentIntentId = searchParams.get("payment_intent");
+
+  const {
+    data,
+  } = useVerifyPaymentQuery(paymentIntentId!, {
+    skip: !paymentIntentId,
+  });
+
 
   return (
     <Box

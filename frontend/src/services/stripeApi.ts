@@ -68,11 +68,25 @@ export const stripeApi = baseApi.injectEndpoints({
       void
     >({
       query: () => ({
-        url: "/stripe/connect/status",
+        url: "/checkout/connect/status",
         method: "GET",
       }),
     }),
-
+    verifyPayment: builder.query<
+      {
+        success: boolean;
+        paymentId: string;
+        stripeStatus: string;
+        isSuccess: boolean;
+        bookingId: string;
+      },
+      string
+    >({
+      query: (paymentIntentId) => ({
+        url: `/checkout/verify/${paymentIntentId}`,
+        method: "GET",
+      }),
+    }),
   }),
 })
 export const {
@@ -81,4 +95,5 @@ export const {
   useLazyStartStripeOnboardingQuery,
   useCompleteRideMutation,
   useGetStripeStatusQuery,
+  useVerifyPaymentQuery,
 } = stripeApi;

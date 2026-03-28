@@ -2,15 +2,18 @@ import { Box, Typography, CircularProgress, Button } from "@mui/material";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetStripeStatusQuery } from "../../services/stripeApi";
+import { useDispatch } from "react-redux";
+import { setOnboardingStatus } from "../../features/auth/authSlice";
 
 const OnboardReturn = () => {
   const navigate = useNavigate();
 
   const { data, isLoading, isError } = useGetStripeStatusQuery();
-
+  const dispatch = useDispatch();
   useEffect(() => {
     if (!isLoading && data?.success) {
       if (data.data.isOnboarded) {
+        dispatch(setOnboardingStatus(true));
         navigate("/onboardSuccess", { replace: true });
       }
     }
@@ -38,17 +41,9 @@ const OnboardReturn = () => {
           Your Stripe onboarding was not completed.
           Please finish the remaining steps.
         </Typography>
-
-        {Array.isArray(data?.data?.currently_due) && data.data.currently_due.length > 0 && (
-          <Typography mt={2} color="text.secondary">
-            Missing information:
-            <br />
-            {data.data.currently_due.join(", ")}
-          </Typography>
-        )}
-
+        
         <Button
-          sx={{ mt: 4 }}
+          sx={{ mt: 4, mb: 3 }}
           variant="contained"
           onClick={() => navigate("/verify-profile")}
         >

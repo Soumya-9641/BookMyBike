@@ -15,7 +15,7 @@ const OnboardingSuccess = () => {
       </Typography>
 
       <Button
-        sx={{ mt: 4 }}
+        sx={{ mt: 4, mb: 3 }}
         variant="contained"
         onClick={() => navigate("/create-listing")}
       >

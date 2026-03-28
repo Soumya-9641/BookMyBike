@@ -12,18 +12,27 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { Link as RouterLink } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../features/auth/authSlice";
+import { logout, setOnboardingStatus } from "../features/auth/authSlice";
 import type { RootState } from "../app/store";
+import { useGetStripeStatusQuery } from "../services/stripeApi";
 
 const Header = () => {
   const dispatch = useDispatch();
-  const { token, user } = useSelector((state: RootState) => state.auth);
-
-  const canCreateListing =
-    Boolean(token) && user?.hasBusinessProfile;
+  const { token, isOnboarded } = useSelector((state: RootState) => state.auth);
   const isLoggedIn = Boolean(token);
+  const { data, isLoading } = useGetStripeStatusQuery();
+  useEffect(() => {
+    if (!isLoading && data?.success) {
+      if (data.data.isOnboarded) {
+        dispatch(setOnboardingStatus(true));
+      }
+    }
+  }, [isLoading, data]);
+
+
+  const canCreateListing = Boolean(token) && isOnboarded;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] =

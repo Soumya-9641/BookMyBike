@@ -37,7 +37,7 @@ const handleSave = async (bookingId: string) => {
   try {
     await completeRide({
       bookingId,
-      status: statusDraft === "in_progress" ? "inprogress" : "completed",
+      status: statusDraft === "inprogress" ? "inprogress" : "completed",
     }).unwrap();
 
     toast.success("Booking status updated successfully");
