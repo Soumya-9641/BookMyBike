@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import User from "../Models/User";
-import { AuthRequest } from "./auth.middleware";
+import { AuthRequest } from "../types/auth-request";
 
 export const requireBusinessUser = async (
   req: AuthRequest,

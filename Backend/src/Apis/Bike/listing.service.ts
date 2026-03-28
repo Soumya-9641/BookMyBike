@@ -243,6 +243,7 @@ export const getAllListingsService = async () => {
    const bikes=  await Listing.find({ isPublished: true })
     .sort({ createdAt: -1 })
     .lean();
+    
     const filters = {
     category:  [...new Set(bikes.map((b) => b.category).filter(Boolean))],
     brand:     [...new Set(bikes.map((b) => b.brand).filter(Boolean))],
