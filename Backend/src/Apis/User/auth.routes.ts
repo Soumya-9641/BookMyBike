@@ -139,11 +139,11 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    if (!user.emailVerified) {
-      return res.status(400).json({
-        message: "Please verify your email before logging in"
-      });
-    }
+    // if (!user.emailVerified) {
+    //   return res.status(400).json({
+    //     message: "Please verify your email before logging in"
+    //   });
+    // }
 
     if (user.isBlocked) {
       return res.status(400).json({ message: "Account blocked" });

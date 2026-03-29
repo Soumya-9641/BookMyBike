@@ -1,6 +1,6 @@
 import express, { Response } from "express";
 import { authMiddleware, isAdmin } from "../../Middlewares/auth.middleware";
-import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersService, getUserBookingSummaryService } from "./admin.service";
+import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersService, getUserBookingSummaryService,getAllAdminsService } from "./admin.service";
 import { AuthRequest } from "../../types/auth-request";
 import mongoose from "mongoose";
 
@@ -100,6 +100,22 @@ router.get("/:userId/bookings", async (req: AuthRequest, res: Response) => {
     });
   }
 });
+
+router.get(
+  "/all",
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const admins = await getAllAdminsService();
+      res.status(200).json({
+        success: true,
+        count: admins.length,
+        admins,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Failed to fetch admins" });
+    }
+  }
+);
 
  
 export default router;

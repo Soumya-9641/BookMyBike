@@ -121,3 +121,8 @@ export const getDisputeDetailService = async (disputeId: string) => {
     },
   };
 };
+
+export const getAllDisputesService = async () => {
+  const disputes = await Dispute.find().sort({ createdAt: -1 }).lean();
+  return disputes;
+};

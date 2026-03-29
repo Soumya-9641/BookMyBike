@@ -16,13 +16,14 @@ export const getAllUsersService = async () => {
     .lean();
  
   return users.map((user) => ({
-    userId:      user._id,
-    email:       user.email,
-    systemRole:  user.systemRole,
+    userId:        user._id,
+    email:         user.email,
+    systemRole:    user.systemRole,
     emailVerified: user.emailVerified,
-    isBlocked:   user.isBlocked,
-    memberSince: user.memberSince,
- 
+    isBlocked:     user.isBlocked,
+    memberSince:   user.memberSince,
+    isLister:      user.businessProfile?.isVerified === true,  // ← new field
+
     personalProfile: {
       firstName:  user.personalProfile?.firstName  ?? null,
       middlename: user.personalProfile?.middlename ?? null,
@@ -211,4 +212,13 @@ export const getUserBookingSummaryService = async (userId: string) => {
       bookings: asOwner,
     },
   };
+};
+
+export const getAllAdminsService = async () => {
+  const admins = await User.find({ 
+systemRole
+: "admin" })
+    .sort({ createdAt: -1 })
+    .lean();
+  return admins;
 };

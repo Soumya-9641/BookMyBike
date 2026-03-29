@@ -1,7 +1,7 @@
 
 import { Router, Request, Response } from "express";
 import { authMiddleware,isAdmin } from "../../Middlewares/auth.middleware";
-import { createDisputeService ,updateDisputeService,getDisputeDetailService} from "./dispute.services";
+import { createDisputeService ,updateDisputeService,getDisputeDetailService,getAllDisputesService} from "./dispute.services";
 import { AuthRequest } from "../../types/auth-request";
 
 const router = Router();
@@ -28,7 +28,7 @@ router.post(
 
 router.patch(
   "/updateDispute/:disputeId",
-
+authMiddleware,
   isAdmin,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -45,7 +45,8 @@ router.patch(
 );
 
 router.get(
-  "/:disputeId",
+  "/dispute/:disputeId",
+  authMiddleware,
   isAdmin,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -59,3 +60,22 @@ router.get(
     }
   }
 );
+
+router.get(
+  "/getall",
+  authMiddleware,
+  isAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const disputes = await getAllDisputesService();
+      res.status(200).json({
+        success: true,
+        count: disputes.length,
+        disputes,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Failed to fetch disputes" });
+    }
+  }
+);
+export default router;
