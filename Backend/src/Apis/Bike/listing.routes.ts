@@ -180,11 +180,12 @@ router.post("/filter", async (req: Request, res: Response) => {
 
 router.post("/search", async (req: Request, res: Response) => {
   try {
-    const bikes = await searchAvailableBikesService(req.body);
+     const { bikes, filters } = await searchAvailableBikesService(req.body);
 
     res.status(200).json({
       count: bikes.length,
-      bikes
+      bikes,
+      filters
     });
   } catch (error: any) {
     res.status(500).json({

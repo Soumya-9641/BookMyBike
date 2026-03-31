@@ -1,6 +1,7 @@
 import express, { Response } from "express";
 import { authMiddleware, isAdmin } from "../../Middlewares/auth.middleware";
-import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersService, getUserBookingSummaryService,getAllAdminsService } from "./admin.service";
+import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersService,
+   getUserBookingSummaryService,getAllAdminsService,blockUserService } from "./admin.service";
 import { AuthRequest } from "../../types/auth-request";
 import mongoose from "mongoose";
 
@@ -117,5 +118,20 @@ router.get(
   }
 );
 
+router.patch(
+  "/block/:userId",
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const user = await blockUserService(req.params.userId);
+      res.status(200).json({
+        success: true,
+        message: "User blocked successfully",
+        user,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Failed to block user" });
+    }
+  }
+);
  
 export default router;

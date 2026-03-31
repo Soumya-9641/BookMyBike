@@ -235,8 +235,13 @@ export const searchAvailableBikesService = async ({
     })
     .filter(bike => bike.distanceInKm <= 8)
     .sort((a, b) => a.distanceInKm - b.distanceInKm);
-
-  return availableBikes;
+ const filters = {
+    category:  [...new Set(availableBikes.map((b) => b.category).filter(Boolean))],
+    brand:     [...new Set(availableBikes.map((b) => b.brand).filter(Boolean))],
+    modelbike: [...new Set(availableBikes.map((b) => b.modelbike).filter(Boolean))],
+    city:      [...new Set(availableBikes.map((b) => b.location?.city).filter(Boolean))],
+  };
+return { bikes: availableBikes, filters };
 };
 
 export const getAllListingsService = async () => {

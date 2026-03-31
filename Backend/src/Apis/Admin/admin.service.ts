@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import bcrypt from "bcryptjs";
 import User from "../../Models/User";
 import Booking from "../../Models/Booking";
@@ -221,4 +221,23 @@ systemRole
     .sort({ createdAt: -1 })
     .lean();
   return admins;
+};
+
+export const blockUserService = async (userId: string) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new Error("Invalid userId");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  if (user.isBlocked) throw new Error("User is already blocked");
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { isBlocked: true },
+    { new: true }
+  ).select("-password -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -__v");
+
+  return updatedUser;
 };

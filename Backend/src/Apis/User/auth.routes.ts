@@ -146,7 +146,10 @@ router.post("/login", async (req: Request, res: Response) => {
     // }
 
     if (user.isBlocked) {
-      return res.status(400).json({ message: "Account blocked" });
+      return res.status(401).json({
+        success: false,
+        message: "Your account has been blocked. Please contact support.",
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
