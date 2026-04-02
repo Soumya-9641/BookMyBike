@@ -7,8 +7,10 @@ import mongoose, { Schema, Document, Types } from "mongoose";
  
 export type BookingStatus =
   | "upcoming"
-  | "inprogress"
-  | "completed"
+  | "startRequested"       // renter requested ride start
+  | "inprogress"           // owner accepted start
+  | "completionRequested"  // owner marked complete, waiting renter confirmation
+  | "completed"            // renter confirmed → triggers payout
   | "cancelled"
   | "rejected";
  
@@ -33,9 +35,19 @@ export interface IBooking extends Document {
   currency: string;
   securityDeposit?: number;
  
+
+   // ── Ride Start Flow ──────────────────────────────
+  startRequestedAt?: Date;        // when renter requested start
+  startRequestedBy?: Types.ObjectId;
+  startAcceptedAt?: Date;         // when owner accepted start
+  actualStartTime?: Date;  
+    // ── Ride Completion Flow ─────────────────────────
+  completionRequestedAt?: Date;   // when owner marked complete
+  completionRequestedBy?: Types.ObjectId;
+  completionConfirmedAt?: Date;   // when renter confirmed completion
+  actualEndTime?: Date;  
   // Ride Info (filled when ride completes)
-  actualStartTime?: Date;
-  actualEndTime?: Date;
+  
   penaltyAmount?: number;           // e.g. late return fee
   penaltyReason?: string;
  
@@ -83,9 +95,17 @@ const BookingSchema = new Schema<IBooking>(
     },
  
     // ── Booking Details ──
-    status: {
+      status: {
       type: String,
-      enum: ["upcoming", "inprogress", "completed", "cancelled", "rejected"],
+      enum: [
+        "upcoming",
+        "startRequested",
+        "inprogress",
+        "completionRequested",
+        "completed",
+        "cancelled",
+        "rejected",
+      ],
       default: "upcoming",
     },
     startDate: {
@@ -123,13 +143,21 @@ const BookingSchema = new Schema<IBooking>(
       default: 0,
       min: 0,
     },
+   // ── Ride Start Flow ──
+    startRequestedAt:  { type: Date },
+    startRequestedBy:  { type: Schema.Types.ObjectId, ref: "User" },
+    startAcceptedAt:   { type: Date },
+    actualStartTime:   { type: Date },
+
+    // ── Ride Completion Flow ──
+    completionRequestedAt: { type: Date },
+    completionRequestedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    completionConfirmedAt: { type: Date },
+    actualEndTime:         { type: Date },
  
-    // ── Ride Info ──
-    actualStartTime: { type: Date },
-    actualEndTime: { type: Date },
+      // ── Penalty ──
     penaltyAmount: { type: Number, default: 0, min: 0 },
     penaltyReason: { type: String },
- 
     // ── Cancellation ──
     cancelledBy: {
       type: String,

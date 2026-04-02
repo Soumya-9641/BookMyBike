@@ -11,7 +11,7 @@ export interface IListing extends Document {
   modelbike: string;
   size: string;
   category: string;
-
+  pickupPoint?: string;
   accessories: string[];
 
   rates: {
@@ -29,6 +29,7 @@ export interface IListing extends Document {
     address: string;
     city: string;
   };
+
 
   isPublished: boolean;
   createdAt: Date;
@@ -50,7 +51,9 @@ const ListingSchema: Schema<IListing> = new Schema({
   modelbike: { type: String, required: true },
   size: { type: String, required: true },
   category: { type: String, required: true },
-
+  pickupPoint: {
+    type: String
+  },
   accessories: { type: [String], default: [] },
 
   rates: {

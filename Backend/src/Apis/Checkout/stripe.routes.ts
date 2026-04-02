@@ -17,9 +17,25 @@ const router = Router();
 // ── Unchanged ──────────────────────────────────────────────
 router.post("/create", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+     const renterId = req.user!.userId.toString();
+
+    // ── Block check before creating booking ──
+    const user = await User.findById(renterId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    if (user.isBlocked) {
+      res.status(401).json({
+        success: false,
+        message: "Your account has been blocked. Please contact support.",
+      });
+      return;
+    }
     const result = await createBookingPaymentService({
       listingId: req.body.listingId,
-      renterId: req.user!.userId.toString(),
+      renterId,
       startDate: new Date(req.body.startDate),
       endDate: new Date(req.body.endDate),
       hours: req.body.hours,

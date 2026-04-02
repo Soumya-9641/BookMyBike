@@ -14,7 +14,7 @@ interface CreateListingInput {
   modelbike: string;
   size: string;
   category: string;
-
+  pickupPoint?: string;
   accessories?: string[];
 
   rates: {
@@ -79,7 +79,7 @@ export const createListingService = async (
     modelbike: data.modelbike,
     size: data.size,
     category: data.category,
-
+      pickupPoint: data.pickupPoint?.trim() || undefined,
     accessories: data.accessories || [],
 
     rates: data.rates,
@@ -210,13 +210,13 @@ export const searchAvailableBikesService = async ({
     endDate: { $gte: new Date(startDate) }
   }).distinct("bikeId");
 
-  // 2️⃣ Fetch candidate bikes (DB-level filtering)
+
   const bikes = await Listing.find({
     isPublished: true,
     _id: { $nin: unavailableBikeIds }
-  }).lean(); // lean() = faster, plain JS objects
+  }).lean();
 
-  // 3️⃣ Apply Haversine distance filtering
+  
   const availableBikes = bikes
     .map(bike => {
       const [bikeLng, bikeLat] = bike.location.coordinates;
@@ -269,4 +269,78 @@ export const getListingByIdService = async (listingId: string) => {
     _id: listingId,
     isPublished: true
   }).lean();
+};
+
+export const requestRideStartService = async (bookingId: string, renterId: string) => {
+  const booking = await Booking.findById(bookingId);
+  if (!booking) throw new Error("Booking not found");
+
+  if (booking.renterId.toString() !== renterId) {
+    throw new Error("Only the renter can request ride start");
+  }
+
+  if (booking.status !== "upcoming") {
+    throw new Error(`Cannot request start. Current status: ${booking.status}`);
+  }
+
+  const updated = await Booking.findByIdAndUpdate(
+    bookingId,
+    {
+      status: "startRequested",
+      startRequestedAt: new Date(),
+      startRequestedBy: renterId,
+    },
+    { new: true }
+  );
+
+  return updated;
+};
+export const acceptRideStartService = async (bookingId: string, ownerId: string) => {
+  const booking = await Booking.findById(bookingId);
+  if (!booking) throw new Error("Booking not found");
+
+  if (booking.ownerId.toString() !== ownerId) {
+    throw new Error("Only the owner can accept ride start");
+  }
+
+  if (booking.status !== "startRequested") {
+    throw new Error(`Cannot accept start. Current status: ${booking.status}`);
+  }
+
+  const updated = await Booking.findByIdAndUpdate(
+    bookingId,
+    {
+      status: "inprogress",
+      startAcceptedAt: new Date(),
+      actualStartTime: new Date(),
+    },
+    { new: true }
+  );
+
+  return updated;
+};
+
+export const requestRideCompletionService = async (bookingId: string, ownerId: string) => {
+  const booking = await Booking.findById(bookingId);
+  if (!booking) throw new Error("Booking not found");
+
+  if (booking.ownerId.toString() !== ownerId) {
+    throw new Error("Only the owner can mark ride as complete");
+  }
+
+  if (booking.status !== "inprogress") {
+    throw new Error(`Cannot mark complete. Current status: ${booking.status}`);
+  }
+
+  const updated = await Booking.findByIdAndUpdate(
+    bookingId,
+    {
+      status: "completionRequested",
+      completionRequestedAt: new Date(),
+      completionRequestedBy: ownerId,
+    },
+    { new: true }
+  );
+
+  return updated;
 };
