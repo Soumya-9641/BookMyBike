@@ -5,7 +5,8 @@ import {
   createBookingPaymentService,
   completeRideService,   // NEW
   refundDepositService,
-  checkStripeOnboardingStatus,  // kept for cancellations only
+  checkStripeOnboardingStatus,
+  cancelBookingService  // kept for cancellations only
 } from "./stripe.service";
 import { AuthRequest } from "../../types/auth-request";
 import Booking from "../../Models/Booking";
@@ -274,6 +275,23 @@ router.get(
         isSuccess: paymentIntent.status === "succeeded",
         bookingId: payment.bookingId,
       });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  }
+);
+
+router.patch(
+  "/:bookingId/cancel",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const result = await cancelBookingService(
+        req.params.bookingId,
+        req.user!.userId.toString(),
+        req.body.reason
+      );
+      res.status(200).json({ success: true, ...result });
     } catch (err: any) {
       res.status(400).json({ message: err.message });
     }

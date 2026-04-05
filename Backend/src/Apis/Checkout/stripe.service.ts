@@ -372,3 +372,111 @@ console.log(isOnboarded);
   };
 };
 
+
+export const cancelBookingService = async (
+  bookingId: string,
+  userId: string,
+  reason?: string
+) => {
+  const booking = await Booking.findById(bookingId);
+  if (!booking) throw new Error("Booking not found");
+
+  // ── Who is cancelling ──
+  const isRenter = booking.renterId.toString() === userId;
+  const isOwner  = booking.ownerId.toString() === userId;
+
+  if (!isRenter && !isOwner) {
+    throw new Error("Only the renter or owner can cancel this booking");
+  }
+
+  // ── Can only cancel if upcoming or startRequested ──
+  if (!["upcoming", "startRequested"].includes(booking.status)) {
+    throw new Error(`Cannot cancel. Current status: ${booking.status}`);
+  }
+
+  // ── Get payment record ──
+  const payment = await Payment.findOne({
+    bookingId: booking._id,
+    type: "booking",
+  });
+  if (!payment) throw new Error("Payment record not found for this booking");
+  if (!payment.stripePaymentIntentId) throw new Error("Stripe PaymentIntent ID missing");
+
+  // ── Verify Stripe PaymentIntent ──
+  const paymentIntent = await stripe.paymentIntents.retrieve(
+    payment.stripePaymentIntentId
+  );
+  if (paymentIntent.status !== "succeeded") {
+    throw new Error("Payment has not been confirmed yet");
+  }
+  if (!paymentIntent.latest_charge) {
+    throw new Error("No charge found on this payment");
+  }
+
+  // ── Check owner KYC (needed for transfer) ──
+  const owner = await User.findById(booking.ownerId);
+  if (!owner?.businessProfile?.stripeIdentityId) {
+    throw new Error("Owner Stripe account missing");
+  }
+  const ownerAccount = await stripe.accounts.retrieve(
+    owner.businessProfile.stripeIdentityId
+  );
+  if (!ownerAccount.payouts_enabled) {
+    throw new Error("Owner has not completed KYC verification");
+  }
+
+  const depositAmount = payment.depositAmount ?? 0;   // refunded to renter
+  const ownerPayout   = payment.ownerPayout   ?? 0;   // sent to owner
+
+  // ── Refund only deposit to renter ──
+  const refund = await stripe.refunds.create({
+    payment_intent: payment.stripePaymentIntentId,
+    amount: depositAmount * 100,                      // only deposit in öre
+    reason: "requested_by_customer",
+  });
+
+  // ── Transfer rental portion to owner ──
+  const transfer = await stripe.transfers.create({
+    amount: ownerPayout * 100,                        // rental portion in öre
+    currency: "sek",
+    destination: owner.businessProfile.stripeIdentityId,
+    source_transaction: paymentIntent.latest_charge as string,
+    metadata: {
+      bookingId: booking._id.toString(),
+      paymentId: payment._id.toString(),
+    },
+  });
+
+  // ── Update Payment record ──
+  payment.status         = "refunded";
+  payment.stripeChargeId = paymentIntent.latest_charge as string;
+  payment.stripeRefundId = refund.id;
+  payment.refundAmount   = depositAmount;
+  payment.refundReason   = `Booking cancelled by ${isRenter ? "renter" : "owner"}`;
+  payment.refundedAt     = new Date();
+  payment.paidAt         = new Date();
+  await payment.save();
+
+  // ── Update Booking record ──
+  booking.status              = "cancelled";
+  booking.cancelledBy         = isRenter ? "renter" : "owner";
+  booking.cancellationReason  = reason ?? undefined;
+  booking.cancelledAt         = new Date();
+  await booking.save();
+
+  return {
+    message: "Booking cancelled. Deposit refunded to renter, rental amount sent to owner.",
+    bookingId: booking._id,
+    cancelledBy: booking.cancelledBy,
+    depositRefund: {
+      refundId: refund.id,
+      amount:   depositAmount,
+      currency: payment.currency,
+    },
+    ownerPayout: {
+      transferId: transfer.id,
+      amount:     ownerPayout,
+      currency:   payment.currency,
+    },
+  };
+};
