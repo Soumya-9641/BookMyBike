@@ -1,7 +1,8 @@
 import express, { Response } from "express";
 import { authMiddleware, isAdmin } from "../../Middlewares/auth.middleware";
 import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersService,
-   getUserBookingSummaryService,getAllAdminsService,blockUserService } from "./admin.service";
+   getUserBookingSummaryService,getAllAdminsService,blockUserService,
+   getAllBookingsService } from "./admin.service";
 import { AuthRequest } from "../../types/auth-request";
 import mongoose from "mongoose";
 
@@ -101,6 +102,26 @@ router.get("/:userId/bookings", async (req: AuthRequest, res: Response) => {
     });
   }
 });
+
+router.get(
+  "/allbookings",
+  
+  async (req: AuthRequest, res: Response)=> {
+    try {
+      const bookings = await getAllBookingsService();
+      res.status(200).json({
+        success: true,
+        count: bookings.length,
+        bookings,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to fetch bookings",
+      });
+    }
+  }
+);
 
 router.get(
   "/all",

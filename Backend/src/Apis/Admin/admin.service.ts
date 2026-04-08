@@ -47,6 +47,12 @@ export const getAllUsersService = async () => {
   }));
 };
 
+export const getAllBookingsService = async () => {
+  const bookings = await Booking.find()
+    .sort({ createdAt: -1 })
+    .lean();
+  return bookings;
+};
 
 // ─────────────────────────────────────────────────────────────
 // 7. GET ADMIN DASHBOARD STATS
@@ -239,5 +245,7 @@ export const blockUserService = async (userId: string) => {
     { new: true }
   ).select("-password -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -__v");
 
+  
   return updatedUser;
 };
+

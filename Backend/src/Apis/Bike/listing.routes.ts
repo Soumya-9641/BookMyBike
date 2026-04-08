@@ -5,7 +5,8 @@ import { authMiddleware } from "../../Middlewares/auth.middleware";
 
 import { createListingService, searchListingsService, getFirstFourBikesService, filterListingsService, 
   searchAvailableBikesService, getAllListingsService, getListingByIdService ,
-  requestRideStartService,acceptRideStartService,requestRideCompletionService} from "./listing.service";
+  requestRideStartService,acceptRideStartService,requestRideCompletionService,
+  updateListingService} from "./listing.service";
 import { uploadBikeImages } from "../../Middlewares/upload.middleware";
 import { AuthRequest } from "../../types/auth-request";
 import User from "../../Models/User";
@@ -216,6 +217,94 @@ router.post("/search", async (req: Request, res: Response) => {
     });
   }
 });
+
+
+router.put(
+  "/:listingId/edit",
+  authMiddleware,
+  uploadBikeImages.array("photos", 6),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const ownerId = req.user!.userId.toString();
+
+      // ── Block check ──
+      const user = await User.findById(ownerId);
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+      if (user.isBlocked) {
+        res.status(401).json({
+          success: false,
+          message: "Your account has been blocked. Please contact support.",
+        });
+        return;
+      }
+
+      const {
+        title,
+        description,
+        brand,
+        modelbike,
+        size,
+        category,
+        accessories,
+        rates,
+        depositAmount,
+        pickupPoint,
+        location,
+      } = req.body;
+
+      // Build update object with only provided fields
+      const updateData: Record<string, any> = {};
+
+      if (title)        updateData.title        = title;
+      if (description)  updateData.description  = description;
+      if (brand)        updateData.brand        = brand;
+      if (modelbike)    updateData.modelbike    = modelbike;
+      if (size)         updateData.size         = size;
+      if (category)     updateData.category     = category;
+      if (depositAmount) updateData.depositAmount = depositAmount;
+      if (accessories)  updateData.accessories  = JSON.parse(accessories);
+      if (rates)        updateData.rates        = JSON.parse(rates);
+      if (pickupPoint !== undefined) {
+        updateData.pickupPoint = pickupPoint?.trim() || undefined;
+      }
+      if (location) {
+        const parsedLocation = JSON.parse(location);
+        updateData.location = {
+          type: "Point",
+          coordinates: [parsedLocation.lng, parsedLocation.lat],
+          address: parsedLocation.address,
+          city: parsedLocation.city,
+        };
+      }
+
+      // If new photos uploaded, replace photos array
+      const files = req.files as Express.Multer.File[];
+      if (files?.length) {
+        updateData.photos = files.map(
+          (file) => `/uploads/bikes/${file.filename}`
+        );
+      }
+
+      const listing = await updateListingService(
+        req.params.listingId,
+        ownerId,
+        updateData
+      );
+
+      res.status(200).json({
+        message: "Listing updated successfully",
+        listing,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        message: error.message || "Failed to update listing",
+      });
+    }
+  }
+);
 
 router.post("/getall",async(req:Request, res:Response)=>{
   try{

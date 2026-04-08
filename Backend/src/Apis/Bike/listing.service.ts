@@ -344,3 +344,48 @@ export const requestRideCompletionService = async (bookingId: string, ownerId: s
 
   return updated;
 };
+
+export const updateListingService = async (
+  listingId: string,
+  ownerId: string,
+  body: Partial<{
+    title: string;
+    description: string;
+    brand: string;
+    modelbike: string;
+    size: string;
+    category: string;
+    accessories: string[];
+    rates: {
+      hourly?: number;
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+    depositAmount: number;
+    pickupPoint: string;
+    location: {
+      type: "Point";
+      coordinates: [number, number];
+      address: string;
+      city: string;
+    };
+    photos: string[];
+  }>
+) => {
+  const listing = await Listing.findById(listingId);
+  if (!listing) throw new Error("Listing not found");
+
+  // Only owner can edit
+  if (listing.ownerId.toString() !== ownerId) {
+    throw new Error("You are not authorized to edit this listing");
+  }
+
+  const updated = await Listing.findByIdAndUpdate(
+    listingId,
+    { $set: body },
+    { new: true }
+  );
+
+  return updated;
+};
