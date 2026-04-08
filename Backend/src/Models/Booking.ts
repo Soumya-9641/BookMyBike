@@ -56,7 +56,7 @@ export interface IBooking extends Document {
   ownerRequestedCompletion: boolean;
   renterConfirmedCompletion: boolean;
 
-  penaltyAmount?: number;           // e.g. late return fee
+  penaltyAmount?: number;           
   penaltyReason?: string;
 
   // Cancellation
