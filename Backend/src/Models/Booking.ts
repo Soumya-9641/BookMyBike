@@ -56,6 +56,8 @@ export interface IBooking extends Document {
   ownerRequestedCompletion: boolean;
   renterConfirmedCompletion: boolean;
 
+  isSettlementDone?: boolean;          // whether payout/refund has been processed for this booking
+
   penaltyAmount?: number;           
   penaltyReason?: string;
 
@@ -171,6 +173,7 @@ const BookingSchema = new Schema<IBooking>(
     ownerRequestedCompletion: { type: Boolean, default: false },  // owner marked complete
     renterConfirmedCompletion: { type: Boolean, default: false },  // renter confirmed
 
+    isSettlementDone: { type: Boolean, default: false },          // whether payout/refund has been processed for this booking
     // ── Penalty ──
     penaltyAmount: { type: Number, default: 0, min: 0 },
     penaltyReason: { type: String },

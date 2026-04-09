@@ -135,15 +135,15 @@ router.get("/connect/onboard", authMiddleware, async (req: AuthRequest, res: Res
 router.post("/:id/complete-ride", authMiddleware, isBikeOwner, async (req: AuthRequest, res: Response) => {
   try {
       const { status } = req.body;
-       if (!status) {
-        return res.status(400).json({ message: "status is required in request body" });
-      }
+      //  if (!status) {
+      //   return res.status(400).json({ message: "status is required in request body" });
+      // }
  
-      if (status !== "inprogress" && status !== "completed") {
-        return res.status(400).json({
-          message: "Invalid status. Allowed values: 'inprogress' | 'completed'",
-        });
-      }
+      // if (status !== "inprogress" && status !== "completed") {
+      //   return res.status(400).json({
+      //     message: "Invalid status. Allowed values: 'inprogress' | 'completed'",
+      //   });
+      // }
     const result = await completeRideService(req.params.id,status);
     res.json(result);
   } catch (err: any) {

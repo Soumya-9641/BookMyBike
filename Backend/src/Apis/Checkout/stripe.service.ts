@@ -179,19 +179,19 @@ let totalDays: number;
 export const completeRideService = async (bookingId: string,  status: "inprogress" | "completed") => {
   const booking = await Booking.findById(bookingId);
   if (!booking) throw new Error("Booking not found");
-  if (booking.status === "completed") throw new Error("Ride already completed");
+  // if (booking.status === "completed") throw new Error("Ride already completed");
 
-    if (status === "inprogress") {
-    booking.status = "inprogress";           // marks ride as started/in-progress
-    booking.actualStartTime = new Date();
-    await booking.save();
+  // //   if (status === "inprogress") {
+  // //   booking.status = "inprogress";           // marks ride as started/in-progress
+  // //   booking.actualStartTime = new Date();
+  // //   await booking.save();
  
-    return {
-      message: "Ride marked as in progress.",
-      bookingId: booking._id,
-      status: booking.status,
-    };
-  }
+  // //   return {
+  // //     message: "Ride marked as in progress.",
+  // //     bookingId: booking._id,
+  // //     status: booking.status,
+  // //   };
+  // // }
   const payment = await Payment.findOne({
     bookingId: booking._id,
     type: "booking",
@@ -256,6 +256,7 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
   // STEP 4: Update Booking record
   booking.status          = "completed";
   booking.actualEndTime   = new Date();
+  booking.isSettlementDone = true;  // mark that payout/refund has been processed
   await booking.save();
    return {
     message: "Ride completed. Deposit refunded to renter, rental sent to owner.",
