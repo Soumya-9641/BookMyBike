@@ -21,6 +21,14 @@ router.post(
         dispute,
       });
     } catch (err: any) {
+        if (err.statusCode === 409) {
+        res.status(409).json({
+          success: false,
+          message: err.message,
+          existingDispute: err.dispute,
+        });
+        return;
+      }
       res.status(500).json({ message: err.message || "Failed to create dispute" });
     }
   }

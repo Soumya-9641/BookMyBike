@@ -6,7 +6,8 @@ import { authMiddleware } from "../../Middlewares/auth.middleware";
 import { createListingService, searchListingsService, getFirstFourBikesService, filterListingsService, 
   searchAvailableBikesService, getAllListingsService, getListingByIdService ,
   requestRideStartService,acceptRideStartService,requestRideCompletionService,
-  updateListingService} from "./listing.service";
+  updateListingService,
+  confirmRideCompletionService} from "./listing.service";
 import { uploadBikeImages } from "../../Middlewares/upload.middleware";
 import { AuthRequest } from "../../types/auth-request";
 import User from "../../Models/User";
@@ -385,6 +386,26 @@ router.patch(
         req.user!.userId.toString()
       );
       res.status(200).json({ success: true, message: "Completion requested, waiting for renter confirmation", booking });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  }
+);
+
+router.patch(
+  "/:bookingId/confirm-completion",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const booking = await confirmRideCompletionService(
+        req.params.bookingId,
+        req.user!.userId.toString()
+      );
+      res.status(200).json({
+        success: true,
+        message: "Ride completed. Payout and deposit refund initiated.",
+        booking,
+      });
     } catch (err: any) {
       res.status(400).json({ message: err.message });
     }

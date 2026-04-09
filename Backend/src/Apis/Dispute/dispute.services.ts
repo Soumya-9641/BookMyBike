@@ -32,8 +32,12 @@ export const createDisputeService = async (
   if (!payment) throw new Error("Associated payment not found");    
 
   const existingDispute = await Dispute.findOne({ bookingId });
-  if (existingDispute) throw new Error("Dispute already raised for this booking");
-
+   if (existingDispute) {
+    const error: any = new Error("Dispute already raised for this booking");
+    error.statusCode = 409;              // ← attach status code to error
+    error.dispute = existingDispute;     // ← attach existing dispute
+    throw error;
+  }
   const dispute = await Dispute.create({
     bikeId:        booking.bikeId,
     sellerId:      booking.ownerId,
