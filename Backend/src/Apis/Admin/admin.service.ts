@@ -249,3 +249,43 @@ export const blockUserService = async (userId: string) => {
   return updatedUser;
 };
 
+
+export const changeAdminPasswordService = async (
+  adminId: string,
+  body: {
+    currentPassword: string;
+    newPassword: string;
+  }
+) => {
+  const { currentPassword, newPassword } = body;
+
+  const admin = await User.findById(adminId);
+  if (!admin) throw new Error("Admin not found");
+
+  if (admin.systemRole !== "admin") {
+    throw new Error("Unauthorized");
+  }
+
+  // Verify current password
+  const isMatch = await bcrypt.compare(currentPassword, admin.password);
+  if (!isMatch) throw new Error("Current password is incorrect");
+
+  if (currentPassword === newPassword) {
+    throw new Error("New password must be different from current password");
+  }
+
+  // Hash new password
+  const hashed = await bcrypt.hash(newPassword, 10);
+
+  admin.password = hashed;
+  await admin.save();
+};
+
+
+export const getAllListingsService = async () => {
+  const listings = await Listing.find()
+    .sort({ createdAt: -1 })
+    .lean();
+  return listings;
+};
+
