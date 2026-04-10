@@ -9,7 +9,12 @@ import { store } from "./app/store";
 import { LocalizationProvider } from '@mui/x-date-pickers-pro/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LoadScript } from '@react-google-maps/api';
+import { Toaster } from 'react-hot-toast';
 import { VITE_GOOGLE_MAPS_API_KEY } from './constant/bikecategories.ts';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import "./slick-overrides.css";
+import "leaflet/dist/leaflet.css";
 const GOOGLE_LIBRARIES: (
   | "places"
 )[] = ["places"];
@@ -25,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
             libraries={GOOGLE_LIBRARIES}
           >
             <App />
+            <Toaster position="top-right" />
           </LoadScript>
         </LocalizationProvider>
       </ThemeProvider>

@@ -7,10 +7,6 @@ import {
   FormControlLabel,
   Stack,
   Link,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
 import { useLoginMutation } from "../services/authApi";
 import { useDispatch } from "react-redux";
@@ -19,6 +15,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { useState } from "react";
 import ResendVerificationDialog from "../components/ResendVerificationDialog";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 
 const SignIn = () => {
@@ -31,9 +28,8 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMessage, setDialogMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
+  // const [dialogOpen, setDialogOpen] = useState(false);
+  // const [isSuccess, setIsSuccess] = useState(false);
 
   /* ---------- Email Validation ---------- */
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,9 +69,7 @@ const SignIn = () => {
         localStorage.setItem("tokenExpiry", expiresAt.toString());
       }
 
-      setDialogMessage("Login successful");
-      setIsSuccess(true);
-      setDialogOpen(true);
+      toast.success("Login successful");
 
       setTimeout(() => {
         navigate("/", { replace: true });
@@ -89,22 +83,20 @@ const SignIn = () => {
         return;
       }
 
-      setDialogMessage(err?.data?.message || "Login failed");
-      setIsSuccess(false);
-      setDialogOpen(true);
+      toast.error(err?.data?.message || "Login failed");
     }
   };
 
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
+  // const handleDialogClose = () => {
+  //   setDialogOpen(false);
 
-    if (isSuccess) {
-      setEmail("");
-      setPassword("");
-      setRememberMe(false);
-    }
-  };
+  //   if (isSuccess) {
+  //     setEmail("");
+  //     setPassword("");
+  //     setRememberMe(false);
+  //   }
+  // };
 
   return (
     <Box
@@ -237,7 +229,7 @@ const SignIn = () => {
       </Box>
 
       {/* ================= Dialog ================= */}
-      <Dialog open={dialogOpen} onClose={handleDialogClose}>
+      {/* <Dialog open={dialogOpen} onClose={handleDialogClose}>
         <DialogTitle
           sx={{
             fontWeight: 700,
@@ -265,7 +257,7 @@ const SignIn = () => {
             OK
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
       <ResendVerificationDialog
         open={showVerifyDialog}
         email={email}

@@ -2,8 +2,10 @@ import { Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
+import AdminProtectedRoute from "./AdminProtectedRoute";
+import AdminLayout from "../layouts/AdminLayout";
 
-/* Pages */
+/* User Pages */
 import Home from "../pages/Home";
 import SignIn from "../pages/SignIn";
 import Register from "../pages/Register";
@@ -27,13 +29,34 @@ import ComingSoon from "../pages/ComingSoon";
 import MyRefunds from "../pages/MyRefunds";
 import MyListings from "../pages/MyListing";
 
+/* Admin Pages */
+import AdminLogin from "../pages/admin/AdminLogin";
+import AdminDashboard from "../pages/admin/AdminDahbaord";
+import AdminUsers from "../pages/admin/AdminUsers";
+import AdminUserBookings from "../pages/admin/AdminUserBookings";
+import AdminDisputes from "../pages/admin/AdminDisputes";
+import AdminDisputeDetail from "../pages/admin/AdminDisputeDetail";
+
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* ================= Layout ================= */}
-      <Route element={<MainLayout />}>
 
-        {/* ---------- Public Routes ---------- */}
+      {/* ================= ADMIN ROUTES (ABSOLUTE ISOLATION) ================= */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+
+      <Route path="/admin" element={<AdminProtectedRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="users/:userId" element={<AdminUserBookings />} />
+          <Route path="disputes" element={<AdminDisputes />} />
+          <Route path="disputes/:disputeId" element={<AdminDisputeDetail />} />
+        </Route>
+      </Route>
+
+      {/* ================= USER APP ================= */}
+      <Route element={<MainLayout />}>
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<SignIn />} />
           <Route path="/register" element={<Register />} />
@@ -41,13 +64,11 @@ const AppRoutes = () => {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
         </Route>
 
-        {/* ---------- Public Accessible ---------- */}
         <Route path="/home" element={<Home />} />
         <Route path="/browse-bikes" element={<BrowseBikes />} />
         <Route path="/bikes/:id" element={<BikeDetails />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
 
-        {/* ---------- Protected Routes ---------- */}
         <Route element={<ProtectedRoute />}>
           <Route path="/create-listing" element={<CreateListing />} />
           <Route path="/my-account" element={<MyProfile />} />
@@ -65,7 +86,7 @@ const AppRoutes = () => {
         </Route>
       </Route>
 
-      {/* ---------- No Layout ---------- */}
+      {/* ---------- Fallback ---------- */}
       <Route path="/" element={<ComingSoon />} />
     </Routes>
   );

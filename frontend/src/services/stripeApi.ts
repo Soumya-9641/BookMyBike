@@ -52,7 +52,7 @@ export const stripeApi = baseApi.injectEndpoints({
         body: { status },
       }),
     }),
-     getStripeStatus: builder.query<
+    getStripeStatus: builder.query<
       {
         success: boolean;
         data: {
@@ -87,6 +87,16 @@ export const stripeApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
+    cancelBooking: builder.mutation<
+      any,
+      { bookingId: string; reason?: string }
+    >({
+      query: ({ bookingId, reason }) => ({
+        url: `/checkout/${bookingId}/cancel`,
+        method: "PATCH",
+        body: { reason },
+      }),
+    }),
   }),
 })
 export const {
@@ -96,4 +106,5 @@ export const {
   useCompleteRideMutation,
   useGetStripeStatusQuery,
   useVerifyPaymentQuery,
+  useCancelBookingMutation,
 } = stripeApi;

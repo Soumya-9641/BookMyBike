@@ -24,6 +24,7 @@ export const listingApi = baseApi.injectEndpoints({
         formData.append("size", data.size);
         formData.append("category", data.category);
         formData.append("depositAmount", String(data.depositAmount));
+        formData.append("pickupPoint", data.pickupPoint);
 
         formData.append("accessories", JSON.stringify(data.accessories));
         formData.append("rates", JSON.stringify(data.rates));

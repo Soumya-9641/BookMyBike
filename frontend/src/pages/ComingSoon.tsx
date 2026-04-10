@@ -21,6 +21,7 @@ import LanguageIcon from "@mui/icons-material/Language";
 import SearchIcon from "@mui/icons-material/Search";
 
 import { useJoinWaitlistMutation } from "../services/waitlistAPI";
+import toast from "react-hot-toast";
 
 /* ---------------- Icon Circle ---------------- */
 const IconCircle = ({
@@ -63,10 +64,6 @@ const ComingSoon: React.FC = () => {
   const [segment, setSegment] = useState<"renter" | "lister">("renter");
   const [email, setEmail] = useState("");
 
-  const [popupOpen, setPopupOpen] = useState(false);
-  const [popupMessage, setPopupMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
-
   const [joinWaitlist, { isLoading }] = useJoinWaitlistMutation();
 
   /* ---------- Email Validation ---------- */
@@ -79,21 +76,9 @@ const ComingSoon: React.FC = () => {
 
     try {
       const res = await joinWaitlist({ email }).unwrap();
-      setPopupMessage(res.message);
-      setIsSuccess(true);
-      setPopupOpen(true);
+      toast.success(res.message);
     } catch (err: any) {
-      setPopupMessage(err?.data?.message || "Failed to join waitlist");
-      setIsSuccess(false);
-      setPopupOpen(true);
-    }
-  };
-
-  const handleClosePopup = () => {
-    setPopupOpen(false);
-
-    if (isSuccess) {
-      setEmail("");
+      toast.error(err?.data?.message || "Failed to join waitlist");
     }
   };
 
@@ -143,202 +128,202 @@ const ComingSoon: React.FC = () => {
             backgroundColor: "rgba(255,255,255,0.9)",
           }}
         >
-        {/* Logo */}
-        <Box mb={3}>
-          <img src="/images/logo.png" alt="RentMyBike" height={60} />
-        </Box>
+          {/* Logo */}
+          <Box mb={3}>
+            <img src="/images/logo.png" alt="RentMyBike" height={60} />
+          </Box>
 
-        {/* Heading */}
-        <Typography
-          sx={{
-            fontSize: { xs: "2rem", sm: "2.8rem" },
-            fontWeight: 800,
-            color: "#2e7d32",
-            mb: 2,
-          }}
-        >
-          COMING SOON
-        </Typography>
-
-        <Typography fontWeight={600} mb={1} fontSize={22}>
-          Discover Smart Bike Sharing on Your Terms. Whenever. Wherever.
-        </Typography>
-
-        <Typography mb={1} fontSize={18}>
-          On Demand bike sharing on your terms-flexible, accessible, and sustainable.
-        </Typography>
-        <Typography mb={4} fontSize={18}>
-          Sign up now to receive early notifications of our launch date.
-        </Typography>
-
-        {/* Email Form */}
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="center"
-          spacing={0}
-          mb={5}
-        >
-          <TextField
-            placeholder="Enter your email address"
-            required
-            value={email}
-            error={showEmailError}
-            helperText={showEmailError ? "Please enter a valid email address" : " "}
-            onChange={(e) => setEmail(e.target.value)}
+          {/* Heading */}
+          <Typography
             sx={{
-              width: { xs: "100%", sm: 380 },
-              "& .MuiInputBase-root": {
+              fontSize: { xs: "2rem", sm: "2.8rem" },
+              fontWeight: 800,
+              color: "#2e7d32",
+              mb: 2,
+            }}
+          >
+            COMING SOON
+          </Typography>
+
+          <Typography fontWeight={600} mb={1} fontSize={22}>
+            Discover Smart Bike Sharing on Your Terms. Whenever. Wherever.
+          </Typography>
+
+          <Typography mb={1} fontSize={18}>
+            On Demand bike sharing on your terms-flexible, accessible, and sustainable.
+          </Typography>
+          <Typography mb={4} fontSize={18}>
+            Sign up now to receive early notifications of our launch date.
+          </Typography>
+
+          {/* Email Form */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="center"
+            spacing={0}
+            mb={5}
+          >
+            <TextField
+              placeholder="Enter your email address"
+              required
+              value={email}
+              error={showEmailError}
+              helperText={showEmailError ? "Please enter a valid email address" : " "}
+              onChange={(e) => setEmail(e.target.value)}
+              sx={{
+                width: { xs: "100%", sm: 380 },
+                "& .MuiInputBase-root": {
+                  height: 52,
+                  backgroundColor: "#fff",
+                  borderRadius: { xs: 1, sm: "8px 0 0 8px" },
+                },
+              }}
+            />
+
+            <Button
+              variant="contained"
+              disabled={!isEmailValid || isLoading}
+              onClick={handleSubmit}
+              sx={{
                 height: 52,
-                backgroundColor: "#fff",
-                borderRadius: { xs: 1, sm: "8px 0 0 8px" },
-              },
-            }}
-          />
-
-          <Button
-            variant="contained"
-            disabled={!isEmailValid || isLoading}
-            onClick={handleSubmit}
-            sx={{
-              height: 52,
-              borderRadius: { xs: 1, sm: "0 8px 8px 0" },
-              backgroundColor: "#2e7d32",
-              px: 4,
-              fontWeight: 600,
-              whiteSpace: "nowrap",
-              "&:hover": { backgroundColor: "#1b5e20" },
-              "&.Mui-disabled": {
-                backgroundColor: "#a5d6a7",
-                color: "#fff",
-              },
-            }}
-          >
-            {isLoading ? "Submitting..." : "Notify me"}
-          </Button>
-        </Stack>
-
-        {/* Segment Toggle */}
-        <Box display="flex" justifyContent="center" mb={5}>
-          <ToggleButtonGroup
-            value={segment}
-            exclusive
-            onChange={handleSegmentChange}
-            sx={{
-              backgroundColor: "#e0e0e0",
-              borderRadius: "8px",
-              padding: "4px",
-            }}
-          >
-            <ToggleButton
-              value="renter"
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
+                borderRadius: { xs: 1, sm: "0 8px 8px 0" },
+                backgroundColor: "#2e7d32",
                 px: 4,
-                border: "none",
-                "&.Mui-selected": {
-                  backgroundColor: "#2e7d32",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                "&:hover": { backgroundColor: "#1b5e20" },
+                "&.Mui-disabled": {
+                  backgroundColor: "#a5d6a7",
                   color: "#fff",
-                  "&:hover": { backgroundColor: "#1b5e20" },
                 },
               }}
             >
-              For Renter
-            </ToggleButton>
+              {isLoading ? "Submitting..." : "Notify me"}
+            </Button>
+          </Stack>
 
-            <ToggleButton
-              value="lister"
+          {/* Segment Toggle */}
+          <Box display="flex" justifyContent="center" mb={5}>
+            <ToggleButtonGroup
+              value={segment}
+              exclusive
+              onChange={handleSegmentChange}
               sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                px: 4,
-                border: "none",
-                "&.Mui-selected": {
-                  backgroundColor: "#2e7d32",
-                  color: "#fff",
-                  "&:hover": { backgroundColor: "#1b5e20" },
-                },
+                backgroundColor: "#e0e0e0",
+                borderRadius: "8px",
+                padding: "4px",
               }}
             >
-              For Lister
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
+              <ToggleButton
+                value="renter"
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 4,
+                  border: "none",
+                  "&.Mui-selected": {
+                    backgroundColor: "#2e7d32",
+                    color: "#fff",
+                    "&:hover": { backgroundColor: "#1b5e20" },
+                  },
+                }}
+              >
+                For Renter
+              </ToggleButton>
 
-        {/* Steps */}
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="center"
-          alignItems="center"
-          spacing={3}
-        >
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <IconCircle
-              text="Sign up & verify your identity(Stripe-secured)"
-              icon={<LanguageIcon fontSize="large" />}
-            />
-            <ArrowForwardIcon
-              sx={{
-                color: "#2e7d32",
-                fontSize: 22,
-                transform: "translateY(-14px)",
-                display: { xs: "none", sm: "block" },
-              }}
-            />
-          </Stack>
+              <ToggleButton
+                value="lister"
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 4,
+                  border: "none",
+                  "&.Mui-selected": {
+                    backgroundColor: "#2e7d32",
+                    color: "#fff",
+                    "&:hover": { backgroundColor: "#1b5e20" },
+                  },
+                }}
+              >
+                For Lister
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
 
-          <Stack direction="row" alignItems="center" spacing={2}>
+          {/* Steps */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="center"
+            alignItems="center"
+            spacing={3}
+          >
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <IconCircle
+                text="Sign up & verify your identity(Stripe-secured)"
+                icon={<LanguageIcon fontSize="large" />}
+              />
+              <ArrowForwardIcon
+                sx={{
+                  color: "#2e7d32",
+                  fontSize: 22,
+                  transform: "translateY(-14px)",
+                  display: { xs: "none", sm: "block" },
+                }}
+              />
+            </Stack>
+
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <IconCircle
+                text={
+                  segment === "renter"
+                    ? "Browse and book a bike"
+                    : "List your bike(s)"
+                }
+                icon={<SearchIcon fontSize="large" />}
+              />
+              <ArrowForwardIcon
+                sx={{
+                  color: "#2e7d32",
+                  fontSize: 22,
+                  transform: "translateY(-14px)",
+                  display: { xs: "none", sm: "block" },
+                }}
+              />
+            </Stack>
+
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <IconCircle
+                text={
+                  segment === "renter"
+                    ? "Pick up, ride & enjoy"
+                    : "Approve bookings & hand over your bike"
+                }
+                icon={<DirectionsBikeIcon fontSize="large" />}
+              />
+              <ArrowForwardIcon
+                sx={{
+                  color: "#2e7d32",
+                  fontSize: 22,
+                  transform: "translateY(-14px)",
+                  display: { xs: "none", sm: "block" },
+                }}
+              />
+            </Stack>
+
             <IconCircle
               text={
-                segment === "renter"
-                  ? "Browse and book a bike"
-                  : "List your bike(s)"
-              }
-              icon={<SearchIcon fontSize="large" />}
-            />
-            <ArrowForwardIcon
-              sx={{
-                color: "#2e7d32",
-                fontSize: 22,
-                transform: "translateY(-14px)",
-                display: { xs: "none", sm: "block" },
-              }}
-            />
-          </Stack>
-
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <IconCircle
-              text={
-                segment === "renter"
-                  ? "Pick up, ride & enjoy"
-                  : "Approve bookings & hand over your bike"
-              }
-              icon={<DirectionsBikeIcon  fontSize="large" />}
-            />
-            <ArrowForwardIcon
-              sx={{
-                color: "#2e7d32",
-                fontSize: 22,
-                transform: "translateY(-14px)",
-                display: { xs: "none", sm: "block" },
-              }}
-            />
-          </Stack>
-
-          <IconCircle
-            text={
                 segment === "renter"
                   ? "Return on time in the same condition-repeat!"
                   : "Confirm return, get paid - repeat!"
               }
-            icon={<VerifiedIcon fontSize="large" />}
-          />
-        </Stack>
+              icon={<VerifiedIcon fontSize="large" />}
+            />
+          </Stack>
         </Paper>
       </Box>
 
       {/* Popup Dialog */}
-      <Dialog open={popupOpen} onClose={handleClosePopup}>
+      {/* <Dialog open={popupOpen} onClose={handleClosePopup}>
         <DialogTitle
           sx={{
             fontWeight: 700,
@@ -366,7 +351,7 @@ const ComingSoon: React.FC = () => {
             OK
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
       {/* Footer */}
       <Box
