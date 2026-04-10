@@ -250,38 +250,27 @@ router.put(
         size,
         category,
         accessories,
-        rates,
         depositAmount,
         pickupPoint,
-        location,
+        // ❌ location — not allowed to change
+        // ❌ rates    — not allowed to change
       } = req.body;
 
-      // Build update object with only provided fields
       const updateData: Record<string, any> = {};
 
-      if (title)        updateData.title        = title;
-      if (description)  updateData.description  = description;
-      if (brand)        updateData.brand        = brand;
-      if (modelbike)    updateData.modelbike    = modelbike;
-      if (size)         updateData.size         = size;
-      if (category)     updateData.category     = category;
+      if (title)         updateData.title         = title;
+      if (description)   updateData.description   = description;
+      if (brand)         updateData.brand         = brand;
+      if (modelbike)     updateData.modelbike     = modelbike;
+      if (size)          updateData.size          = size;
+      if (category)      updateData.category      = category;
       if (depositAmount) updateData.depositAmount = depositAmount;
-      if (accessories)  updateData.accessories  = JSON.parse(accessories);
-      if (rates)        updateData.rates        = JSON.parse(rates);
+      if (accessories)   updateData.accessories   = JSON.parse(accessories);
       if (pickupPoint !== undefined) {
         updateData.pickupPoint = pickupPoint?.trim() || undefined;
       }
-      if (location) {
-        const parsedLocation = JSON.parse(location);
-        updateData.location = {
-          type: "Point",
-          coordinates: [parsedLocation.lng, parsedLocation.lat],
-          address: parsedLocation.address,
-          city: parsedLocation.city,
-        };
-      }
 
-      // If new photos uploaded, replace photos array
+      // ── New photos uploaded → replace photos array ──
       const files = req.files as Express.Multer.File[];
       if (files?.length) {
         updateData.photos = files.map(
