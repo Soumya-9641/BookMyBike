@@ -2,7 +2,9 @@ import express, { Response } from "express";
 import { authMiddleware, isAdmin } from "../../Middlewares/auth.middleware";
 import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersService,
    getUserBookingSummaryService,getAllAdminsService,blockUserService,
-   getAllBookingsService } from "./admin.service";
+   getAllBookingsService, 
+   changeAdminPasswordService,
+   getAllListingsService} from "./admin.service";
 import { AuthRequest } from "../../types/auth-request";
 import mongoose from "mongoose";
 
@@ -154,5 +156,51 @@ router.patch(
     }
   }
 );
+router.patch(
+  "/changePassword",
+  
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        res.status(400).json({
+          success: false,
+          message: "currentPassword and newPassword are required",
+        });
+        return;
+      }
+
+      await changeAdminPasswordService(
+        req.user!.userId.toString(),
+        { currentPassword, newPassword }
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Password changed successfully",
+      });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  }
+);
  
+router.get(
+  "/alllistings",
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const listings = await getAllListingsService();
+      res.status(200).json({
+        success: true,
+        count: listings.length,
+        listings,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Failed to fetch listings" });
+    }
+  }
+);
+
+
 export default router;
