@@ -36,6 +36,10 @@ import AdminUsers from "../pages/admin/AdminUsers";
 import AdminUserBookings from "../pages/admin/AdminUserBookings";
 import AdminDisputes from "../pages/admin/AdminDisputes";
 import AdminDisputeDetail from "../pages/admin/AdminDisputeDetail";
+import EditListing from "../pages/EditListings";
+import AdminChangePassword from "../components/admin/AdminChangePassword";
+import AdminListings from "../pages/admin/AdminListings";
+import AdminBookings from "../pages/admin/AdminBookings";
 
 const AppRoutes = () => {
   return (
@@ -49,6 +53,9 @@ const AppRoutes = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="bookings" element={<AdminBookings/>} />
+          <Route path="listings" element={<AdminListings />} />
+          <Route path="change-password" element={<AdminChangePassword />} />
           <Route path="users/:userId" element={<AdminUserBookings />} />
           <Route path="disputes" element={<AdminDisputes />} />
           <Route path="disputes/:disputeId" element={<AdminDisputeDetail />} />
@@ -83,6 +90,7 @@ const AppRoutes = () => {
           <Route path="/onboardReturn" element={<OnboardReturn />} />
           <Route path="/my-refunds" element={<MyRefunds />} />
           <Route path="/my-listings" element={<MyListings />} />
+          <Route path="/edit-listing/:listingId" element={<EditListing />} />
         </Route>
       </Route>
 

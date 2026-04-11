@@ -66,6 +66,26 @@ export const adminApi = createApi({
       }),
       invalidatesTags: ["Disputes", "Dispute"],
     }),
+    getAllBookings: builder.query<any[], void>({
+      query: () => "/adminstats/allbookings",
+      transformResponse: (res: any) => res.bookings,
+    }),
+
+    getAllListings: builder.query<any[], void>({
+      query: () => "/adminstats/alllistings",
+      transformResponse: (res: any) => res.listings,
+    }),
+
+    changeAdminPassword: builder.mutation<
+      { message: string },
+      { currentPassword: string; newPassword: string }
+    >({
+      query: (body) => ({
+        url: "/adminstats/changePassword",
+        method: "PATCH",
+        body,
+      }),
+    })
 
   }),
 
@@ -80,4 +100,7 @@ export const {
   useGetAllDisputesQuery,
   useGetDisputeDetailQuery,
   useUpdateDisputeMutation,
+  useGetAllBookingsQuery,
+  useGetAllListingsQuery,
+  useChangeAdminPasswordMutation,
 } = adminApi;

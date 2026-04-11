@@ -74,8 +74,19 @@ export const listingApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+    editListing: builder.mutation<
+      { listing: any },
+      { listingId: string; data: FormData }
+    >({
+      query: ({ listingId, data }) => ({
+        url: `/bike/listing/${listingId}/edit`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Listing"],
+    }),
   }),
 });
 
 export const { useCreateListingMutation, useGetAllBikesQuery,
-  useFilterBikesMutation, useGetHomeBikesQuery, useGetBikeByIdQuery,useSearchBikesMutation  } = listingApi;
+  useFilterBikesMutation, useGetHomeBikesQuery, useGetBikeByIdQuery, useSearchBikesMutation, useEditListingMutation } = listingApi;

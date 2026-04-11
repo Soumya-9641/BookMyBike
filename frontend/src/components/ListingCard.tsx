@@ -9,14 +9,26 @@ import {
   Box,
 } from "@mui/material";
 import { useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import ListingDetailsModal from "./ListingDetailsModal";
 
 interface Props {
   listing: any;
+  isAdmin?: boolean;
 }
 
-const ListingCard = ({ listing }: Props) => {
+const ListingCard = ({ listing, isAdmin = false }: Props) => {
   const [open, setOpen] = useState(false);
+
+  /**
+   * ✅ SUPPORT BOTH SHAPES
+   * - User API → listing.bike.brand
+   * - Admin API → listing.brand
+   */
+  const brand = listing?.bike?.brand ?? listing?.brand ?? "—";
+  const model = listing?.bike?.modelbike ?? listing?.modelbike ?? "—";
+  const category = listing?.bike?.category ?? listing?.category ?? "—";
+  const rates = listing?.rates ?? {};
 
   return (
     <>
@@ -25,50 +37,66 @@ const ListingCard = ({ listing }: Props) => {
         <CardMedia
           component="img"
           height="180"
-          image={`${import.meta.env.VITE_API_BASE_URL}${listing.photos?.[0] || "/placeholder-bike.png"}`}
-          alt={listing.title}
+          image={
+            listing?.photos?.[0]
+              ? `${import.meta.env.VITE_API_BASE_URL}${listing.photos[0]}`
+              : "/placeholder-bike.png"
+          }
+          alt={listing?.title || "Listing"}
         />
 
         <CardContent sx={{ flexGrow: 1 }}>
           {/* TITLE */}
           <Typography fontWeight={700} gutterBottom>
-            {listing.title}
+            {listing?.title || "Untitled Listing"}
           </Typography>
 
           {/* BRAND / MODEL */}
           <Typography variant="body2" color="text.secondary">
-            {listing.bike.brand} • {listing.bike.modelbike}
+            {brand} • {model}
           </Typography>
 
           {/* CATEGORY */}
           <Typography variant="body2" color="text.secondary">
-            {listing.bike.category}
+            {category}
           </Typography>
 
           {/* STATUS */}
           <Stack direction="row" spacing={1} mt={2}>
             <Chip
-              label={listing.isPublished ? "Published" : "Draft"}
-              color={listing.isPublished ? "success" : "default"}
+              label={listing?.isPublished ? "Published" : "Draft"}
+              color={listing?.isPublished ? "success" : "default"}
               size="small"
             />
-            <Chip
-              label={`Deposit: SEK ${listing.depositAmount}`}
-              size="small"
-              variant="outlined"
-            />
+            {listing?.depositAmount !== undefined && (
+              <Chip
+                label={`Deposit: SEK ${listing.depositAmount}`}
+                size="small"
+                variant="outlined"
+              />
+            )}
           </Stack>
 
           {/* PRICING */}
           <Box mt={2}>
-            {listing.rates?.daily && (
+            {rates.daily && (
               <Typography variant="body2">
-                Daily: SEK {listing.rates.daily}
+                Daily: SEK {rates.daily}
               </Typography>
             )}
-            {listing.rates?.hourly && (
+            {rates.hourly && (
               <Typography variant="body2">
-                Hourly: SEK {listing.rates.hourly}
+                Hourly: SEK {rates.hourly}
+              </Typography>
+            )}
+            {rates.weekly && (
+              <Typography variant="body2">
+                Weekly: SEK {rates.weekly}
+              </Typography>
+            )}
+            {rates.monthly && (
+              <Typography variant="body2">
+                Monthly: SEK {rates.monthly}
               </Typography>
             )}
           </Box>
@@ -84,10 +112,21 @@ const ListingCard = ({ listing }: Props) => {
           >
             View
           </Button>
+
+          {!isAdmin && (
+            <Button
+              size="small"
+              variant="contained"
+              color="warning"
+              fullWidth
+              component={RouterLink}
+            to={`/edit-listing/${listing.listingId}`}
+          >
+            Edit
+          </Button>)}
         </Stack>
       </Card>
 
-      {/* DETAILS MODAL */}
       {open && (
         <ListingDetailsModal
           open={open}

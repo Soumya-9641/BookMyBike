@@ -17,6 +17,18 @@ interface Props {
 }
 
 const ListingDetailsModal = ({ open, listing, onClose }: Props) => {
+  if (!listing) return null;
+
+  // ✅ NORMALIZE DATA (User + Admin)
+  const listingId = listing.listingId || listing._id;
+  const brand = listing?.bike?.brand ?? listing?.brand ?? "—";
+  const model = listing?.bike?.modelbike ?? listing?.modelbike ?? "—";
+  const category = listing?.bike?.category ?? listing?.category ?? "—";
+  const size = listing?.bike?.size ?? listing?.size ?? "—";
+  const accessories = listing?.accessories ?? [];
+  const rates = listing?.rates ?? {};
+  const location = listing?.location ?? {};
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Listing Details</DialogTitle>
@@ -26,49 +38,63 @@ const ListingDetailsModal = ({ open, listing, onClose }: Props) => {
           {/* BASIC INFO */}
           <Typography variant="h6">Basic Info</Typography>
           <Divider />
-          <Typography>Listing ID: {listing.listingId}</Typography>
+          <Typography>Listing ID: {listingId}</Typography>
           <Typography>Title: {listing.title}</Typography>
           <Typography>Description: {listing.description}</Typography>
 
           {/* BIKE INFO */}
-          <Typography variant="h6" mt={2}>Bike Details</Typography>
+          <Typography variant="h6" mt={2}>
+            Bike Details
+          </Typography>
           <Divider />
-          <Typography>Brand: {listing.bike.brand}</Typography>
-          <Typography>Model: {listing.bike.modelbike}</Typography>
-          <Typography>Category: {listing.bike.category}</Typography>
-          <Typography>Size: {listing.bike.size}</Typography>
+          <Typography>Brand: {brand}</Typography>
+          <Typography>Model: {model}</Typography>
+          <Typography>Category: {category}</Typography>
+          <Typography>Size: {size}</Typography>
 
           {/* PRICING */}
-          <Typography variant="h6" mt={2}>Pricing</Typography>
+          <Typography variant="h6" mt={2}>
+            Pricing
+          </Typography>
           <Divider />
-          {listing.rates?.hourly && (
-            <Typography>Hourly: SEK {listing.rates.hourly}</Typography>
+          {rates.hourly && (
+            <Typography>Hourly: SEK {rates.hourly}</Typography>
           )}
-          {listing.rates?.daily && (
-            <Typography>Daily: SEK {listing.rates.daily}</Typography>
+          {rates.daily && (
+            <Typography>Daily: SEK {rates.daily}</Typography>
           )}
-          {listing.rates?.weekly && (
-            <Typography>Weekly: SEK {listing.rates.weekly}</Typography>
+          {rates.weekly && (
+            <Typography>Weekly: SEK {rates.weekly}</Typography>
           )}
-          {listing.rates?.monthly && (
-            <Typography>Monthly: SEK {listing.rates.monthly}</Typography>
+          {rates.monthly && (
+            <Typography>Monthly: SEK {rates.monthly}</Typography>
           )}
-          <Typography>Deposit: SEK {listing.depositAmount}</Typography>
+          <Typography>
+            Deposit: SEK {listing.depositAmount ?? "—"}
+          </Typography>
 
           {/* ACCESSORIES */}
-          <Typography variant="h6" mt={2}>Accessories</Typography>
+          <Typography variant="h6" mt={2}>
+            Accessories
+          </Typography>
           <Divider />
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            {listing.accessories.map((a: string) => (
-              <Chip key={a} label={a} size="small" />
-            ))}
-          </Stack>
+          {accessories.length > 0 ? (
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              {accessories.map((a: string) => (
+                <Chip key={a} label={a} size="small" />
+              ))}
+            </Stack>
+          ) : (
+            <Typography color="text.secondary">No accessories</Typography>
+          )}
 
           {/* LOCATION */}
-          <Typography variant="h6" mt={2}>Location</Typography>
+          <Typography variant="h6" mt={2}>
+            Location
+          </Typography>
           <Divider />
-          <Typography>{listing.location.address}</Typography>
-          <Typography>City: {listing.location.city}</Typography>
+          <Typography>{location.address || "—"}</Typography>
+          {location.city && <Typography>City: {location.city}</Typography>}
         </Stack>
       </DialogContent>
 
