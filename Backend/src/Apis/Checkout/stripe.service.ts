@@ -12,7 +12,54 @@ import Payment from "../../Models/Payment";
 const PLATFORM_FEE_RATE = 0.18; // 18% of rental amount
 const VAT_RATE = 0.25; // 25% Swedish VAT , included in the 18%
 
+// ── 1. calculateRentalAmount ────────────────────────────────────
+// Mirrors the hourly/daily branching logic from your service exactly.
+export const calculateRentalAmount = (
+  listing: { rates?: { hourly?: number; daily?: number }; depositAmount?: number },
+  hours: number
+): { rentalAmount: number; pricePerDay: number; totalDays: number } => {
+  const hourlyRate = listing.rates?.hourly;
+  const dailyRate  = listing.rates?.daily;
 
+  if (hours < 24) {
+    if (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
+    return {
+      rentalAmount: Math.round(hours * hourlyRate),
+      pricePerDay:  hourlyRate * 24,   // informational
+      totalDays:    1,
+    };
+  } else {
+    if (!dailyRate) throw new Error("Listing does not have a daily rate set");
+    const totalDays = Math.ceil(hours / 24);  // 25h=2d, 48h=2d, 49h=3d
+    return {
+      rentalAmount: Math.round(totalDays * dailyRate),
+      pricePerDay:  dailyRate,
+      totalDays,
+    };
+  }
+};
+
+export const checkAvailability = async (
+  listingId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<boolean> => {
+  // Check if any active booking overlaps with the requested date range
+  const conflictingBooking = await Booking.findOne({
+    bikeId: listingId,
+    status: { $in: ["upcoming", "active"] }, // only block on live bookings
+    $or: [
+      // Case 1: existing booking starts inside requested range
+      { startDate: { $gte: startDate, $lt: endDate } },
+      // Case 2: existing booking ends inside requested range
+      { endDate: { $gt: startDate, $lte: endDate } },
+      // Case 3: existing booking completely wraps the requested range
+      { startDate: { $lte: startDate }, endDate: { $gte: endDate } },
+    ],
+  });
+
+  return !conflictingBooking; // true = available, false = conflict found
+};
 
 export const createBookingPaymentService = async ({
   listingId,
@@ -428,11 +475,11 @@ export const cancelBookingService = async (
 
   const depositAmount = payment.depositAmount ?? 0;   // refunded to renter
   const ownerPayout   = payment.ownerPayout   ?? 0;   // sent to owner
-
+const fullRefundAmount = payment.amount ?? 0;
   // ── Refund only deposit to renter ──
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
-    amount: depositAmount * 100,                      // only deposit in öre
+    amount: fullRefundAmount * 100,                      // only deposit in öre
     reason: "requested_by_customer",
   });
 
