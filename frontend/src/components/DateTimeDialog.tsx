@@ -140,7 +140,7 @@ const DateTimeDialog = ({
             <TimePicker
               value={end}
               minutesStep={30}
-              minTime={start}
+              minTime={end.isSame(start, "day") ? start : undefined}
               onChange={handleEndTimeChange}
             />
           </Stack>

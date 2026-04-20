@@ -43,16 +43,13 @@ const EditListing = () => {
     const [form, setForm] = useState<any>(null);
     const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
 
-    // existing photos (URLs)
     const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
-    // newly added files
     const [newPhotos, setNewPhotos] = useState<File[]>([]);
 
     /* -------------------- PREFILL -------------------- */
     useEffect(() => {
         if (!listing) return;
 
-        // ✅ Always read category from bike first
         const rawCategory =
             listing.bike?.category ||
             listing.category ||
@@ -84,12 +81,13 @@ const EditListing = () => {
         );
     }, [listing]);
 
-    if (isLoading || !form)
+    if (isLoading || !form) {
         return (
             <Box minHeight="400px" display="flex" justifyContent="center">
                 <CircularProgress />
             </Box>
         );
+    }
 
     /* -------------------- HANDLERS -------------------- */
     const handleChange = (e: any) =>
@@ -138,7 +136,28 @@ const EditListing = () => {
             fd.append("category", `${mainCategory} > ${subCategory}`);
             fd.append("accessories", JSON.stringify(selectedAccessories));
 
-            newPhotos.forEach((p) => fd.append("photos", p));
+            /* ✅ IMPORTANT FIX: SEND ALL IMAGES */
+
+            // 1. Convert existing image URLs to File objects
+            const existingImageFiles = await Promise.all(
+                existingPhotos.map(async (url, index) => {
+                    const res = await fetch(url);
+                    const blob = await res.blob();
+                    return new File([blob], `existing_${index}.jpg`, {
+                        type: blob.type,
+                    });
+                })
+            );
+
+            // 2. Append existing images
+            existingImageFiles.forEach((file) => {
+                fd.append("photos", file);
+            });
+
+            // 3. Append newly added images
+            newPhotos.forEach((file) => {
+                fd.append("photos", file);
+            });
 
             await editListing({
                 listingId: listing.listingId,
@@ -179,7 +198,7 @@ const EditListing = () => {
                     </Stack>
                 </Paper>
 
-                {/* PRICING (READ ONLY) */}
+                {/* PRICING */}
                 <Paper variant="outlined" sx={{ p: 3 }}>
                     <Typography fontWeight={600} mb={2}>
                         Pricing (cannot be changed)
@@ -192,7 +211,7 @@ const EditListing = () => {
                     </Stack>
                 </Paper>
 
-                {/* LOCATION (READ ONLY) */}
+                {/* LOCATION */}
                 <Paper variant="outlined" sx={{ p: 3 }}>
                     <Typography fontWeight={600} mb={2}>
                         Location (cannot be changed)
