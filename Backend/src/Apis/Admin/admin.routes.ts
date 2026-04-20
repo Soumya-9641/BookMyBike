@@ -4,9 +4,12 @@ import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersSe
    getUserBookingSummaryService,getAllAdminsService,blockUserService,
    getAllBookingsService, 
    changeAdminPasswordService,
-   getAllListingsService} from "./admin.service";
+   getAllListingsService,
+   updateListingService} from "./admin.service";
 import { AuthRequest } from "../../types/auth-request";
 import mongoose from "mongoose";
+import { uploadBikeImages } from "../../Middlewares/upload.middleware";
+import User from "../../Models/User";
 
 
 const router = express.Router();
@@ -202,5 +205,78 @@ router.get(
   }
 );
 
+
+router.put(
+  "/:listingId/edit",
+  uploadBikeImages.array("photos", 6),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const ownerId = req.user!.userId.toString();
+
+      // ── Block check ──
+      const user = await User.findById(ownerId);
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+      if (user.isBlocked) {
+        res.status(401).json({
+          success: false,
+          message: "Your account has been blocked. Please contact support.",
+        });
+        return;
+      }
+
+      const {
+        title,
+        description,
+        brand,
+        modelbike,
+        size,
+        category,
+        accessories,
+        depositAmount,
+        pickupPoint,
+      } = req.body;
+
+      const updateData: Record<string, any> = {};
+
+      if (title)         updateData.title         = title;
+      if (description)   updateData.description   = description;
+      if (brand)         updateData.brand         = brand;
+      if (modelbike)     updateData.modelbike     = modelbike;
+      if (size)          updateData.size          = size;
+      if (category)      updateData.category      = category;
+      if (depositAmount) updateData.depositAmount = depositAmount;
+      if (accessories)   updateData.accessories   = JSON.parse(accessories);
+      if (pickupPoint !== undefined) {
+        updateData.pickupPoint = pickupPoint?.trim() || undefined;
+      }
+
+      // ── New photos uploaded → replace photos array ──
+      const files = req.files as Express.Multer.File[];
+      if (files?.length) {
+        updateData.photos = files.map(
+          (file) => `/uploads/bikes/${file.filename}`
+        );
+      }
+
+      const listing = await updateListingService(
+        req.params.listingId,
+        ownerId,
+        updateData
+      );
+
+      res.status(200).json({
+        message: "Listing updated successfully",
+        listing,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        message: error.message || "Failed to update listing",
+      });
+    }
+  }
+);
 
 export default router;

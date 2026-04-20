@@ -252,8 +252,6 @@ router.put(
         accessories,
         depositAmount,
         pickupPoint,
-        // ❌ location — not allowed to change
-        // ❌ rates    — not allowed to change
       } = req.body;
 
       const updateData: Record<string, any> = {};

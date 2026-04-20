@@ -6,12 +6,15 @@ import {
   completeRideService,   // NEW
   refundDepositService,
   checkStripeOnboardingStatus,
-  cancelBookingService  // kept for cancellations only
+  cancelBookingService , calculateRentalAmount,
+  checkAvailability // kept for cancellations only
 } from "./stripe.service";
 import { AuthRequest } from "../../types/auth-request";
 import Booking from "../../Models/Booking";
 import User from "../../Models/User";
 import Payment from "../../Models/Payment";
+import Listing, { IListing } from "../../Models/Listing";
+import { Document, DefaultSchemaOptions, Types } from "mongoose";
 
 const router = Router();
 
@@ -42,6 +45,96 @@ router.post("/create", authMiddleware, async (req: AuthRequest, res: Response) =
       hours: req.body.hours,
     });
     res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const renterId = req.user!.userId.toString();
+
+    const user = await User.findById(renterId);
+    if (!user) return void res.status(404).json({ message: "User not found" });
+    if (user.isBlocked) {
+      return void res.status(401).json({
+        success: false,
+        message: "Your account has been blocked. Please contact support.",
+      });
+    }
+
+    const { listingId, startDate, endDate, hours } = req.body;
+
+    // Fetch listing to get amount
+    const listing = await Listing.findById(listingId);
+    if (!listing) return void res.status(404).json({ message: "Listing not found" });
+
+    // Check availability before charging
+    const isAvailable = await checkAvailability(listingId, new Date(startDate), new Date(endDate));
+    if (!isAvailable) return void res.status(409).json({ message: "Listing is not available for selected dates" });
+
+    const { rentalAmount } = calculateRentalAmount(listing, hours);
+    const amount = rentalAmount; // Convert to smallest currency unit
+
+    // Create Stripe PaymentIntent — NO booking record created yet
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,         // in smallest currency unit (paise/cents)
+      currency: "inr",
+      metadata: {
+        renterId,
+        listingId,
+        startDate,
+        endDate,
+        hours: String(hours),
+      },
+    });
+
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (err: any) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+router.post("/confirm-booking", authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const renterId = req.user!.userId.toString();
+    const { paymentIntentId } = req.body;
+
+    if (!paymentIntentId) {
+      return void res.status(400).json({ message: "paymentIntentId is required" });
+    }
+
+    // Verify with Stripe server-side — never trust the frontend alone
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status !== "succeeded") {
+      return void res.status(400).json({
+        success: false,
+        message: `Payment not completed. Status: ${paymentIntent.status}`,
+      });
+    }
+
+    // Guard: ensure this intent belongs to this user
+    if (paymentIntent.metadata.renterId !== renterId) {
+      return void res.status(403).json({ message: "Unauthorized" });
+    }
+
+    // Guard: prevent duplicate bookings for same payment intent
+    const existing = await Booking.findOne({ paymentIntentId });
+    if (existing) {
+      return void res.status(409).json({ message: "Booking already exists for this payment" });
+    }
+
+    // NOW create booking + payment record
+    const result = await createBookingPaymentService({
+      listingId: paymentIntent.metadata.listingId,
+      renterId,
+      startDate: new Date(paymentIntent.metadata.startDate),
+      endDate: new Date(paymentIntent.metadata.endDate),
+      hours: Number(paymentIntent.metadata.hours)
+    });
+
+    res.json({ success: true, booking: result });
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }
@@ -298,3 +391,5 @@ router.patch(
   }
 );
 export default router;
+
+
