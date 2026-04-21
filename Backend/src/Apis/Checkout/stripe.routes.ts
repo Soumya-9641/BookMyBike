@@ -139,7 +139,7 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
           vatAmount: vatAmount.toString(),
           platformNet: platformNet.toString(),
           ownerPayout: ownerPayout.toString(),
-           chargeAmount:  chargeAmount.toString(),
+          chargeAmount:  chargeAmount.toString(),
           totalDays:     totalDays.toString(),
           pricePerDay:   pricePerDay.toString(),
         },
