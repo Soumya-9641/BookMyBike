@@ -76,7 +76,7 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
     const isAvailable = await checkAvailability(listingId, new Date(startDate), new Date(endDate));
     if (!isAvailable) return void res.status(409).json({ message: "Listing is not available for selected dates" });
 
-    const { rentalAmount } = calculateRentalAmount(listing, hours);
+    const { rentalAmount,pricePerDay, totalDays } = calculateRentalAmount(listing, hours);
     const amount = rentalAmount; // Convert to smallest currency unit
 //
      const depositAmount = Math.round(listing.depositAmount ?? 0);   // e.g. 100 kr
@@ -139,6 +139,9 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
           vatAmount: vatAmount.toString(),
           platformNet: platformNet.toString(),
           ownerPayout: ownerPayout.toString(),
+          chargeAmount:  chargeAmount.toString(),
+          totalDays:     totalDays.toString(),
+          pricePerDay:   pricePerDay.toString(),
         },
       });
 

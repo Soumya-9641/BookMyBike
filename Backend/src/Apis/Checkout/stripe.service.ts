@@ -250,7 +250,7 @@ export const confirmBookingService = async (
     payeeId:                m.ownerId,
     type:                   "booking",
     method:                 "card",
-    status:                 "paid",                    // ← paid, not pending
+    status:                 "succeeded",                    // ← paid, not pending
     amount:                 Number(m.chargeAmount),
     currency:               "SEK",
     platformFee:            Number(m.platformFee),
