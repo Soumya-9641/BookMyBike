@@ -205,6 +205,82 @@ let totalDays: number;
   };
 };
 
+export const confirmBookingService = async (
+  paymentIntentId: string,
+  renterId: string
+) => {
+  // ── Verify with Stripe ──
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+  if (paymentIntent.status !== "succeeded") {
+    throw new Error(`Payment not completed. Status: ${paymentIntent.status}`);
+  }
+
+  // ── Ownership guard ──
+  if (paymentIntent.metadata.renterId !== renterId) {
+    throw new Error("Unauthorized");
+  }
+
+  // ── Duplicate booking guard ──
+  const existing = await Payment.findOne({ stripePaymentIntentId: paymentIntentId });
+  if (existing) throw new Error("Booking already exists for this payment");
+
+  // ── Pull all values from Stripe metadata (locked at payment time) ──
+  const m = paymentIntent.metadata;
+
+  // ── Create Booking ──
+  const booking = await Booking.create({
+    bikeId:          m.listingId,
+    renterId:        m.renterId,
+    ownerId:         m.ownerId,
+    startDate:       new Date(m.startDate),
+    endDate:         new Date(m.endDate),
+    totalDays:       Number(m.totalDays),
+    pricePerDay:     Number(m.pricePerDay),
+    totalAmount:     Number(m.chargeAmount),
+    securityDeposit: Number(m.depositAmount),
+    currency:        "SEK",
+    status:          "upcoming",
+  });
+
+  // ── Create Payment record ──
+  const payment = await Payment.create({
+    bookingId:              booking._id,
+    payerId:                m.renterId,
+    payeeId:                m.ownerId,
+    type:                   "booking",
+    method:                 "card",
+    status:                 "paid",                    // ← paid, not pending
+    amount:                 Number(m.chargeAmount),
+    currency:               "SEK",
+    platformFee:            Number(m.platformFee),
+    vatAmount:              Number(m.vatAmount),
+    platformNet:            Number(m.platformNet),
+    ownerPayout:            Number(m.ownerPayout),
+    depositAmount:          Number(m.depositAmount),
+    stripePaymentIntentId:  paymentIntentId,
+    paidAt:                 new Date(),
+    description:            `Rental payment for listing ${m.listingId} — ${m.hours}h`,
+  });
+
+  booking.paymentId = payment._id as Types.ObjectId;
+  await booking.save();
+
+  return {
+    bookingId:  booking._id,
+    paymentId:  payment._id,
+    breakdown: {
+      rentalAmount:  Number(m.rentalAmount),
+      depositAmount: Number(m.depositAmount),
+      chargeAmount:  Number(m.chargeAmount),
+      platformFee:   Number(m.platformFee),
+      vatAmount:     Number(m.vatAmount),
+      platformNet:   Number(m.platformNet),
+      ownerPayout:   Number(m.ownerPayout),
+    },
+  };
+};
+
 // ─────────────────────────────────────────────────────────────
 // NEW — call this single function when ride ends.
 //

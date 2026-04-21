@@ -7,7 +7,8 @@ import {
   refundDepositService,
   checkStripeOnboardingStatus,
   cancelBookingService , calculateRentalAmount,
-  checkAvailability // kept for cancellations only
+  checkAvailability, // kept for cancellations only
+  confirmBookingService
 } from "./stripe.service";
 import { AuthRequest } from "../../types/auth-request";
 import Booking from "../../Models/Booking";
@@ -156,39 +157,13 @@ router.post("/confirm-booking", authMiddleware, async (req: AuthRequest, res: Re
       return void res.status(400).json({ message: "paymentIntentId is required" });
     }
 
-    // Verify with Stripe server-side — never trust the frontend alone
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-    if (paymentIntent.status !== "succeeded") {
-      return void res.status(400).json({
-        success: false,
-        message: `Payment not completed. Status: ${paymentIntent.status}`,
-      });
-    }
-
-    // Guard: ensure this intent belongs to this user
-    if (paymentIntent.metadata.renterId !== renterId) {
-      return void res.status(403).json({ message: "Unauthorized" });
-    }
-
-    // Guard: prevent duplicate bookings for same payment intent
-    const existing = await Booking.findOne({ paymentIntentId });
-    if (existing) {
-      return void res.status(409).json({ message: "Booking already exists for this payment" });
-    }
-
-    // NOW create booking + payment record
-    const result = await createBookingPaymentService({
-      listingId: paymentIntent.metadata.listingId,
-      renterId,
-      startDate: new Date(paymentIntent.metadata.startDate),
-      endDate: new Date(paymentIntent.metadata.endDate),
-      hours: Number(paymentIntent.metadata.hours)
-    });
-
+    const result = await confirmBookingService(paymentIntentId, renterId);
     res.json({ success: true, booking: result });
   } catch (err: any) {
-    res.status(400).json({ message: err.message });
+    const status = err.message === "Unauthorized" ? 403
+                 : err.message.includes("already exists") ? 409
+                 : 400;
+    res.status(status).json({ message: err.message });
   }
 });
 
