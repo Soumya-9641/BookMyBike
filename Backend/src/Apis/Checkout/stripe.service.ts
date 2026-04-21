@@ -110,7 +110,7 @@ let totalDays: number;
   // Platform fee: 18% of rental (VAT included, NOT added on top)
   const platformFee = Math.round(rentalAmount * PLATFORM_FEE_RATE); // e.g. 18 kr
 
-  // VAT portion inside the platform fee (reverse VAT calculation)
+  // VAT portion inside the platform fee (reverse VAT calculation)  
   // vatAmount = platformFee - (platformFee / 1.25)
   const vatAmount = Math.round(platformFee - platformFee / (1 + VAT_RATE)); // e.g. 3.60 kr → 4 kr rounded
   const platformNet = platformFee - vatAmount;                  // e.g. 14 kr (net revenue excl. VAT)

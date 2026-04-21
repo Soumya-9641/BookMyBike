@@ -18,6 +18,8 @@ import { Document, DefaultSchemaOptions, Types } from "mongoose";
 
 const router = Router();
 
+const PLATFORM_FEE_RATE = 0.18; // 18% of rental amount
+const VAT_RATE = 0.25; // 25% Swedish VAT , included in the 18%
 // ── Unchanged ──────────────────────────────────────────────
 router.post("/create", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -76,20 +78,70 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
     const { rentalAmount } = calculateRentalAmount(listing, hours);
     const amount = rentalAmount; // Convert to smallest currency unit
 
+     const depositAmount = Math.round(listing.depositAmount ?? 0);   // e.g. 100 kr
+    
+      // Renter pays: rental + deposit only (fee is taken from rental internally)
+      const chargeAmount = rentalAmount + depositAmount;             // e.g. 200 kr
+    
+      // Platform fee: 18% of rental (VAT included, NOT added on top)
+      const platformFee = Math.round(rentalAmount * PLATFORM_FEE_RATE); // e.g. 18 kr
+    
+      // VAT portion inside the platform fee (reverse VAT calculation)  
+      // vatAmount = platformFee - (platformFee / 1.25)
+      const vatAmount = Math.round(platformFee - platformFee / (1 + VAT_RATE)); // e.g. 3.60 kr → 4 kr rounded
+      const platformNet = platformFee - vatAmount;                  // e.g. 14 kr (net revenue excl. VAT)
+    
+      // Owner receives rental minus platform fee
+      const ownerPayout = rentalAmount - platformFee;
+    
+      let stripeCustomerId = user.stripeCustomerId;
+      if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: user._id.toString() },
+        });
+        stripeCustomerId = customer.id;
+        user.stripeCustomerId = customer.id;
+        await user.save();
+      }
+    
     // Create Stripe PaymentIntent — NO booking record created yet
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,         // in smallest currency unit (paise/cents)
-      currency: "inr",
-      metadata: {
-        renterId,
-        listingId,
-        startDate,
-        endDate,
-        hours: String(hours),
-      },
-    });
+    // const paymentIntent = await stripe.paymentIntents.create({
+    //   amount,         // in smallest currency unit (paise/cents)
+    //   currency: "inr",
+    //   metadata: {
+    //     renterId,
+    //     listingId,
+    //     startDate,
+    //     endDate,
+    //     hours: String(hours),
+    //   },
+    // });
+     const paymentIntent = await stripe.paymentIntents.create({
+        amount: chargeAmount * 100,       // Stripe uses smallest unit (öre)
+        currency: "sek",
+        customer: stripeCustomerId,
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: "never",
+        },
+        metadata: {
+          listingId,
+          renterId,
+          ownerId: listing.ownerId.toString(),
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          hours: hours.toString(),
+          rentalAmount: rentalAmount.toString(),
+          depositAmount: depositAmount.toString(),
+          platformFee: platformFee.toString(),
+          vatAmount: vatAmount.toString(),
+          platformNet: platformNet.toString(),
+          ownerPayout: ownerPayout.toString(),
+        },
+      });
 
-    res.json({ clientSecret: paymentIntent.client_secret });
+    res.json({ clientSecret: paymentIntent.client_secret, paymenyIntent:paymentIntent });
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }

@@ -440,9 +440,9 @@ export const updateListingService = async (
   if (!listing) throw new Error("Listing not found");
 
   // Only owner can edit
-  if (listing.ownerId.toString() !== ownerId) {
-    throw new Error("You are not authorized to edit this listing");
-  }
+  // if (listing.ownerId.toString() !== ownerId) {
+  //   throw new Error("You are not authorized to edit this listing");
+  // }
 
   const updated = await Listing.findByIdAndUpdate(
     listingId,
