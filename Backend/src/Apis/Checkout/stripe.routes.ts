@@ -77,7 +77,7 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
 
     const { rentalAmount } = calculateRentalAmount(listing, hours);
     const amount = rentalAmount; // Convert to smallest currency unit
-
+//
      const depositAmount = Math.round(listing.depositAmount ?? 0);   // e.g. 100 kr
     
       // Renter pays: rental + deposit only (fee is taken from rental internally)
@@ -129,8 +129,8 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
           listingId,
           renterId,
           ownerId: listing.ownerId.toString(),
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
           hours: hours.toString(),
           rentalAmount: rentalAmount.toString(),
           depositAmount: depositAmount.toString(),
