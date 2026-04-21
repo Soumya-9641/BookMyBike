@@ -40,6 +40,7 @@ import EditListing from "../pages/EditListings";
 import AdminChangePassword from "../components/admin/AdminChangePassword";
 import AdminListings from "../pages/admin/AdminListings";
 import AdminBookings from "../pages/admin/AdminBookings";
+import AuthOrAdminRoute from "./AuthorAdminRoute";
 
 const AppRoutes = () => {
   return (
@@ -53,7 +54,7 @@ const AppRoutes = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
-          <Route path="bookings" element={<AdminBookings/>} />
+          <Route path="bookings" element={<AdminBookings />} />
           <Route path="listings" element={<AdminListings />} />
           <Route path="change-password" element={<AdminChangePassword />} />
           <Route path="users/:userId" element={<AdminUserBookings />} />
@@ -61,7 +62,11 @@ const AppRoutes = () => {
           <Route path="disputes/:disputeId" element={<AdminDisputeDetail />} />
         </Route>
       </Route>
-
+      {/* ================= SHARED ROUTES (USER + ADMIN) ================= */}
+      <Route element={<AuthOrAdminRoute />}>
+        <Route path="/edit-listing/:listingId" element={<EditListing />} />
+        <Route path="/admin/edit-listing/:listingId" element={<EditListing />} />
+      </Route>
       {/* ================= USER APP ================= */}
       <Route element={<MainLayout />}>
         <Route element={<PublicRoute />}>
@@ -90,7 +95,7 @@ const AppRoutes = () => {
           <Route path="/onboardReturn" element={<OnboardReturn />} />
           <Route path="/my-refunds" element={<MyRefunds />} />
           <Route path="/my-listings" element={<MyListings />} />
-          <Route path="/edit-listing/:listingId" element={<EditListing />} />
+          {/* <Route path="/edit-listing/:listingId" element={<EditListing />} /> */}
         </Route>
       </Route>
 

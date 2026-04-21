@@ -92,12 +92,6 @@ const BikeDetails = () => {
       })
       : null;
 
-  const platformFee =
-    pricePreview ? Math.round(pricePreview.rentalAmount * PLATFORM_FEE_RATE) : 0;
-
-  const vatAmount =
-    platformFee ? Math.round(platformFee * VAT_RATE) : 0;
-
   /* ---------------- SLIDER SETTINGS (REFERENCE BASED) ---------------- */
   const sliderSettings = {
     dots: true,
@@ -244,23 +238,30 @@ const BikeDetails = () => {
               <Typography fontWeight={600}>Price Breakdown</Typography>
 
               <Typography>
-                Rental ({pricePreview.priceType}): SEK {pricePreview.rentalAmount}
+                Rental ({pricePreview.priceType}): SEK{" "}
+                {pricePreview.rentalAmount.toFixed(2)}
               </Typography>
 
-              <Typography variant="body2" color="text.secondary" ml={1}>
-                (Platform fee included: SEK {platformFee})
+              <Typography variant="body2" color="text.secondary">
+                Platform Fee (18%): SEK {pricePreview.platformFee.toFixed(2)}
               </Typography>
 
-              <Typography variant="body2" color="text.secondary" ml={1}>
-                (VAT 25% included: SEK {vatAmount})
+              <Typography variant="body2" color="text.secondary">
+                VAT (20%): SEK {pricePreview.vatAmount.toFixed(2)}
               </Typography>
 
-              <Typography mt={1}>
-                Security Deposit: SEK {pricePreview.deposit}
+              <Typography variant="body2" color="text.secondary">
+                Platform Fee Net: SEK {pricePreview.platformFeeNet.toFixed(2)}
+              </Typography>
+
+              <Divider sx={{ my: 1 }} />
+
+              <Typography>
+                Security Deposit: SEK {pricePreview.deposit.toFixed(2)}
               </Typography>
 
               <Typography fontWeight={700} mt={1}>
-                Total to Pay: SEK {pricePreview.totalToPay}
+                Total to Pay: SEK {pricePreview.totalToPay.toFixed(2)}
               </Typography>
             </>
           )}

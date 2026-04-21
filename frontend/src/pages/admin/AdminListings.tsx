@@ -116,7 +116,7 @@ const AdminListings = () => {
                         variant="contained"
                         color="warning"
                         onClick={() =>
-                          navigate(`/edit-listing/${listing.listingId}`)
+                          navigate(`/admin/edit-listing/${listing._id}`)
                         }
                       >
                         Edit

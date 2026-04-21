@@ -8,7 +8,17 @@ export const bookingApi = baseApi.injectEndpoints({
       CreateBookingPayload
     >({
       query: (body) => ({
-        url: "/checkout/create",
+        url: "/checkout/create-payment-intent",
+        method: "POST",
+        body,
+      }),
+    }),
+    confirmBooking: builder.mutation<
+      { success: boolean; booking: any },
+      { paymentIntentId: string }
+    >({
+      query: (body) => ({
+        url: "/checkout/confirm-booking",
         method: "POST",
         body,
       }),
@@ -125,4 +135,4 @@ export const bookingApi = baseApi.injectEndpoints({
 });
 
 export const { useCreateBookingMutation, useGetMyBookingsQuery,
-  useGetOwnerBookingsQuery, useGetProfileQuery, useUpdateProfileMutation, useGetMyRefundsQuery, useGetMyListingsQuery, useCreateDisputeMutation, useRequestRideStartMutation, useAcceptRideStartMutation, useRequestRideCompletionMutation, useConfirmRideCompletionMutation } = bookingApi;
+  useGetOwnerBookingsQuery, useGetProfileQuery, useUpdateProfileMutation, useGetMyRefundsQuery, useGetMyListingsQuery, useCreateDisputeMutation, useRequestRideStartMutation, useAcceptRideStartMutation, useRequestRideCompletionMutation, useConfirmRideCompletionMutation, useConfirmBookingMutation } = bookingApi;

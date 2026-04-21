@@ -10,7 +10,7 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Users", "Stats", "Disputes", "Dispute"],
+  tagTypes: ["Users", "Stats", "Disputes", "Dispute", "AdminListings"],
   endpoints: (builder) => ({
     /* ---------------- USERS ---------------- */
     getAllUsers: builder.query<any, void>({
@@ -85,7 +85,20 @@ export const adminApi = createApi({
         method: "PATCH",
         body,
       }),
-    })
+      
+    }),
+    editListingAsAdmin: builder.mutation<
+      any,
+      { listingId: string; data: FormData }
+    >({
+      query: ({ listingId, data }) => ({
+        url: `/adminstats/${listingId}/edit`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["AdminListings"],
+    }),
+    
 
   }),
 
@@ -103,4 +116,5 @@ export const {
   useGetAllBookingsQuery,
   useGetAllListingsQuery,
   useChangeAdminPasswordMutation,
+  useEditListingAsAdminMutation,
 } = adminApi;

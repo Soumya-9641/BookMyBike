@@ -8,6 +8,8 @@ import {
   IconButton,
   Stack,
   Chip,
+  TableContainer,
+  Paper,
 } from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useState } from "react";
@@ -132,233 +134,246 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
 
   return (
     <>
-      <Table>
-        <TableHead>
-          <TableRow
-            sx={{
-              backgroundColor: "#22a652",
-              "& th": {
-                color: "#fff",
-                fontWeight: 600,
-                py: 2,
-              },
-            }}
-          >
-            <TableCell>Start</TableCell>
-            <TableCell>End</TableCell>
-            <TableCell>Bike</TableCell>
-            <TableCell>Amount</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Payment</TableCell>
-            <TableCell>Details</TableCell>
-            <TableCell>Action</TableCell>
-          </TableRow>
-        </TableHead>
+      <TableContainer
+        component={Paper}
+        sx={{
+          height: "100%",              // 🔥 fill parent height
+          overflowX: "auto",
+          overflowY: "auto",
+        }}
+      >
+        <Table
+          sx={{
+            minWidth: 900,        // ✅ forces table wider than mobile
+          }}
+        >
+          <TableHead>
+            <TableRow
+              sx={{
+                backgroundColor: "#22a652",
+                "& th": {
+                  color: "#fff",
+                  fontWeight: 600,
+                  py: 2,
+                },
+              }}
+            >
+              <TableCell>Start</TableCell>
+              <TableCell>End</TableCell>
+              <TableCell>Bike</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Payment</TableCell>
+              <TableCell>Details</TableCell>
+              <TableCell>Action</TableCell>
+            </TableRow>
+          </TableHead>
 
-        <TableBody>
-          {bookings.map((b, idx) => {
-            const flags = b.flags || {};
-            const paymentStatus = b.payment?.status || "pending";
-            const displayStatus = getDisplayStatus(b.status);
+          <TableBody>
+            {bookings.map((b, idx) => {
+              const flags = b.flags || {};
+              const paymentStatus = b.payment?.status || "pending";
+              const displayStatus = getDisplayStatus(b.status);
 
-            const amountToShow =
-              b.refund?.refundAmount ??
-              b.payment?.refundAmount ??
-              b.pricing.totalAmount;
+              const amountToShow =
+                b.refund?.refundAmount ??
+                b.payment?.refundAmount ??
+                b.pricing.totalAmount;
 
-            return (
-              <TableRow
-                key={b.bookingId}
-                sx={{
-                  backgroundColor: idx % 2 === 0 ? "#f9f9f9" : "#ebebeb",
-                }}
-              >
-                <TableCell>
-                  {new Date(b.startDate).toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  {new Date(b.endDate).toLocaleString()}
-                </TableCell>
-                <TableCell>{b.bike?.title}</TableCell>
+              return (
+                <TableRow
+                  key={b.bookingId}
+                  sx={{
+                    backgroundColor: idx % 2 === 0 ? "#f9f9f9" : "#ebebeb",
+                  }}
+                >
+                  <TableCell>
+                    {new Date(b.startDate).toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(b.endDate).toLocaleString()}
+                  </TableCell>
+                  <TableCell>{b.bike?.title}</TableCell>
 
-                <TableCell>SEK {amountToShow}</TableCell>
+                  <TableCell>SEK {amountToShow}</TableCell>
 
-                {/* STATUS */}
-                <TableCell>
-                  <Chip
-                    label={formatStatusLabel(displayStatus)}
-                    color={statusColorMap[displayStatus]}
-                    size="small"
-                  />
-                </TableCell>
+                  {/* STATUS */}
+                  <TableCell>
+                    <Chip
+                      label={formatStatusLabel(displayStatus)}
+                      color={statusColorMap[displayStatus]}
+                      size="small"
+                    />
+                  </TableCell>
 
-                {/* PAYMENT */}
-                <TableCell>
-                  <Chip
-                    label={paymentStatus.toUpperCase()}
-                    color={statusColorMap[paymentStatus]}
-                    size="small"
-                  />
-                </TableCell>
+                  {/* PAYMENT */}
+                  <TableCell>
+                    <Chip
+                      label={paymentStatus.toUpperCase()}
+                      color={statusColorMap[paymentStatus]}
+                      size="small"
+                    />
+                  </TableCell>
 
-                {/* DETAILS */}
-                <TableCell>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => {
-                      setSelectedBooking(b);
-                      setOpen(true);
-                    }}
-                  >
-                    View
-                  </Button>
-                </TableCell>
+                  {/* DETAILS */}
+                  <TableCell>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        setSelectedBooking(b);
+                        setOpen(true);
+                      }}
+                    >
+                      View
+                    </Button>
+                  </TableCell>
 
-                {/* ACTIONS */}
-                <TableCell>
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {/* ACTIONS */}
+                  <TableCell>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
 
-                    {/* RENTER → REQUEST START */}
-                    {!editable &&
-                      b.status === "upcoming" &&
-                      !flags.renterRequestedStart && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={async () => {
-                            try {
-                              await requestStart({
-                                bookingId: b.bookingId,
-                              }).unwrap();
-                              toast.success("Ride start requested");
-                              refetch?.();
-                            } catch (e: any) {
-                              toast.error(
-                                e?.data?.message ||
-                                "Failed to request start"
-                              );
-                            }
-                          }}
-                        >
-                          Request Start
-                        </Button>
-                      )}
+                      {/* RENTER → REQUEST START */}
+                      {!editable &&
+                        b.status === "upcoming" &&
+                        !flags.renterRequestedStart && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={async () => {
+                              try {
+                                await requestStart({
+                                  bookingId: b.bookingId,
+                                }).unwrap();
+                                toast.success("Ride start requested");
+                                refetch?.();
+                              } catch (e: any) {
+                                toast.error(
+                                  e?.data?.message ||
+                                  "Failed to request start"
+                                );
+                              }
+                            }}
+                          >
+                            Request Start
+                          </Button>
+                        )}
 
-                    {/* OWNER → ACCEPT START */}
-                    {editable &&
-                      b.status === "startRequested" &&
-                      flags.renterRequestedStart &&
-                      !flags.ownerAcceptedStart && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={async () => {
-                            try {
-                              await acceptStart({
-                                bookingId: b.bookingId,
-                              }).unwrap();
-                              toast.success("Ride started");
-                              refetch?.();
-                            } catch (e: any) {
-                              toast.error(
-                                e?.data?.message ||
-                                "Failed to accept start"
-                              );
-                            }
-                          }}
-                        >
-                          Accept Start
-                        </Button>
-                      )}
+                      {/* OWNER → ACCEPT START */}
+                      {editable &&
+                        b.status === "startRequested" &&
+                        flags.renterRequestedStart &&
+                        !flags.ownerAcceptedStart && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={async () => {
+                              try {
+                                await acceptStart({
+                                  bookingId: b.bookingId,
+                                }).unwrap();
+                                toast.success("Ride started");
+                                refetch?.();
+                              } catch (e: any) {
+                                toast.error(
+                                  e?.data?.message ||
+                                  "Failed to accept start"
+                                );
+                              }
+                            }}
+                          >
+                            Accept Start
+                          </Button>
+                        )}
 
-                    {/* OWNER → END RIDE */}
-                    {editable &&
-                      b.status === "inprogress" &&
-                      !flags.ownerRequestedCompletion && (
-                        <Button
-                          size="small"
-                          color="warning"
-                          variant="contained"
-                          onClick={async () => {
-                            try {
-                              await requestCompletion({
-                                bookingId: b.bookingId,
-                              }).unwrap();
-                              toast.success("Ride end requested");
-                              refetch?.();
-                            } catch (e: any) {
-                              toast.error(
-                                e?.data?.message ||
-                                "Failed to request completion"
-                              );
-                            }
-                          }}
-                        >
-                          End Ride
-                        </Button>
-                      )}
+                      {/* OWNER → END RIDE */}
+                      {editable &&
+                        b.status === "inprogress" &&
+                        !flags.ownerRequestedCompletion && (
+                          <Button
+                            size="small"
+                            color="warning"
+                            variant="contained"
+                            onClick={async () => {
+                              try {
+                                await requestCompletion({
+                                  bookingId: b.bookingId,
+                                }).unwrap();
+                                toast.success("Ride end requested");
+                                refetch?.();
+                              } catch (e: any) {
+                                toast.error(
+                                  e?.data?.message ||
+                                  "Failed to request completion"
+                                );
+                              }
+                            }}
+                          >
+                            End Ride
+                          </Button>
+                        )}
 
-                    {/* RENTER → CONFIRM COMPLETION */}
-                    {!editable &&
-                      b.status === "completionRequested" &&
-                      !flags.renterConfirmedCompletion && (
-                        <Button
-                          size="small"
-                          color="success"
-                          variant="contained"
-                          onClick={async () => {
-                            try {
-                              await confirmCompletion({
-                                bookingId: b.bookingId,
-                              }).unwrap();
-                              toast.success("Ride completed");
-                              refetch?.();
-                            } catch (e: any) {
-                              toast.error(
-                                e?.data?.message ||
-                                "Failed to confirm completion"
-                              );
-                            }
-                          }}
-                        >
-                          Confirm Completion
-                        </Button>
-                      )}
+                      {/* RENTER → CONFIRM COMPLETION */}
+                      {!editable &&
+                        b.status === "completionRequested" &&
+                        !flags.renterConfirmedCompletion && (
+                          <Button
+                            size="small"
+                            color="success"
+                            variant="contained"
+                            onClick={async () => {
+                              try {
+                                await confirmCompletion({
+                                  bookingId: b.bookingId,
+                                }).unwrap();
+                                toast.success("Ride completed");
+                                refetch?.();
+                              } catch (e: any) {
+                                toast.error(
+                                  e?.data?.message ||
+                                  "Failed to confirm completion"
+                                );
+                              }
+                            }}
+                          >
+                            Confirm Completion
+                          </Button>
+                        )}
 
-                    {/* SETTLEMENT / DISPUTE */}
-                    {editable && flags.renterConfirmedCompletion &&
-                      !flags.isSettlementDone && (
-                        <Button
-                          size="small"
+                      {/* SETTLEMENT / DISPUTE */}
+                      {editable && flags.renterConfirmedCompletion &&
+                        !flags.isSettlementDone && (
+                          <Button
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                            onClick={() => {
+                              setPendingBooking(b);
+                              setOpenDispute(true);
+                            }}
+                          >
+                            Settlement
+                          </Button>
+                        )}
+
+                      {/* CANCEL */}
+                      {(b.status === "upcoming" || b.status === "startRequested") && (
+                        <IconButton
                           color="error"
-                          variant="outlined"
-                          onClick={() => {
-                            setPendingBooking(b);
-                            setOpenDispute(true);
-                          }}
+                          disabled={isCanceling}
+                          onClick={() => handleCancelBooking(b)}
                         >
-                          Settlement
-                        </Button>
+                          <CancelIcon />
+                        </IconButton>
                       )}
-
-                    {/* CANCEL */}
-                    {(b.status === "upcoming" || b.status === "startRequested") && (
-                      <IconButton
-                        color="error"
-                        disabled={isCanceling}
-                        onClick={() => handleCancelBooking(b)}
-                      >
-                        <CancelIcon />
-                      </IconButton>
-                    )}
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {/* DETAILS MODAL */}
       {selectedBooking && (
