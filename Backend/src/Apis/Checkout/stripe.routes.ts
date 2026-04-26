@@ -222,7 +222,7 @@ router.post("/create-connect-account", authMiddleware, async (req: AuthRequest, 
 
       
       business_profile: {
-        mcc: "7999",  // ← pre-fill industry so Stripe doesn't ask during onboarding
+        mcc: "7999",  
         product_description: "Marketplace seller payouts",
       },
 
@@ -233,8 +233,8 @@ router.post("/create-connect-account", authMiddleware, async (req: AuthRequest, 
     });
 
     user.businessProfile!.stripeIdentityId = account.id;
-    user.businessProfile!.isActive = true; // Mark as active immediately for testing; in production, wait until onboarding complete
-    user.businessProfile!.isVerified = false; // Will be updated after Stripe onboarding and KY
+    user.businessProfile!.isActive = true; 
+    user.businessProfile!.isVerified = false;
     await user.save();
 
     res.json({ accountId: account.id });
