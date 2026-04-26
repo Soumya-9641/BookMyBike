@@ -552,26 +552,26 @@ export const cancelBookingService = async (
   const depositAmount = payment.depositAmount ?? 0;   // refunded to renter
   const ownerPayout   = payment.ownerPayout   ?? 0;   // sent to owner
 const fullRefundAmount = payment.amount ?? 0;
-  // ── Refund only deposit to renter ──
+
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
     amount: fullRefundAmount * 100,                      // only deposit in öre
     reason: "requested_by_customer",
   });
 
-  // ── Transfer rental portion to owner ──
-  const transfer = await stripe.transfers.create({
-    amount: ownerPayout * 100,                        // rental portion in öre
-    currency: "sek",
-    destination: owner.businessProfile.stripeIdentityId,
-    source_transaction: paymentIntent.latest_charge as string,
-    metadata: {
-      bookingId: booking._id.toString(),
-      paymentId: payment._id.toString(),
-    },
-  });
 
-  // ── Update Payment record ──
+  // const transfer = await stripe.transfers.create({
+  //   amount: ownerPayout * 100,                        // rental portion in öre
+  //   currency: "sek",
+  //   destination: owner.businessProfile.stripeIdentityId,
+  //   source_transaction: paymentIntent.latest_charge as string,
+  //   metadata: {
+  //     bookingId: booking._id.toString(),
+  //     paymentId: payment._id.toString(),
+  //   },
+  // });
+
+  
   payment.status         = "refunded";
   payment.stripeChargeId = paymentIntent.latest_charge as string;
   payment.stripeRefundId = refund.id;
@@ -581,7 +581,7 @@ const fullRefundAmount = payment.amount ?? 0;
   payment.paidAt         = new Date();
   await payment.save();
 
-  // ── Update Booking record ──
+
   booking.status              = "cancelled";
   booking.cancelledBy         = isRenter ? "renter" : "owner";
   booking.cancellationReason  = reason ?? undefined;
@@ -598,7 +598,7 @@ const fullRefundAmount = payment.amount ?? 0;
       currency: payment.currency,
     },
     ownerPayout: {
-      transferId: transfer.id,
+      transferId: refund.id,
       amount:     ownerPayout,
       currency:   payment.currency,
     },

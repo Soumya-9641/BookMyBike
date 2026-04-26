@@ -6,7 +6,7 @@ import {
   completeRideService,   // NEW
   refundDepositService,
   checkStripeOnboardingStatus,
-  cancelBookingService , calculateRentalAmount,
+  cancelBookingService, calculateRentalAmount,
   checkAvailability, // kept for cancellations only
   confirmBookingService
 } from "./stripe.service";
@@ -24,7 +24,7 @@ const VAT_RATE = 0.25; // 25% Swedish VAT , included in the 18%
 // ── Unchanged ──────────────────────────────────────────────
 router.post("/create", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-     const renterId = req.user!.userId.toString();
+    const renterId = req.user!.userId.toString();
 
     // ── Block check before creating booking ──
     const user = await User.findById(renterId);
@@ -76,36 +76,36 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
     const isAvailable = await checkAvailability(listingId, new Date(startDate), new Date(endDate));
     if (!isAvailable) return void res.status(409).json({ message: "Listing is not available for selected dates" });
 
-    const { rentalAmount,pricePerDay, totalDays } = calculateRentalAmount(listing, hours);
+    const { rentalAmount, pricePerDay, totalDays } = calculateRentalAmount(listing, hours);
     const amount = rentalAmount; // Convert to smallest currency unit
-//
-     const depositAmount = Math.round(listing.depositAmount ?? 0);   // e.g. 100 kr
-    
-      // Renter pays: rental + deposit only (fee is taken from rental internally)
-      const chargeAmount = rentalAmount + depositAmount;             // e.g. 200 kr
-    
-      // Platform fee: 18% of rental (VAT included, NOT added on top)
-      const platformFee = Math.round(rentalAmount * PLATFORM_FEE_RATE); // e.g. 18 kr
-    
-      // VAT portion inside the platform fee (reverse VAT calculation)  
-      // vatAmount = platformFee - (platformFee / 1.25)
-      const vatAmount = Math.round(platformFee - platformFee / (1 + VAT_RATE)); // e.g. 3.60 kr → 4 kr rounded
-      const platformNet = platformFee - vatAmount;                  // e.g. 14 kr (net revenue excl. VAT)
-    
-      // Owner receives rental minus platform fee
-      const ownerPayout = rentalAmount - platformFee;
-    
-      let stripeCustomerId = user.stripeCustomerId;
-      if (!stripeCustomerId) {
-        const customer = await stripe.customers.create({
-          email: user.email,
-          metadata: { userId: user._id.toString() },
-        });
-        stripeCustomerId = customer.id;
-        user.stripeCustomerId = customer.id;
-        await user.save();
-      }
-    
+    //
+    const depositAmount = Math.round(listing.depositAmount ?? 0);   // e.g. 100 kr
+
+    // Renter pays: rental + deposit only (fee is taken from rental internally)
+    const chargeAmount = rentalAmount + depositAmount;             // e.g. 200 kr
+
+    // Platform fee: 18% of rental (VAT included, NOT added on top)
+    const platformFee = Math.round(rentalAmount * PLATFORM_FEE_RATE); // e.g. 18 kr
+
+    // VAT portion inside the platform fee (reverse VAT calculation)  
+    // vatAmount = platformFee - (platformFee / 1.25)
+    const vatAmount = Math.round(platformFee - platformFee / (1 + VAT_RATE)); // e.g. 3.60 kr → 4 kr rounded
+    const platformNet = platformFee - vatAmount;                  // e.g. 14 kr (net revenue excl. VAT)
+
+    // Owner receives rental minus platform fee
+    const ownerPayout = rentalAmount - platformFee;
+
+    let stripeCustomerId = user.stripeCustomerId;
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { userId: user._id.toString() },
+      });
+      stripeCustomerId = customer.id;
+      user.stripeCustomerId = customer.id;
+      await user.save();
+    }
+
     // Create Stripe PaymentIntent — NO booking record created yet
     // const paymentIntent = await stripe.paymentIntents.create({
     //   amount,         // in smallest currency unit (paise/cents)
@@ -118,34 +118,34 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
     //     hours: String(hours),
     //   },
     // });
-     const paymentIntent = await stripe.paymentIntents.create({
-        amount: chargeAmount * 100,       // Stripe uses smallest unit (öre)
-        currency: "sek",
-        customer: stripeCustomerId,
-        automatic_payment_methods: {
-          enabled: true,
-          allow_redirects: "never",
-        },
-        metadata: {
-          listingId,
-          renterId,
-          ownerId: listing.ownerId.toString(),
-          startDate: new Date(startDate).toISOString(),
-          endDate: new Date(endDate).toISOString(),
-          hours: hours.toString(),
-          rentalAmount: rentalAmount.toString(),
-          depositAmount: depositAmount.toString(),
-          platformFee: platformFee.toString(),
-          vatAmount: vatAmount.toString(),
-          platformNet: platformNet.toString(),
-          ownerPayout: ownerPayout.toString(),
-          chargeAmount:  chargeAmount.toString(),
-          totalDays:     totalDays.toString(),
-          pricePerDay:   pricePerDay.toString(),
-        },
-      });
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: chargeAmount * 100,       // Stripe uses smallest unit (öre)
+      currency: "sek",
+      customer: stripeCustomerId,
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: "never",
+      },
+      metadata: {
+        listingId,
+        renterId,
+        ownerId: listing.ownerId.toString(),
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        hours: hours.toString(),
+        rentalAmount: rentalAmount.toString(),
+        depositAmount: depositAmount.toString(),
+        platformFee: platformFee.toString(),
+        vatAmount: vatAmount.toString(),
+        platformNet: platformNet.toString(),
+        ownerPayout: ownerPayout.toString(),
+        chargeAmount: chargeAmount.toString(),
+        totalDays: totalDays.toString(),
+        pricePerDay: pricePerDay.toString(),
+      },
+    });
 
-    res.json({ clientSecret: paymentIntent.client_secret, paymenyIntent:paymentIntent });
+    res.json({ clientSecret: paymentIntent.client_secret, paymenyIntent: paymentIntent });
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }
@@ -164,8 +164,8 @@ router.post("/confirm-booking", authMiddleware, async (req: AuthRequest, res: Re
     res.json({ success: true, booking: result });
   } catch (err: any) {
     const status = err.message === "Unauthorized" ? 403
-                 : err.message.includes("already exists") ? 409
-                 : 400;
+      : err.message.includes("already exists") ? 409
+        : 400;
     res.status(status).json({ message: err.message });
   }
 });
@@ -212,7 +212,20 @@ router.post("/create-connect-account", authMiddleware, async (req: AuthRequest, 
     const account = await stripe.accounts.create({
       type: "express",
       country: "SE",
-      email: user.email,
+      business_type: "individual",
+
+      individual: {
+        email: user.email,
+        first_name: "",
+        last_name: "",
+      },
+
+      
+      business_profile: {
+        mcc: "7999",  // ← pre-fill industry so Stripe doesn't ask during onboarding
+        product_description: "Marketplace seller payouts",
+      },
+
       capabilities: {
         transfers: { requested: true },
         card_payments: { requested: true },
@@ -230,7 +243,7 @@ router.post("/create-connect-account", authMiddleware, async (req: AuthRequest, 
   }
 });
 
-// ── Unchanged ──────────────────────────────────────────────
+
 router.get("/connect/onboard", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findById(req.user!.userId);
@@ -257,17 +270,17 @@ router.get("/connect/onboard", authMiddleware, async (req: AuthRequest, res: Res
 //   - transfers rental to owner
 router.post("/:id/complete-ride", authMiddleware, isBikeOwner, async (req: AuthRequest, res: Response) => {
   try {
-      const { status } = req.body;
-      //  if (!status) {
-      //   return res.status(400).json({ message: "status is required in request body" });
-      // }
- 
-      // if (status !== "inprogress" && status !== "completed") {
-      //   return res.status(400).json({
-      //     message: "Invalid status. Allowed values: 'inprogress' | 'completed'",
-      //   });
-      // }
-    const result = await completeRideService(req.params.id,status);
+    const { status } = req.body;
+    //  if (!status) {
+    //   return res.status(400).json({ message: "status is required in request body" });
+    // }
+
+    // if (status !== "inprogress" && status !== "completed") {
+    //   return res.status(400).json({
+    //     message: "Invalid status. Allowed values: 'inprogress' | 'completed'",
+    //   });
+    // }
+    const result = await completeRideService(req.params.id, status);
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ message: err.message });
@@ -369,7 +382,7 @@ router.get(
       const payment = await Payment.findOne({
         stripePaymentIntentId: paymentIntentId,
       });
-      if(!payment){
+      if (!payment) {
         res.status(404).json({ message: "Payment record not found for this PaymentIntent ID" });
         return;
       }
