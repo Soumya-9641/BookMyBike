@@ -55,6 +55,7 @@ router.post("/create", authMiddleware, async (req: AuthRequest, res: Response) =
 
 router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const to2dp = (n: number) => Math.round(n * 100) / 100;
     const renterId = req.user!.userId.toString();
 
     const user = await User.findById(renterId);
@@ -79,21 +80,12 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
     const { rentalAmount, pricePerDay, totalDays } = calculateRentalAmount(listing, hours);
     const amount = rentalAmount; // Convert to smallest currency unit
     //
-    const depositAmount = Math.round(listing.depositAmount ?? 0);   // e.g. 100 kr
-
-    // Renter pays: rental + deposit only (fee is taken from rental internally)
-    const chargeAmount = rentalAmount + depositAmount;             // e.g. 200 kr
-
-    // Platform fee: 18% of rental (VAT included, NOT added on top)
-    const platformFee = Math.round(rentalAmount * PLATFORM_FEE_RATE); // e.g. 18 kr
-
-    // VAT portion inside the platform fee (reverse VAT calculation)  
-    // vatAmount = platformFee - (platformFee / 1.25)
-    const vatAmount = Math.round(platformFee - platformFee / (1 + VAT_RATE)); // e.g. 3.60 kr → 4 kr rounded
-    const platformNet = platformFee - vatAmount;                  // e.g. 14 kr (net revenue excl. VAT)
-
-    // Owner receives rental minus platform fee
-    const ownerPayout = rentalAmount - platformFee;
+   const depositAmount = to2dp(listing.depositAmount ?? 0);
+const chargeAmount  = to2dp(rentalAmount + depositAmount);
+const platformFee   = to2dp(rentalAmount * PLATFORM_FEE_RATE);
+const vatAmount     = to2dp(platformFee - platformFee / (1 + VAT_RATE));
+const platformNet   = to2dp(platformFee - vatAmount);
+const ownerPayout   = to2dp(rentalAmount - platformFee);
 
     let stripeCustomerId = user.stripeCustomerId;
     if (!stripeCustomerId) {
@@ -264,10 +256,7 @@ router.get("/connect/onboard", authMiddleware, async (req: AuthRequest, res: Res
   }
 });
 
-// ── NEW — replaces /payout-owner/:bookingId ────────────────
-// Call this when the ride ends. Does BOTH:
-//   - refunds deposit to renter
-//   - transfers rental to owner
+
 router.post("/:id/complete-ride", authMiddleware, isBikeOwner, async (req: AuthRequest, res: Response) => {
   try {
     const { status } = req.body;
