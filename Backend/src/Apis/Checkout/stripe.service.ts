@@ -4,6 +4,7 @@ import Listing from "../../Models/Listing";
 import User from "../../Models/User";
 import { Types } from "mongoose";
 import Payment from "../../Models/Payment";
+import Dispute from "../../Models/Dispute";
 
 // ─────────────────────────────────────────────────────────────
 // UNCHANGED from your original
@@ -15,28 +16,50 @@ const VAT_RATE = 0.25; // 25% Swedish VAT , included in the 18%
 // ── 1. calculateRentalAmount ────────────────────────────────────
 // Mirrors the hourly/daily branching logic from your service exactly.
 export const calculateRentalAmount = (
-  listing: { rates?: { hourly?: number; daily?: number }; depositAmount?: number },
+  listing: { rates?: { hourly?: number; daily?: number; weekly? :  number;
+      monthly?: number;
+ }; depositAmount?: number },
   hours: number
 ): { rentalAmount: number; pricePerDay: number; totalDays: number } => {
-  const hourlyRate = listing.rates?.hourly;
-  const dailyRate  = listing.rates?.daily;
+  
+const { hourly, daily, weekly, monthly } = listing.rates ?? {};
+
+  const totalDays = Math.ceil(hours / 24);
 
   if (hours < 24) {
-    if (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
+    if (!hourly) throw new Error("Listing does not have an hourly rate set");
     return {
-      rentalAmount: Math.round(hours * hourlyRate),
-      pricePerDay:  hourlyRate * 24,   // informational
+      rentalAmount: hours * hourly,
+      pricePerDay:  hourly * 24,   // informational
       totalDays:    1,
     };
-  } else {
-    if (!dailyRate) throw new Error("Listing does not have a daily rate set");
-    const totalDays = Math.ceil(hours / 24);  // 25h=2d, 48h=2d, 49h=3d
+  } 
+  if (totalDays >= 30) {
+    if (!monthly) throw new Error("Listing does not have a monthly rate set");
+    const totalMonths = Math.ceil(totalDays / 30);
     return {
-      rentalAmount: Math.round(totalDays * dailyRate),
-      pricePerDay:  dailyRate,
+      rentalAmount: totalMonths * monthly,
+      pricePerDay:monthly / 30,   // informational
       totalDays,
     };
   }
+
+  // ── Weekly: 7 days or more (but less than 30) ──
+  if (totalDays >= 7) {
+    if (!weekly) throw new Error("Listing does not have a weekly rate set");
+    const totalWeeks = Math.ceil(totalDays / 7);
+    return {
+      rentalAmount: totalWeeks * weekly,
+      pricePerDay:  weekly / 7,   // informational
+      totalDays,
+    };
+  }
+ if (!daily) throw new Error("Listing does not have a daily rate set");
+  return {
+    rentalAmount:totalDays * daily,
+    pricePerDay:  daily,
+    totalDays,
+  };
 };
 
 export const checkAvailability = async (
@@ -400,7 +423,14 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
 // ─────────────────────────────────────────────────────────────
 export const refundDepositService = async (bookingId: string) => {
   // ── Fetch Booking ──
-  const booking = await Booking.findById(bookingId);
+  //const booking = await Booking.findById(bookingId);
+  const [booking, dispute] = await Promise.all([
+    Booking.findById(bookingId).lean(),
+    Dispute.findOne({
+      bookingId,
+      status: "resolved",   // only apply penalty if dispute is resolved
+    }).lean(),
+  ]);
   if (!booking) throw new Error("Booking not found");
  
   // ── Fetch linked Payment record ──
@@ -552,26 +582,26 @@ export const cancelBookingService = async (
   const depositAmount = payment.depositAmount ?? 0;   // refunded to renter
   const ownerPayout   = payment.ownerPayout   ?? 0;   // sent to owner
 const fullRefundAmount = payment.amount ?? 0;
-  // ── Refund only deposit to renter ──
+
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
     amount: fullRefundAmount * 100,                      // only deposit in öre
     reason: "requested_by_customer",
   });
 
-  // ── Transfer rental portion to owner ──
-  const transfer = await stripe.transfers.create({
-    amount: ownerPayout * 100,                        // rental portion in öre
-    currency: "sek",
-    destination: owner.businessProfile.stripeIdentityId,
-    source_transaction: paymentIntent.latest_charge as string,
-    metadata: {
-      bookingId: booking._id.toString(),
-      paymentId: payment._id.toString(),
-    },
-  });
 
-  // ── Update Payment record ──
+  // const transfer = await stripe.transfers.create({
+  //   amount: ownerPayout * 100,                        // rental portion in öre
+  //   currency: "sek",
+  //   destination: owner.businessProfile.stripeIdentityId,
+  //   source_transaction: paymentIntent.latest_charge as string,
+  //   metadata: {
+  //     bookingId: booking._id.toString(),
+  //     paymentId: payment._id.toString(),
+  //   },
+  // });
+
+  
   payment.status         = "refunded";
   payment.stripeChargeId = paymentIntent.latest_charge as string;
   payment.stripeRefundId = refund.id;
@@ -581,7 +611,7 @@ const fullRefundAmount = payment.amount ?? 0;
   payment.paidAt         = new Date();
   await payment.save();
 
-  // ── Update Booking record ──
+
   booking.status              = "cancelled";
   booking.cancelledBy         = isRenter ? "renter" : "owner";
   booking.cancellationReason  = reason ?? undefined;
@@ -598,7 +628,7 @@ const fullRefundAmount = payment.amount ?? 0;
       currency: payment.currency,
     },
     ownerPayout: {
-      transferId: transfer.id,
+      transferId: refund.id,
       amount:     ownerPayout,
       currency:   payment.currency,
     },
