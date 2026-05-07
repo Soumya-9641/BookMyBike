@@ -247,7 +247,8 @@ export const confirmBookingService = async (
   // ── Duplicate booking guard ──
   const existing = await Payment.findOne({ stripePaymentIntentId: paymentIntentId });
   if (existing) throw new Error("Booking already exists for this payment");
-
+  const renter = await User.findById(renterId);
+  if (!renter) throw new Error("Renter not found");
   // ── Pull all values from Stripe metadata (locked at payment time) ──
   const m = paymentIntent.metadata;
 
@@ -288,7 +289,9 @@ export const confirmBookingService = async (
 
   booking.paymentId = payment._id as Types.ObjectId;
   await booking.save();
-
+ const firstName   = renter.personalProfile?.firstName ?? "there";
+  const startDate   = new Date(m.startDate);
+  const endDate     = new Date(m.endDate);
   return {
     bookingId:  booking._id,
     paymentId:  payment._id,

@@ -46,12 +46,82 @@ router.post("/signup", async (req: Request, res: Response) => {
 console.log("Saved token:", user.emailVerificationToken);
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
-    await sendEmail(
-      email,
-      "Verify your email",
-      `<p>Click the link to verify your email:</p>
-       <a href="${verifyUrl}">${verifyUrl}</a>`
-    );
+   await sendEmail(
+  email,
+  "Verify your email",
+  `<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </head>
+    <body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              
+              <!-- Header -->
+              <tr>
+                <td align="center" style="background-color:#2e7d32;padding:32px 40px;">
+                  <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:1px;">VERIFY EMAIL</h1>
+                </td>
+              </tr>
+                            <!-- Logo Section -->
+              <tr>
+                <td align="center" style="background-color:#ffffff;padding:24px 40px;border-bottom:3px solid #2e7d32;">
+                  <img src="https://cdn.vectorstock.com/i/1000v/72/97/golden-lion-king-logo-vector-54867297.jpg"
+                       alt="Logo"
+                       width="140"
+                       style="display:block;"/>
+                </td>
+              </tr>
+
+
+              <!-- Body -->
+              <tr>
+                <td style="padding:40px;">
+                  <p style="margin:0 0 12px;color:#333333;font-size:16px;font-weight:600;">
+                    Hi ${firstName ?? "there"},
+                  </p>
+                  <p style="margin:0 0 28px;color:#555555;font-size:15px;line-height:1.6;">
+                    Please verify your email address to activate your account. Click the button below to confirm.Link expires soon
+                  </p>
+
+                  <!-- Button -->
+                  <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+                    <tr>
+                      <td align="center" style="background-color:#2e7d32;border-radius:6px;">
+                        <a href="${verifyUrl}"
+                           style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.5px;">
+                          Verify Email
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin:0;color:#999999;font-size:13px;text-align:center;">
+                    ⏱ This link expires in <strong>24 hours</strong>. If you did not create an account, you can safely ignore this email.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color:#f9f9f9;padding:20px 40px;border-top:1px solid #eeeeee;">
+                  <p style="margin:0;color:#bbbbbb;font-size:12px;text-align:center;">
+                    © ${new Date().getFullYear()} Your Company. All rights reserved.
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>`
+);
 
     res.status(201).json({
       message: "Verification email sent. Please verify your email."
@@ -251,15 +321,81 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     await sendEmail(
-      user.email,
-      "Reset your password",
-      `
-      <h3>Password Reset</h3>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetUrl}">${resetUrl}</a>
-      <p>This link expires in 1 hour.</p>
-      `
-    );
+  user.email,
+  "Reset your password",
+  `<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </head>
+    <body style="margin:0;padding:0;background-color:#f0f0f0;font-family:Arial,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f0f0;padding:40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+              <!-- Logo Section -->
+              <tr>
+                <td align="center" style="background-color:#ffffff;padding:24px 40px;border-bottom:3px solid #2e7d32;">
+                  <img src="${process.env.LOGO_URL ?? 'https://placehold.co/140x45?text=Logo'}"
+                       alt="Logo"
+                       width="140"
+                       style="display:block;margin:0 auto;"/>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td align="center" style="padding:48px 40px 32px;">
+                  <p style="margin:0 0 6px;color:#444444;font-size:16px;">
+                    Hi Mr. ${user.personalProfile?.firstName ?? "there"},
+                  </p>
+                  <p style="margin:0 0 16px;color:#444444;font-size:15px;">
+                    You requested a password reset
+                  </p>
+                  <h1 style="margin:0 0 20px;color:#1a1a1a;font-size:28px;font-weight:700;">
+                    Password Reset
+                  </h1>
+                  <p style="margin:0 0 36px;color:#666666;font-size:15px;line-height:1.6;max-width:440px;">
+                    Click the button below to reset your password. This link expires in <strong>1 hour</strong>.
+                  </p>
+
+                  <!-- Green Button -->
+                  <table cellpadding="0" cellspacing="0" style="margin:0 auto 36px;">
+                    <tr>
+                      <td align="center" style="background-color:#2e7d32;border-radius:6px;">
+                        <a href="${resetUrl}"
+                           style="display:inline-block;padding:16px 48px;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">
+                          Reset Password
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin:0;color:#999999;font-size:13px;text-align:center;">
+                    If you didn't request a password reset, you can safely ignore this email.<br/>
+                    Your password will remain unchanged.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color:#f9f9f9;padding:20px 40px;border-top:1px solid #eeeeee;">
+                  <p style="margin:0;color:#bbbbbb;font-size:12px;text-align:center;">
+                    © ${new Date().getFullYear()} Your Company. All rights reserved.
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>`
+);
 
     return res.status(200).json({
       message: "Password reset link sent successfully"

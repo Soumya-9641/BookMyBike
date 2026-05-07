@@ -43,7 +43,7 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────
 // ADMIN REGISTER
 // Protected — only an existing admin can create another admin
 // ─────────────────────────────────────────────────────────────
