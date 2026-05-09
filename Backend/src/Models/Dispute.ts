@@ -13,7 +13,7 @@ export interface IDispute extends Document {
 
   reason: string;
   status: "open" | "resolved" | "rejected";
-  type: string;   // ← new
+  type: "APPLICABLE" | "NOT_APPLICABLE";   // ← new
   images: string[];
   resolvedAt?: Date;
 
@@ -59,6 +59,7 @@ const DisputeSchema: Schema<IDispute> = new Schema({
   },
   type: {
     type: String,
+    enum: ["APPLICABLE", "NOT_APPLICABLE"],
     required: true,
   },
   images: {

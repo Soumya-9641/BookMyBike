@@ -13,7 +13,7 @@ export const createDisputeService = async (
     reason: string;
     date: Date;
     time: string;
-    type: string;      // ← new
+    type: "APPLICABLE" | "NOT_APPLICABLE";      // ← new
     images: string[];  // ← new
   }
 ) => {
@@ -40,6 +40,7 @@ export const createDisputeService = async (
     error.dispute = existingDispute;     // ← attach existing dispute
     throw error;
   }
+   const status = type === "NOT_APPLICABLE" ? "rejected" : "open";
   const dispute = await Dispute.create({
     bikeId:        booking.bikeId,
     sellerId:      booking.ownerId,
@@ -52,7 +53,7 @@ export const createDisputeService = async (
     time,
       type,            // ← new
     images: images ?? [],  // ← new
-    status: "open",
+    status,
   });
 
   return dispute;
