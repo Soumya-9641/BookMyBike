@@ -3,17 +3,40 @@ import { Router, Request, Response } from "express";
 import { authMiddleware,isAdmin } from "../../Middlewares/auth.middleware";
 import { createDisputeService ,updateDisputeService,getDisputeDetailService,getAllDisputesService} from "./dispute.services";
 import { AuthRequest } from "../../types/auth-request";
-
+import multer from "multer";
+import path from "path";
 const router = Router();
+
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/disputes/"),
+  filename:    (req, file, cb) => cb(null, `${Date.now()}_${file.originalname}`),
+});
+
+const uploadDisputeImages = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowed = [".jpg", ".jpeg", ".png", ".webp"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    allowed.includes(ext) ? cb(null, true) : cb(new Error("Only image files are allowed"));
+  },
+  limits: { fileSize: 5 * 1024 * 1024 },  // 5MB
+});
 
 router.post(
   "/createDispute",
   authMiddleware,
+   uploadDisputeImages.array("images", 1),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+       const files = req.files as Express.Multer.File[];
+      const imagePaths = files?.length
+        ? files.map((file) => `/uploads/disputes/${file.filename}`)
+        : [];
+      
       const dispute = await createDisputeService(
         req.user!.userId.toString(),
-        req.body
+        { ...req.body, images: imagePaths }
       );
       res.status(201).json({
         success: true,

@@ -13,9 +13,11 @@ export const createDisputeService = async (
     reason: string;
     date: Date;
     time: string;
+    type: string;      // ← new
+    images: string[];  // ← new
   }
 ) => {
-  const { bookingId, disputeAmount, reason, date, time } = body;
+  const { bookingId, disputeAmount, reason, date, time, type, images } = body;
 
   if (!mongoose.Types.ObjectId.isValid(bookingId)) {
     throw new Error("Invalid bookingId");
@@ -48,6 +50,8 @@ export const createDisputeService = async (
     reason,
     date,
     time,
+      type,            // ← new
+    images: images ?? [],  // ← new
     status: "open",
   });
 

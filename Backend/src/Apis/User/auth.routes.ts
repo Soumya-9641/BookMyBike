@@ -46,80 +46,65 @@ router.post("/signup", async (req: Request, res: Response) => {
 console.log("Saved token:", user.emailVerificationToken);
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
-   await sendEmail(
+  await sendEmail(
   email,
   "Verify your email",
   `<!DOCTYPE html>
   <html>
-    <head>
-      <meta charset="utf-8"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    </head>
-    <body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,sans-serif;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:40px 0;">
+  <head>
+    <meta charset="utf-8">
+    <title>Verify Your Email</title>
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i&display=swap" rel="stylesheet">
+  </head>
+  <body style="background:#fff; margin:0; padding:0; font-family:Source Sans Pro,sans-serif;">
+    <table style="width:80%; max-width:800px; border:none; background:#fff; margin:30px auto">
+      <thead>
         <tr>
-          <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          <th>
+            <img alt="Logo"
+              src="${process.env.LOGO_URL}"
+              width="140"
+              style="display:block; margin:0 auto;">
+          </th>
+        </tr>
+      </thead>
+      <tbody style="width:100%">
+        <tr style="width:100%">
+          <td>
+            <div style="background:#F6F6F6; padding:15px; box-shadow:0px 1px 5px rgba(0,0,0,0.15); border-top:8px solid #17a34a; text-align:center; border-radius:5px">
               
-              <!-- Header -->
-              <tr>
-                <td align="center" style="background-color:#2e7d32;padding:32px 40px;">
-                  <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:1px;">VERIFY EMAIL</h1>
-                </td>
-              </tr>
-                            <!-- Logo Section -->
-              <tr>
-                <td align="center" style="background-color:#ffffff;padding:24px 40px;border-bottom:3px solid #2e7d32;">
-                  <img src="https://cdn.vectorstock.com/i/1000v/72/97/golden-lion-king-logo-vector-54867297.jpg"
-                       alt="Logo"
-                       width="140"
-                       style="display:block;"/>
-                </td>
-              </tr>
+              <h3 style="font-size:30px; font-weight:400; margin:5px 0 10px">
+                Hi ${firstName ?? "there"},
+              </h3>
+              <p style="font-size:20px; font-weight:400; margin:5px 0 10px; text-transform:capitalize">
+                You are one step away
+              </p>
+              <h2 style="font-size:36px; font-weight:400; margin:5px 0 10px; text-transform:capitalize">
+                Verify your email address
+              </h2>
+              <p style="font-size:20px; font-weight:400; margin:5px 0 10px; text-transform:capitalize">
+                To complete your profile you'll need to verify your email address.
+              </p>
 
+              <a style="width:150px; height:40px; font-size:20px; font-weight:600; color:#fff; background:#17a34a; text-decoration:none; padding:5px 22px; margin:35px auto; display:block; line-height:40px; box-shadow:0px 1px 5px rgba(0,0,0,0.35); border-radius:5px; text-transform:capitalize"
+                rel="noopener noreferrer"
+                target="_blank"
+                href="${verifyUrl}"
+                title="Verify address">
+                Verify email
+              </a>
 
-              <!-- Body -->
-              <tr>
-                <td style="padding:40px;">
-                  <p style="margin:0 0 12px;color:#333333;font-size:16px;font-weight:600;">
-                    Hi ${firstName ?? "there"},
-                  </p>
-                  <p style="margin:0 0 28px;color:#555555;font-size:15px;line-height:1.6;">
-                    Please verify your email address to activate your account. Click the button below to confirm.Link expires soon
-                  </p>
+              <p style="font-size:14px; color:#999999; margin:20px 0 10px;">
+                ⏱ This link expires in <strong>24 hours</strong>. 
+                If you did not create an account, you can safely ignore this email.
+              </p>
 
-                  <!-- Button -->
-                  <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
-                    <tr>
-                      <td align="center" style="background-color:#2e7d32;border-radius:6px;">
-                        <a href="${verifyUrl}"
-                           style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.5px;">
-                          Verify Email
-                        </a>
-                      </td>
-                    </tr>
-                  </table>
-
-                  <p style="margin:0;color:#999999;font-size:13px;text-align:center;">
-                    ⏱ This link expires in <strong>24 hours</strong>. If you did not create an account, you can safely ignore this email.
-                  </p>
-                </td>
-              </tr>
-
-              <!-- Footer -->
-              <tr>
-                <td style="background-color:#f9f9f9;padding:20px 40px;border-top:1px solid #eeeeee;">
-                  <p style="margin:0;color:#bbbbbb;font-size:12px;text-align:center;">
-                    © ${new Date().getFullYear()} Your Company. All rights reserved.
-                  </p>
-                </td>
-              </tr>
-
-            </table>
+            </div>
           </td>
         </tr>
-      </table>
-    </body>
+      </tbody>
+    </table>
+  </body>
   </html>`
 );
 

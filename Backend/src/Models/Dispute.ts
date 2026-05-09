@@ -13,6 +13,8 @@ export interface IDispute extends Document {
 
   reason: string;
   status: "open" | "resolved" | "rejected";
+  type: string;   // ← new
+  images: string[];
   resolvedAt?: Date;
 
   createdAt: Date;
@@ -54,6 +56,14 @@ const DisputeSchema: Schema<IDispute> = new Schema({
     type: String,
     enum: ["open", "resolved", "rejected"],
     default: "open",
+  },
+  type: {
+    type: String,
+    required: true,
+  },
+  images: {
+    type: [String],
+    default: [],
   },
   resolvedAt: { type: Date },
 
