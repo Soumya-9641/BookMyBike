@@ -80,12 +80,12 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
     const { rentalAmount, pricePerDay, totalDays } = calculateRentalAmount(listing, hours);
     const amount = rentalAmount; // Convert to smallest currency unit
     //
-   const depositAmount = to2dp(listing.depositAmount ?? 0);
-const chargeAmount  = to2dp(rentalAmount + depositAmount);
-const platformFee   = to2dp(rentalAmount * PLATFORM_FEE_RATE);
-const vatAmount     = to2dp(platformFee - platformFee / (1 + VAT_RATE));
-const platformNet   = to2dp(platformFee - vatAmount);
-const ownerPayout   = to2dp(rentalAmount - platformFee);
+    const depositAmount = to2dp(listing.depositAmount ?? 0);
+    const chargeAmount = to2dp(rentalAmount + depositAmount);
+    const platformFee = to2dp(rentalAmount * PLATFORM_FEE_RATE);
+    const vatAmount = to2dp(platformFee - platformFee / (1 + VAT_RATE));
+    const platformNet = to2dp(platformFee - vatAmount);
+    const ownerPayout = to2dp(rentalAmount - platformFee);
 
     let stripeCustomerId = user.stripeCustomerId;
     if (!stripeCustomerId) {
@@ -212,9 +212,9 @@ router.post("/create-connect-account", authMiddleware, async (req: AuthRequest, 
         last_name: "",
       },
 
-      
+
       business_profile: {
-        mcc: "7999",  
+        mcc: "7999",
         product_description: "Marketplace seller payouts",
       },
 
@@ -225,7 +225,7 @@ router.post("/create-connect-account", authMiddleware, async (req: AuthRequest, 
     });
 
     user.businessProfile!.stripeIdentityId = account.id;
-    user.businessProfile!.isActive = true; 
+    user.businessProfile!.isActive = true;
     user.businessProfile!.isVerified = false;
     await user.save();
 
@@ -422,6 +422,59 @@ router.patch(
     }
   }
 );
+
+router.post("/price-breakdown", authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { listingId, startDate, endDate, hours } = req.body;
+   const to2dp = (n: number) => Math.round(n * 100) / 100;
+    if (!listingId || !startDate || !endDate || !hours) {
+      return void res.status(400).json({ message: "listingId, startDate, endDate and hours are required" });
+    }
+
+    const listing = await Listing.findById(listingId);
+    if (!listing) return void res.status(404).json({ message: "Listing not found" });
+
+  
+    const isAvailable = await checkAvailability(listingId, new Date(startDate), new Date(endDate));
+    if (!isAvailable) return void res.status(409).json({ message: "Listing is not available for selected dates" });
+
+    
+    const { rentalAmount, pricePerDay, totalDays } = calculateRentalAmount(listing, hours);
+
+    const depositAmount = to2dp(listing.depositAmount ?? 0);
+    const chargeAmount  = to2dp(rentalAmount + depositAmount);
+    const platformFee   = to2dp(rentalAmount * PLATFORM_FEE_RATE);
+    const vatAmount     = to2dp(platformFee - platformFee / (1 + VAT_RATE));
+    const platformNet   = to2dp(platformFee - vatAmount);
+    const ownerPayout   = to2dp(rentalAmount - platformFee);
+
+    return void res.status(200).json({
+      success: true,
+      breakdown: {
+        hours:         Number(hours),
+        totalDays,
+        pricePerDay,
+        rentalAmount,
+
+      
+        depositAmount,
+
+        chargeAmount,
+
+
+        platformFee,
+        vatAmount,
+        platformNet,
+
+        ownerPayout,
+
+        currency: "SEK",
+      },
+    });
+  } catch (err: any) {
+    res.status(400).json({ message: err.message });
+  }
+});
 export default router;
 
 

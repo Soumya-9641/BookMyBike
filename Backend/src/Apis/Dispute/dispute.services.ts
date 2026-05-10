@@ -13,9 +13,11 @@ export const createDisputeService = async (
     reason: string;
     date: Date;
     time: string;
+    type: "APPLICABLE" | "NOT_APPLICABLE";      // ← new
+    images: string[];  // ← new
   }
 ) => {
-  const { bookingId, disputeAmount, reason, date, time } = body;
+  const { bookingId, disputeAmount, reason, date, time, type, images } = body;
 
   if (!mongoose.Types.ObjectId.isValid(bookingId)) {
     throw new Error("Invalid bookingId");
@@ -38,6 +40,7 @@ export const createDisputeService = async (
     error.dispute = existingDispute;     // ← attach existing dispute
     throw error;
   }
+   const status = type === "NOT_APPLICABLE" ? "rejected" : "open";
   const dispute = await Dispute.create({
     bikeId:        booking.bikeId,
     sellerId:      booking.ownerId,
@@ -48,7 +51,9 @@ export const createDisputeService = async (
     reason,
     date,
     time,
-    status: "open",
+      type,            // ← new
+    images: images ?? [],  // ← new
+    status,
   });
 
   return dispute;
