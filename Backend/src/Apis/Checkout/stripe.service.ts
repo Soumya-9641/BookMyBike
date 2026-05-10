@@ -376,13 +376,33 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
    const depositAmount  = payment.depositAmount  ?? 0;  // refunded to renter
   const ownerPayout    = payment.ownerPayout    ?? 0;  // transferred to owner
  
+    const dispute = await Dispute.findOne({ bookingId: booking._id });
+      let renterRefund        = depositAmount;   // default: full deposit back to renter
+  let adjustedOwnerPayout = ownerPayout;
+    if (dispute) {
+    if (dispute.status === "rejected") {
+      // ── Dispute rejected → full deposit refunded to renter, normal owner payout ──
+      renterRefund        = depositAmount;
+      adjustedOwnerPayout = ownerPayout;
+
+    } else if (dispute.status === "resolved") {
+      // ── Dispute resolved → deduct disputeAmount from deposit, add to owner payout ──
+      const penaltyAmount = dispute.disputeAmount ?? 0;
+      renterRefund        = Math.max(0, depositAmount - penaltyAmount);
+      adjustedOwnerPayout = ownerPayout + penaltyAmount;
+
+    } else if (dispute.status === "open") {
+      // ── Dispute still open → block completion until resolved ──
+      throw new Error("Cannot complete ride. Dispute is still open and pending resolution.");
+    }
+  }
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
-    amount: depositAmount * 100,        // convert to öre
+    amount: renterRefund  * 100,        // convert to öre
     reason: "requested_by_customer",
   });
  const transfer = await stripe.transfers.create({
-    amount: ownerPayout * 100,          // convert to öre
+    amount: adjustedOwnerPayout * 100,          // convert to öre
     currency: "sek",
     destination: owner.businessProfile.stripeIdentityId,
     source_transaction: paymentIntent.latest_charge as string, // 🔑 THE FIX
@@ -407,15 +427,23 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
   booking.actualEndTime   = new Date();
   booking.isSettlementDone = true;  // mark that payout/refund has been processed
   await booking.save();
-   return {
-    message: "Ride completed. Deposit refunded to renter, rental sent to owner.",
+  return {
+    message: dispute?.status === "resolved"
+      ? `Ride completed. ${dispute.disputeAmount} SEK penalty deducted from deposit.`
+      : "Ride completed. Full deposit refunded to renter.",
+    dispute: dispute
+      ? { disputeId: dispute._id, status: dispute.status, disputeAmount: dispute.disputeAmount }
+      : null,
     depositRefund: {
-      refundId: refund.id,
-      amount:   depositAmount,
+      refundId:      refund.id,
+      amount:        renterRefund,
+      currency:      payment.currency,
     },
     ownerPayout: {
-      transferId: transfer.id,
-      amount:     ownerPayout,
+      transferId:      transfer.id,
+      amount:          adjustedOwnerPayout,
+      penaltyIncluded: dispute?.status === "resolved" ? dispute.disputeAmount : 0,
+      currency:        payment.currency,
     },
   };
 };
