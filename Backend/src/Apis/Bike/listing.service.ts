@@ -245,17 +245,36 @@ return { bikes: availableBikes, filters };
 };
 
 export const getAllListingsService = async () => {
-   const bikes=  await Listing.find({ isPublished: true })
+  const bikes = await Listing.find({ isPublished: true })
     .sort({ createdAt: -1 })
     .lean();
-    
-    const filters = {
+
+  const latestBrands: string[] = [];
+  for (const bike of bikes) {
+    if (bike.brand && !latestBrands.includes(bike.brand)) {
+      latestBrands.push(bike.brand);
+    }
+    if (latestBrands.length === 10) break;
+  }
+
+  const cityCount: Record<string, number> = {};
+  for (const bike of bikes) {
+    const city = bike.location?.city;
+    if (city) {
+      cityCount[city] = (cityCount[city] ?? 0) + 1;
+    }
+  }
+  const topCities = Object.entries(cityCount)
+    .sort((a, b) => b[1] - a[1])      
+    .slice(0, 10)                        
+    .map(([city]) => city);              
+
+  const filters = {
     category:  [...new Set(bikes.map((b) => b.category).filter(Boolean))],
-    brand:     [...new Set(bikes.map((b) => b.brand).filter(Boolean))],
     modelbike: [...new Set(bikes.map((b) => b.modelbike).filter(Boolean))],
-    city:      [...new Set(bikes.map((b) => b.location?.city).filter(Boolean))],
+    brand:     latestBrands,             
+    city:      topCities,                 
   };
-  console.log(bikes);
 
   return { bikes, filters };
 };
