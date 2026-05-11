@@ -257,7 +257,7 @@ router.get("/connect/onboard", authMiddleware, async (req: AuthRequest, res: Res
 });
 
 
-router.post("/:id/complete-ride", authMiddleware, isBikeOwner, async (req: AuthRequest, res: Response) => {
+router.post("/:id/complete-ride", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { status } = req.body;
     //  if (!status) {
