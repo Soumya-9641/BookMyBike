@@ -17,19 +17,22 @@ export const calculatePricePreview = ({
 
   if (hours < 24) {
     if (!hourlyRate) return null;
-
-    rentalAmount = Math.round(hours * hourlyRate);
-    totalDays = 1;
+    rentalAmount = hours * hourlyRate;
     priceType = "hourly";
+    totalDays = 1;
   } else {
     if (!dailyRate) return null;
-
     totalDays = Math.ceil(hours / 24);
-    rentalAmount = Math.round(totalDays * dailyRate);
+    rentalAmount = totalDays * dailyRate;
     priceType = "daily";
   }
 
-  const deposit = Math.round(depositAmount);
+  const platformFee = rentalAmount * 0.18;        // 18%
+  const vatAmount = platformFee * 0.20;           // 20% VAT on platform fee
+  const platformFeeNet = platformFee - vatAmount; // admin net
+  const listerPayout = rentalAmount - platformFee;
+
+  const deposit = depositAmount;
   const totalToPay = rentalAmount + deposit;
 
   return {
@@ -39,5 +42,10 @@ export const calculatePricePreview = ({
     rentalAmount,
     deposit,
     totalToPay,
+
+    platformFee,
+    vatAmount,
+    platformFeeNet,
+    listerPayout,
   };
 };

@@ -68,18 +68,12 @@ export const bookingApi = baseApi.injectEndpoints({
     }),
     createDispute: builder.mutation<
       any,
-      {
-        bookingId: string;
-        disputeAmount: number;
-        reason: string;
-        date: Date;
-        time: string;
-      }
+      FormData
     >({
-      query: (body) => ({
+      query: (formData) => ({
         url: "/disputes/createDispute",
         method: "POST",
-        body,
+        body: formData,
       }),
 
     }),

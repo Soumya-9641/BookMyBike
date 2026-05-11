@@ -56,15 +56,24 @@ export const adminApi = createApi({
     }),
 
     updateDispute: builder.mutation<
-      any,
-      { disputeId: string; body: { status: string; reason?: string } }
+      {
+        success: boolean;
+        dispute: any;
+        message: string;
+      },
+      {
+        disputeId: string;
+        status: "resolved" | "rejected";
+      }
     >({
-      query: ({ disputeId, body }) => ({
-        url: `/disputes/updateDispute/${disputeId}`,
+      query: ({ disputeId, status }) => ({
+        url: "/disputes/updateDispute",
         method: "PATCH",
-        body,
+        body: {
+          disputeId,
+          status,
+        },
       }),
-      invalidatesTags: ["Disputes", "Dispute"],
     }),
     getAllBookings: builder.query<any[], void>({
       query: () => "/adminstats/allbookings",
@@ -86,6 +95,16 @@ export const adminApi = createApi({
         body,
       }),
       
+    }),
+    completeAdminRide: builder.mutation<
+      { success: boolean },
+      { bookingId: string; status: "inprogress" | "completed" }
+    >({
+      query: ({ bookingId, status }) => ({
+        url: `checkout/${bookingId}/complete-ride`,
+        method: "POST",
+        body: { status },
+      }),
     }),
     editListingAsAdmin: builder.mutation<
       any,
@@ -117,4 +136,5 @@ export const {
   useGetAllListingsQuery,
   useChangeAdminPasswordMutation,
   useEditListingAsAdminMutation,
+  useCompleteAdminRideMutation,
 } = adminApi;

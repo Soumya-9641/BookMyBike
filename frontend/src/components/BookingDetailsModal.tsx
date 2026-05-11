@@ -128,16 +128,16 @@ const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
                 </Typography>
 
                 <Typography fontWeight={600}>
-                  Refund Amount: SEK {booking.refund.refundAmount}
+                  Refund Amount: SEK {booking?.refund.refundAmount ?? 0}
                 </Typography>
 
                 <Typography>
-                  <strong>Reason:</strong> {booking.refund.refundReason}
+                  <strong>Reason:</strong> {booking?.refund.refundReason ?? "—"}
                 </Typography>
 
                 <Typography>
                   <strong>Refunded At:</strong>{" "}
-                  {new Date(booking.refund.refundedAt).toLocaleString()}
+                  {new Date(booking?.refund.refundedAt).toLocaleString()}
                 </Typography>
               </Stack>
             </>
@@ -209,9 +209,9 @@ const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
                   VAT Amount: SEK {payment?.vatAmount}
                 </Typography>
 
-                <Typography>
+                {/* <Typography>
                   Platform Net: SEK {payment?.platformNet}
-                </Typography>
+                </Typography> */}
 
                 <Typography fontWeight={600}>
                   Owner Payout: SEK {payment?.ownerPayout}
@@ -226,7 +226,7 @@ const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
                     </Typography>
 
                     <Typography>
-                      Refund Amount: SEK {payment?.refundAmount}
+                      Refund Amount: SEK {payment?.refundAmount ?? 0}
                     </Typography>
 
                     <Typography>
@@ -259,7 +259,7 @@ const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
             </Typography>
 
             <Typography>
-              Penalty Amount: SEK {booking?.ride?.penaltyAmount}
+              Penalty Amount: SEK {booking?.ride?.penaltyAmount ?? 0}
             </Typography>
 
             {booking.ride.penaltyReason && (

@@ -222,3 +222,22 @@ export interface UserProfileUpdatePayload {
   address?: string;
   city?: string;
 }
+
+export interface PriceBreakdownResponse {
+  success: boolean;
+  breakdown: {
+    hours: number;
+    totalDays: number;
+    pricePerDay: number;
+    rentalAmount: number;
+    depositAmount: number;
+    chargeAmount: number;
+
+    platformFee: number;
+    vatAmount: number;
+    platformNet: number;
+
+    ownerPayout: number;
+    currency: string;
+  };
+}

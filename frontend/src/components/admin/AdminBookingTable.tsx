@@ -66,10 +66,10 @@ const AdminBookingTable = ({ bookings }: Props) => {
                     color={statusColorMap[b.status]}
                   />
                 </TableCell>
-                <TableCell>SEK {b.pricePerDay}</TableCell>
-                <TableCell>SEK {b.securityDeposit}</TableCell>
+                <TableCell>SEK {b?.pricing?.pricePerDay}</TableCell>
+                <TableCell>SEK {b?.pricing?.securityDeposit}</TableCell>
                 <TableCell>
-                  <strong>SEK {b.totalAmount}</strong>
+                  <strong>SEK {b?.pricing?.totalAmount}</strong>
                 </TableCell>
                 <TableCell align="center">
                   <Button

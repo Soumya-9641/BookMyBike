@@ -4,7 +4,7 @@ import BookingTable from "../components/BookingTable";
 import AccountTabs from "../components/AccountTabs";
 
 const MyBookings = () => {
-  const { data, isLoading } = useGetMyBookingsQuery();
+  const { data, isLoading, refetch } = useGetMyBookingsQuery();
 
   if (isLoading) return <CircularProgress />;
 
@@ -24,7 +24,7 @@ const MyBookings = () => {
         My Bookings
       </Typography>
 
-      <BookingTable bookings={data?.bookings || []} />
+      <BookingTable bookings={data?.bookings || []}  refetch={refetch} />
     </Box>
 
   );

@@ -128,14 +128,24 @@ const Header = () => {
               </>
             ) : (
               <>
-                {canCreateListing && (
-                  <Button
-                    variant="contained"
-                    component={RouterLink}
-                    to="/create-listing"
-                  >
-                    Create Listing
-                  </Button>
+                {isLoggedIn && (
+                  canCreateListing ? (
+                    <Button
+                      variant="contained"
+                      component={RouterLink}
+                      to="/create-listing"
+                    >
+                      Create Listing
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      component={RouterLink}
+                      to="/verify-profile"
+                    >
+                      Register as Lister
+                    </Button>
+                  )
                 )}
                 {isLoggedIn && (
                   <Stack direction="row" spacing={1} alignItems="center">
@@ -319,14 +329,26 @@ const Header = () => {
               </>
             )}
 
-            {canCreateListing && (
-              <Button
-                variant="contained"
-                component={RouterLink}
-                to="/create-listing"
-              >
-                Create Listing
-              </Button>
+            {isLoggedIn && (
+              canCreateListing ? (
+                <Button
+                  variant="contained"
+                  component={RouterLink}
+                  to="/create-listing"
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  Create Listing
+                </Button>
+              ) : (
+                <Button
+                  variant="outlined"
+                  component={RouterLink}
+                  to="/verify-profile"
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  Register as Lister
+                </Button>
+              )
             )}
           </Stack>
         </Box>

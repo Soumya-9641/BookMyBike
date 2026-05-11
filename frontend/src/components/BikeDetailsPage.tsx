@@ -15,15 +15,12 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import { useState } from "react";
 import Slider from "react-slick";
-
+import { useGetPriceBreakdownMutation } from "../services/stripeApi";
 import { useGetBikeByIdQuery } from "../services/listingApi";
 import { useCreateBookingMutation } from "../services/bookingApi";
 import DateTimeDialog from "../components/DateTimeDialog";
-import { calculatePricePreview } from "../utils/CalculatePricePreview";
 import BikeLocationMap from "./BikeLocationMap";
 
-const PLATFORM_FEE_RATE = 0.18;
-const VAT_RATE = 0.25;
 
 const BikeDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +29,8 @@ const BikeDetails = () => {
   const { data, isLoading } = useGetBikeByIdQuery(id!);
   const [createBooking, { isLoading: bookingLoading }] =
     useCreateBookingMutation();
-
+  const [getPriceBreakdown, { data: priceData, isLoading: priceLoading }] =
+    useGetPriceBreakdownMutation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(null);
   const [endDateTime, setEndDateTime] = useState<Dayjs | null>(null);
@@ -76,21 +74,6 @@ const BikeDetails = () => {
       alert(err?.data?.message || "Booking failed");
     }
   };
-
-  const hours =
-    startDateTime && endDateTime
-      ? endDateTime.diff(startDateTime, "hour")
-      : 0;
-
-  const pricePreview =
-    hours > 0
-      ? calculatePricePreview({
-        hours,
-        hourlyRate: data.rates?.hourly,
-        dailyRate: data.rates?.daily,
-        depositAmount: data.depositAmount,
-      })
-      : null;
 
   /* ---------------- SLIDER SETTINGS (REFERENCE BASED) ---------------- */
   const sliderSettings = {
@@ -231,37 +214,50 @@ const BikeDetails = () => {
           </Stack>
 
           {/* ---------- PRICE BREAKDOWN ---------- */}
-          {pricePreview && (
+          {/* ---------- PRICE BREAKDOWN ---------- */}
+          {priceLoading && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Stack alignItems="center" py={2}>
+                <CircularProgress size={28} />
+                <Typography mt={1} variant="body2">
+                  Calculating price...
+                </Typography>
+              </Stack>
+            </>
+          )}
+
+          {priceData?.breakdown && (
             <>
               <Divider sx={{ my: 2 }} />
 
               <Typography fontWeight={600}>Price Breakdown</Typography>
 
               <Typography>
-                Rental ({pricePreview.priceType}): SEK{" "}
-                {pricePreview.rentalAmount.toFixed(2)}
+                Rental Amount: SEK{" "}
+                {priceData.breakdown.rentalAmount.toFixed(2)}
               </Typography>
 
               <Typography variant="body2" color="text.secondary">
-                Platform Fee (18%): SEK {pricePreview.platformFee.toFixed(2)}
+                Platform Fee (18%): SEK{" "}
+                {priceData.breakdown.platformFee.toFixed(2)}
               </Typography>
-
+              {/* 
               <Typography variant="body2" color="text.secondary">
-                VAT (20%): SEK {pricePreview.vatAmount.toFixed(2)}
-              </Typography>
-
-              <Typography variant="body2" color="text.secondary">
-                Platform Fee Net: SEK {pricePreview.platformFeeNet.toFixed(2)}
-              </Typography>
+                VAT (included): SEK{" "}
+                {priceData.breakdown.vatAmount.toFixed(2)}
+              </Typography> */}
 
               <Divider sx={{ my: 1 }} />
 
               <Typography>
-                Security Deposit: SEK {pricePreview.deposit.toFixed(2)}
+                Security Deposit: SEK{" "}
+                {priceData.breakdown.depositAmount.toFixed(2)}
               </Typography>
 
               <Typography fontWeight={700} mt={1}>
-                Total to Pay: SEK {pricePreview.totalToPay.toFixed(2)}
+                Total to Pay: SEK{" "}
+                {priceData.breakdown.chargeAmount.toFixed(2)}
               </Typography>
             </>
           )}
@@ -269,7 +265,7 @@ const BikeDetails = () => {
           <Button
             variant="contained"
             sx={{ mt: 3, bgcolor: "#22a652" }}
-            disabled={!pricePreview || bookingLoading}
+            disabled={!priceData?.breakdown || bookingLoading}
             onClick={handleBookNow}
           >
             Pay Now
@@ -284,10 +280,25 @@ const BikeDetails = () => {
         endDateTime={endDateTime ?? dayjs().add(1, "hour")}
         onClose={() => setDialogOpen(false)}
         disablePast
-        onApply={(start, end) => {
+        onApply={async (start, end) => {
           setStartDateTime(start);
           setEndDateTime(end);
           setDialogOpen(false);
+
+          const hours = end.diff(start, "hour");
+
+          if (hours <= 0) return;
+
+          try {
+            await getPriceBreakdown({
+              listingId: data._id,
+              startDate: start.toISOString(),
+              endDate: end.toISOString(),
+              hours,
+            }).unwrap();
+          } catch (err: any) {
+            alert(err?.data?.message || "Failed to calculate price");
+          }
         }}
       />
 

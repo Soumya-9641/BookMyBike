@@ -76,61 +76,54 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
   };
 
   /* -------------------- DISPUTE + SETTLEMENT -------------------- */
-  const handleDisputeSubmit = async (data: {
-    disputeAmount: number;
-    reason: string;
-    date: Date;
-    time: string;
-  }) => {
-    if (!pendingBooking) return;
+const handleDisputeSubmit = async (data: {
+  disputeAmount: number;
+  reason: string;
+  date: Date;
+  time: string;
+  type: "APPLICABLE" | "NOT_APPLICABLE";
+  image?: File;
+}) => {
+  if (!pendingBooking) return;
 
-    let disputeAllowed = false;
+  const formData = new FormData();
+  formData.append("bookingId", pendingBooking.bookingId);
+  formData.append("disputeAmount", String(data.disputeAmount));
+  formData.append("reason", data.reason);
+  formData.append("date", data.date.toISOString());
+  formData.append("time", data.time);
+  formData.append("type", data.type);
 
-    try {
-      // Try to create dispute
-      await createDispute({
+  if (data.image) {
+    formData.append("images", data.image);
+  }
+
+  try {
+    await createDispute(formData).unwrap();
+    toast.success("Dispute created");
+
+    // ✅ ONLY for NOT_APPLICABLE → complete ride
+    if (data.type === "NOT_APPLICABLE") {
+      await completeRide({
         bookingId: pendingBooking.bookingId,
-        ...data,
+        status: "completed",
       }).unwrap();
 
-      // ✅ 201 → Dispute created
-      toast.success("Dispute created");
-      disputeAllowed = true;
-
-    } catch (err: any) {
-      // ✅ 409 → Dispute already exists → allow completion
-      if (err?.status === 409) {
-        toast("Dispute already exists. Continuing ride completion.", {
-          icon: "ℹ️",
-        });
-        disputeAllowed = true;
-      } else {
-        // ❌ Real error → stop flow
-        toast.error(err?.data?.message || "Failed to create dispute");
-        return;
-      }
+      toast.success("Ride completed");
     }
 
-    // ✅ Proceed to complete ride in BOTH cases (201 or 409)
-    if (disputeAllowed) {
-      try {
-        await completeRide({
-          bookingId: pendingBooking.bookingId,
-          status: "completed",
-        }).unwrap();
+    setOpenDispute(false);
+    setPendingBooking(null);
+    refetch?.();
 
-        toast.success("Ride completed successfully");
-        setOpenDispute(false);
-        setPendingBooking(null);
-        refetch && refetch();
-
-      } catch (err: any) {
-        toast.error(
-          err?.data?.message || "Failed to complete ride"
-        );
-      }
+  } catch (err: any) {
+    if (err?.status === 409) {
+      toast("Dispute already exists", { icon: "ℹ️" });
+    } else {
+      toast.error(err?.data?.message || "Failed to submit dispute");
     }
-  };
+  }
+};
 
   return (
     <>
