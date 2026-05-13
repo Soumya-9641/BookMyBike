@@ -3,14 +3,17 @@ import { Router, Request, Response } from "express";
 
 import { authMiddleware } from "../../Middlewares/auth.middleware";
 
-import { createListingService, searchListingsService, getFirstFourBikesService, filterListingsService, 
-  searchAvailableBikesService, getAllListingsService, getListingByIdService ,
-  requestRideStartService,acceptRideStartService,requestRideCompletionService,
+import {
+  createListingService, searchListingsService, getFirstFourBikesService, filterListingsService,
+  searchAvailableBikesService, getAllListingsService, getListingByIdService,
+  requestRideStartService, acceptRideStartService, requestRideCompletionService,
   updateListingService,
-  confirmRideCompletionService} from "./listing.service";
+  confirmRideCompletionService
+} from "./listing.service";
 import { uploadBikeImages } from "../../Middlewares/upload.middleware";
 import { AuthRequest } from "../../types/auth-request";
 import User from "../../Models/User";
+import { sendEmail } from "../../Utils/sendEmail";
 
 
 const router = Router();
@@ -52,7 +55,7 @@ router.post(
         rates,
         depositAmount,
         location,
-         pickupPoint,
+        pickupPoint,
       } = req.body;
 
       const files = req.files as Express.Multer.File[];
@@ -89,7 +92,7 @@ router.post(
         accessories: accessories ? JSON.parse(accessories) : [],
         rates: rates ? JSON.parse(rates) : {},
         depositAmount,
-         pickupPoint: pickupPoint?.trim() || undefined,
+        pickupPoint: pickupPoint?.trim() || undefined,
         location: {
           type: "Point",
           coordinates: [
@@ -101,6 +104,68 @@ router.post(
         }
       });
 
+      const firstName = user.personalProfile?.firstName || "User";
+
+      await sendEmail(
+        user.email,
+        "Bike Listing Created Successfully",
+        `<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bike Listing Created</title>
+  </head>
+
+  <body style="font-family: Arial, sans-serif; background:#f5f5f5; padding:30px;">
+
+    <div style="
+      max-width:600px;
+      margin:auto;
+      background:white;
+      padding:30px;
+      border-radius:8px;
+      border-top:6px solid #17a34a;
+    ">
+
+      <div style="text-align:center; margin-bottom:20px;">
+        <img
+          src="${process.env.LOGO_URL}"
+          width="130"
+          alt="Logo"
+        />
+      </div>
+
+      <h2 style="color:#111;">
+        Hi ${firstName},
+      </h2>
+
+      <p style="font-size:16px; color:#444; line-height:1.7;">
+        Your bike listing has been created successfully and is now live on RentMyBike.
+      </p>
+
+      <p style="font-size:16px; color:#444; line-height:1.7;">
+        Riders can now discover and book your bike.
+      </p>
+
+      <p style="font-size:16px; color:#444; line-height:1.7;">
+        If you have any questions, contact us at
+        <a
+          href="mailto:support@rentmy.bike"
+          style="color:#17a34a; text-decoration:none;"
+        >
+          support@rentmy.bike
+        </a>
+      </p>
+
+      <p style="margin-top:30px; color:#888;">
+        — RentMyBike Team
+      </p>
+
+    </div>
+
+  </body>
+  </html>`
+      );
 
       res.status(201).json({
         message: "Listing created successfully",
@@ -205,7 +270,7 @@ router.post("/filter", async (req: Request, res: Response) => {
 
 router.post("/search", async (req: Request, res: Response) => {
   try {
-     const { bikes, filters } = await searchAvailableBikesService(req.body);
+    const { bikes, filters } = await searchAvailableBikesService(req.body);
 
     res.status(200).json({
       count: bikes.length,
@@ -256,14 +321,14 @@ router.put(
 
       const updateData: Record<string, any> = {};
 
-      if (title)         updateData.title         = title;
-      if (description)   updateData.description   = description;
-      if (brand)         updateData.brand         = brand;
-      if (modelbike)     updateData.modelbike     = modelbike;
-      if (size)          updateData.size          = size;
-      if (category)      updateData.category      = category;
+      if (title) updateData.title = title;
+      if (description) updateData.description = description;
+      if (brand) updateData.brand = brand;
+      if (modelbike) updateData.modelbike = modelbike;
+      if (size) updateData.size = size;
+      if (category) updateData.category = category;
       if (depositAmount) updateData.depositAmount = depositAmount;
-      if (accessories)   updateData.accessories   = JSON.parse(accessories);
+      if (accessories) updateData.accessories = JSON.parse(accessories);
       if (pickupPoint !== undefined) {
         updateData.pickupPoint = pickupPoint?.trim() || undefined;
       }
@@ -294,15 +359,15 @@ router.put(
   }
 );
 
-router.post("/getall",async(req:Request, res:Response)=>{
-  try{
-      const { bikes, filters }=await getAllListingsService();
-      res.status(200).json({
-        count: bikes.length,
-        bikes,
-        filters
-      });
-  }catch(error:any){
+router.post("/getall", async (req: Request, res: Response) => {
+  try {
+    const { bikes, filters } = await getAllListingsService();
+    res.status(200).json({
+      count: bikes.length,
+      bikes,
+      filters
+    });
+  } catch (error: any) {
     res.status(500).json({
       message: error.message || "fetch failed"
     });
