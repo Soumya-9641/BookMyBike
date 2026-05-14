@@ -262,11 +262,66 @@ router.post("/resend-verification", async (req: Request, res: Response) => {
 
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
-    await sendEmail(
+      await sendEmail(
       user.email,
       "Verify your email",
-      `<p>Your verification link:</p>
-       <a href="${verifyUrl}">${verifyUrl}</a>`
+      `<!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Verify Your Email</title>
+        <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i&display=swap" rel="stylesheet">
+      </head>
+      <body style="background:#fff; margin:0; padding:0; font-family:Source Sans Pro,sans-serif;">
+        <table style="width:80%; max-width:800px; border:none; background:#fff; margin:30px auto">
+          <thead>
+            <tr>
+              <th>
+                <img alt="Logo"
+                  src="${process.env.LOGO_URL}"
+                  width="140"
+                  style="display:block; margin:0 auto;">
+              </th>
+            </tr>
+          </thead>
+          <tbody style="width:100%">
+            <tr style="width:100%">
+              <td>
+                <div style="background:#F6F6F6; padding:15px; box-shadow:0px 1px 5px rgba(0,0,0,0.15); border-top:8px solid #17a34a; text-align:center; border-radius:5px">
+                  
+                  <h3 style="font-size:30px; font-weight:400; margin:5px 0 10px">
+                    Hi ${user.personalProfile?.firstName ?? "there"},
+                  </h3>
+                  <p style="font-size:20px; font-weight:400; margin:5px 0 10px; text-transform:capitalize">
+                    You are one step away
+                  </p>
+                  <h2 style="font-size:36px; font-weight:400; margin:5px 0 10px; text-transform:capitalize">
+                    Verify your email address
+                  </h2>
+                  <p style="font-size:20px; font-weight:400; margin:5px 0 10px; text-transform:capitalize">
+                    To complete your profile you'll need to verify your email address.
+                  </p>
+
+                  <a style="width:150px; height:40px; font-size:20px; font-weight:600; color:#fff; background:#17a34a; text-decoration:none; padding:5px 22px; margin:35px auto; display:block; line-height:40px; box-shadow:0px 1px 5px rgba(0,0,0,0.35); border-radius:5px; text-transform:capitalize"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    href="${verifyUrl}"
+                    title="Verify address">
+                    Verify email
+                  </a>
+
+                  <p style="font-size:14px; color:#999999; margin:20px 0 10px;">
+                    ⏱ This link expires in <strong>24 hours</strong>.
+                    If you did not create an account, you can safely ignore this email.
+                  </p>
+
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </body>
+      </html>`
     );
 
     return res.status(200).json({

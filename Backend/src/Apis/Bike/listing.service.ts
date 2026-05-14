@@ -3,6 +3,8 @@ import Listing from "../../Models/Listing";
 import { Types } from "mongoose";
 import Booking from "../../Models/Booking";
 import { haversineDistance } from "../../Utils/haversine";
+import { sendEmail } from "../../Utils/sendEmail";
+import User from "../../Models/User";
 interface CreateListingInput {
   ownerId:Types.ObjectId;
 
@@ -245,17 +247,36 @@ return { bikes: availableBikes, filters };
 };
 
 export const getAllListingsService = async () => {
-   const bikes=  await Listing.find({ isPublished: true })
+  const bikes = await Listing.find({ isPublished: true })
     .sort({ createdAt: -1 })
     .lean();
-    
-    const filters = {
+
+  const latestBrands: string[] = [];
+  for (const bike of bikes) {
+    if (bike.brand && !latestBrands.includes(bike.brand)) {
+      latestBrands.push(bike.brand);
+    }
+    if (latestBrands.length === 10) break;
+  }
+
+  const cityCount: Record<string, number> = {};
+  for (const bike of bikes) {
+    const city = bike.location?.city;
+    if (city) {
+      cityCount[city] = (cityCount[city] ?? 0) + 1;
+    }
+  }
+  const topCities = Object.entries(cityCount)
+    .sort((a, b) => b[1] - a[1])      
+    .slice(0, 10)                        
+    .map(([city]) => city);              
+
+  const filters = {
     category:  [...new Set(bikes.map((b) => b.category).filter(Boolean))],
-    brand:     [...new Set(bikes.map((b) => b.brand).filter(Boolean))],
     modelbike: [...new Set(bikes.map((b) => b.modelbike).filter(Boolean))],
-    city:      [...new Set(bikes.map((b) => b.location?.city).filter(Boolean))],
+    brand:     latestBrands,             
+    city:      topCities,                 
   };
-  console.log(bikes);
 
   return { bikes, filters };
 };
@@ -294,6 +315,7 @@ export const requestRideStartService = async (bookingId: string, renterId: strin
     { new: true }
   );
 
+   
   return updated;
 };
 export const acceptRideStartService = async (bookingId: string, ownerId: string) => {
@@ -318,7 +340,91 @@ export const acceptRideStartService = async (bookingId: string, ownerId: string)
     },
     { new: true }
   );
+const renter         = await User.findById(booking.renterId);
+  const firstName      = renter?.personalProfile?.firstName ?? "there";
+  const bookingShortId = booking._id.toString().slice(-8).toUpperCase();
+  const startedAt      = new Date().toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
 
+  await sendEmail(
+    renter?.email!,
+    "Rental Started 🚲",
+    `<!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Rental Started</title>
+      <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i&display=swap" rel="stylesheet">
+    </head>
+    <body style="background:#fff; margin:0; padding:0; font-family:Source Sans Pro,sans-serif;">
+      <table style="width:80%; max-width:800px; border:none; background:#fff; margin:30px auto">
+        <thead>
+          <tr>
+            <th>
+              <img alt="Logo"
+                src="${process.env.LOGO_URL}"
+                width="140"
+                style="display:block; margin:0 auto;">
+            </th>
+          </tr>
+        </thead>
+        <tbody style="width:100%">
+          <tr style="width:100%">
+            <td>
+              <div style="background:#F6F6F6; padding:30px; box-shadow:0px 1px 5px rgba(0,0,0,0.15); border-top:8px solid #17a34a; text-align:center; border-radius:5px">
+
+                <h3 style="font-size:30px; font-weight:400; margin:5px 0 10px">
+                  Hi ${firstName},
+                </h3>
+                <p style="font-size:20px; font-weight:400; margin:5px 0 10px;">
+                  Time to start exploring!
+                </p>
+                <h2 style="font-size:36px; font-weight:400; margin:5px 0 20px; text-transform:capitalize">
+                  Rental Started 🚲
+                </h2>
+                <p style="font-size:18px; font-weight:400; color:#444; margin:0 0 24px;">
+                  Your rental has officially started. Enjoy your ride!
+                </p>
+
+                <!-- Details Card -->
+                <table style="width:100%; max-width:500px; margin:20px auto; border-radius:8px; overflow:hidden; border:1px solid #e0e0e0;">
+                  <tr style="background:#ffffff;">
+                    <td style="padding:12px 20px; font-size:15px; color:#666; text-align:left; border-bottom:1px solid #eeeeee;">
+                      Booking ID
+                    </td>
+                    <td style="padding:12px 20px; font-size:15px; font-weight:600; color:#1a1a1a; text-align:right; border-bottom:1px solid #eeeeee;">
+                      #${bookingShortId}
+                    </td>
+                  </tr>
+                  <tr style="background:#f9f9f9;">
+                    <td style="padding:12px 20px; font-size:15px; color:#666; text-align:left; border-bottom:1px solid #eeeeee;">
+                      Started At
+                    </td>
+                    <td style="padding:12px 20px; font-size:15px; font-weight:600; color:#1a1a1a; text-align:right; border-bottom:1px solid #eeeeee;">
+                      ${startedAt}
+                    </td>
+                  </tr>
+                  <tr style="background:#ffffff;">
+                    <td style="padding:12px 20px; font-size:15px; color:#666; text-align:left;">
+                      Status
+                    </td>
+                    <td style="padding:12px 20px; font-size:15px; font-weight:700; color:#17a34a; text-align:right;">
+                      In Progress
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="font-size:14px; color:#999999; margin:20px 0 10px;">
+                  If you have any questions, please contact our support team.
+                </p>
+
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </body>
+    </html>`
+  );
   return updated;
 };
 
@@ -379,7 +485,83 @@ export const confirmRideCompletionService = async (bookingId: string, renterId: 
     },
     { new: true }
   );
+const renter         = await User.findById(booking.renterId);
+  const firstName      = renter?.personalProfile?.firstName ?? "there";
+  const bookingShortId = booking._id.toString().slice(-8).toUpperCase();
+  const startedAt      = new Date().toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
 
+  await sendEmail(
+    renter?.email!,
+    "Rental Started 🚲",
+    `<!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Rental Started</title>
+      <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i&display=swap" rel="stylesheet">
+    </head>
+    <body style="background:#fff; margin:0; padding:0; font-family:Source Sans Pro,sans-serif;">
+      <table style="width:80%; max-width:800px; border:none; background:#fff; margin:30px auto">
+        <thead>
+          <tr>
+            <th>
+              <img alt="Logo"
+                src="${process.env.LOGO_URL}"
+                width="140"
+                style="display:block; margin:0 auto;">
+            </th>
+          </tr>
+        </thead>
+        <tbody style="width:100%">
+          <tr style="width:100%">
+            <td>
+              <div style="background:#F6F6F6; padding:30px; box-shadow:0px 1px 5px rgba(0,0,0,0.15); border-top:8px solid #17a34a; text-align:center; border-radius:5px">
+
+                <h3 style="font-size:30px; font-weight:400; margin:5px 0 10px">
+                  Hi ${firstName},
+                </h3>
+                <p style="font-size:20px; font-weight:400; margin:5px 0 10px;">
+                  Time to start exploring!
+                </p>
+                <h2 style="font-size:36px; font-weight:400; margin:5px 0 20px; text-transform:capitalize">
+                  Rental Completed 🚲
+                </h2>
+                <p style="font-size:18px; font-weight:400; color:#444; margin:0 0 24px;">
+                   Your rental is completed. We hope you had a great ride! If you have any feedback, please let us know.Your deposit/payout will be processed shortly.
+                </p>
+
+                <!-- Details Card -->
+                <table style="width:100%; max-width:500px; margin:20px auto; border-radius:8px; overflow:hidden; border:1px solid #e0e0e0;">
+                  <tr style="background:#ffffff;">
+                    <td style="padding:12px 20px; font-size:15px; color:#666; text-align:left; border-bottom:1px solid #eeeeee;">
+                      Booking ID
+                    </td>
+                    <td style="padding:12px 20px; font-size:15px; font-weight:600; color:#1a1a1a; text-align:right; border-bottom:1px solid #eeeeee;">
+                      #${bookingShortId}
+                    </td>
+                  </tr>
+                  <tr style="background:#f9f9f9;">
+                    <td style="padding:12px 20px; font-size:15px; color:#666; text-align:left; border-bottom:1px solid #eeeeee;">
+                      Started At
+                    </td>
+                    <td style="padding:12px 20px; font-size:15px; font-weight:600; color:#1a1a1a; text-align:right; border-bottom:1px solid #eeeeee;">
+                      ${startedAt}
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="font-size:14px; color:#999999; margin:20px 0 10px;">
+                  If you have any questions, please contact our support team.
+                </p>
+
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </body>
+    </html>`
+  );
   return updated;
 };
 
