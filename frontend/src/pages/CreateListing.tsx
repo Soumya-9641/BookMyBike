@@ -42,6 +42,7 @@ const CreateListing = () => {
     size: "",
     description: "",
     depositAmount: "",
+    pickupPoint: "",
     rates: {
       hourly: "",
       daily: "",
@@ -97,6 +98,8 @@ const CreateListing = () => {
       !form.brand ||
       !form.modelbike ||
       !form.size ||
+      !form.depositAmount ||
+      !form.pickupPoint ||
       !mainCategory ||
       !subCategory ||
       !location ||
@@ -133,6 +136,7 @@ const CreateListing = () => {
         brand: form.brand,
         modelbike: form.modelbike,
         size: form.size,
+        pickupPoint: form.pickupPoint,
         category: `${mainCategory} > ${subCategory}`,
         depositAmount: Number(form.depositAmount),
         accessories: selectedAccessories,
@@ -189,7 +193,14 @@ const CreateListing = () => {
               </Paper>
 
               <TextField label="Size *" name="size" onChange={handleChange} />
-
+              <TextField
+                label="Pickup Point"
+                name="pickupPoint"
+                placeholder="e.g. Near Central Station parking"
+                value={form.pickupPoint}
+                onChange={handleChange}
+                required
+              />
               <LocationAutocomplete
                 label="Location *"
                 value={locationText}

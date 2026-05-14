@@ -1,0 +1,22 @@
+/* Fix slick thumbnail dots positioning */
+.slick-dots.slick-thumb {
+  position: static !important;   /* removes absolute positioning */
+  margin-top: 12px;              /* space between image & thumbnails */
+}
+
+/* Optional: center thumbnails */
+.slick-dots.slick-thumb li {
+  width: auto;
+  height: auto;
+}
+
+/* Optional: active thumbnail highlight */
+.slick-dots.slick-thumb li.slick-active img {
+  border: 2px solid #22a652;
+  opacity: 1;
+}
+
+.slick-dots.slick-thumb li img {
+  opacity: 0.6;
+  cursor: pointer;
+}

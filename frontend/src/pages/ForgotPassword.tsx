@@ -12,11 +12,11 @@ import {
 } from "@mui/material";
 import { useForgotPasswordMutation } from "../services/authApi";
 import { Link as RouterLink } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMessage, setDialogMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [forgotPassword, { isLoading }] =
@@ -31,12 +31,12 @@ const ForgotPassword = () => {
 
     try {
       const res = await forgotPassword({ email }).unwrap();
-      setDialogMessage(res.message);
+      toast.success(res.message);
       setIsSuccess(true);
       setDialogOpen(true);
       setEmail("");
     } catch (err: any) {
-      setDialogMessage(
+      toast.error(
         err?.data?.message || "Something went wrong"
       );
       setIsSuccess(false);
@@ -114,7 +114,7 @@ const ForgotPassword = () => {
       </Box>
 
       {/* Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+      {/* <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle
           sx={{
             fontWeight: 700,
@@ -139,7 +139,7 @@ const ForgotPassword = () => {
             OK
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
     </Box>
   );
 };

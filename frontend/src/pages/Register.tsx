@@ -5,39 +5,31 @@ import {
   Stack,
   TextField,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
 } from "@mui/material";
-import { Navigate, Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useSignupMutation } from "../services/authApi";
 import {
   useSendOtpMutation,
   useVerifyOtpMutation,
 } from "../services/authApi";
 import { useState } from "react";
-
-const countryCodes = [
-  { label: "India (+91)", value: "+91" },
-  { label: "Sweden (+46)", value: "+46" },
-  { label: "USA (+1)", value: "+1" },
-];
+import toast from "react-hot-toast";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/material.css";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 const Register = () => {
+  const navigate = useNavigate();
+
   const [signup, { isLoading }] = useSignupMutation();
   const [sendOtp, { isLoading: sendingOtp }] = useSendOtpMutation();
   const [verifyOtp, { isLoading: verifyingOtp }] = useVerifyOtpMutation();
-  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     firstName: "",
-    middleName: "",
     lastName: "",
     email: "",
-    countryCode: "+91",
-    phone: "",
+    phone: "",        // international format without +
     password: "",
   });
 
@@ -45,40 +37,34 @@ const Register = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMessage, setDialogMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
-
+  /* -------------------- VALIDATION -------------------- */
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isEmailValid = emailRegex.test(formData.email);
-
-  const fullPhoneNumber = `${formData.countryCode}${formData.phone}`;
+  const fullPhoneNumber = `+${formData.phone}`;
+  const isPhoneValid = isValidPhoneNumber(fullPhoneNumber);
 
   const isFormValid =
     formData.firstName.trim() &&
     formData.lastName.trim() &&
-    formData.phone.trim() &&
     formData.password.trim() &&
     isEmailValid &&
+    isPhoneValid &&
     otpVerified;
 
+  /* -------------------- HANDLERS -------------------- */
   const handleChange =
     (field: keyof typeof formData) =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [field]: e.target.value });
-      };
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData({ ...formData, [field]: e.target.value });
+    };
 
   const handleSendOtp = async () => {
     try {
       await sendOtp({ phoneNumber: fullPhoneNumber }).unwrap();
       setOtpSent(true);
-      setDialogMessage("OTP sent successfully");
-      setIsSuccess(true);
-      setDialogOpen(true);
+      toast.success("OTP sent successfully");
     } catch (err: any) {
-      setDialogMessage(err?.data?.message || "Failed to send OTP");
-      setIsSuccess(false);
-      setDialogOpen(true);
+      toast.error(err?.data?.message || "Failed to send OTP");
     }
   };
 
@@ -89,13 +75,9 @@ const Register = () => {
         otp,
       }).unwrap();
       setOtpVerified(true);
-      setDialogMessage("Phone number verified successfully");
-      setIsSuccess(true);
-      setDialogOpen(true);
+      toast.success("Phone number verified");
     } catch (err: any) {
-      setDialogMessage(err?.data?.message || "Invalid OTP");
-      setIsSuccess(false);
-      setDialogOpen(true);
+      toast.error(err?.data?.message || "Invalid OTP");
     }
   };
 
@@ -103,7 +85,7 @@ const Register = () => {
     if (!isFormValid) return;
 
     try {
-      const res = await signup({
+      await signup({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -111,17 +93,14 @@ const Register = () => {
         phoneNumber: fullPhoneNumber,
       }).unwrap();
 
-      setDialogMessage(res.message || "Registration successful");
-      setIsSuccess(true);
-      setDialogOpen(true);
+      toast.success("Registration successful");
       navigate("/login");
     } catch (err: any) {
-      setDialogMessage(err?.data?.message || "Registration failed");
-      setIsSuccess(false);
-      setDialogOpen(true);
+      toast.error(err?.data?.message || "Registration failed");
     }
   };
 
+  /* -------------------- UI -------------------- */
   return (
     <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
       <Paper sx={{ p: 4, maxWidth: 600, mx: "auto" }}>
@@ -152,63 +131,53 @@ const Register = () => {
             error={!isEmailValid && formData.email.length > 0}
           />
 
-          {/* PHONE */}
-          <Stack direction="row" spacing={2}>
-            <TextField
-              select
-              label="Country"
-              value={formData.countryCode}
-              onChange={handleChange("countryCode")}
-              sx={{ width: 160 }}
-            >
-              {countryCodes.map((c) => (
-                <MenuItem key={c.value} value={c.value}>
-                  {c.label}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              label="Phone Number"
-              fullWidth
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  phone: e.target.value.replace(/\D/g, ""),
-                })
-              }
-            />
-          </Stack>
-
-          {!otpSent ? (
-            <Button
-              variant="outlined"
-              onClick={handleSendOtp}
-              disabled={!formData.phone || sendingOtp}
-            >
-              Send OTP
-            </Button>
-          ) : !otpVerified ? (
-            <>
-              <TextField
-                label="Enter OTP"
-                fullWidth
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+          {/* 📞 PHONE + OTP (SINGLE LINE) */}
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Box sx={{ flex: 1 }}>
+              <PhoneInput
+                country={"se"} // default Sweden
+                value={formData.phone}
+                onChange={(value) =>
+                  setFormData({ ...formData, phone: value })
+                }
+                inputStyle={{ width: "100%" }}
+                inputProps={{ required: true }}
               />
+            </Box>
+
+            {!otpSent ? (
+              <Button
+                variant="outlined"
+                onClick={handleSendOtp}
+                disabled={!isPhoneValid || sendingOtp}
+                sx={{ whiteSpace: "nowrap" }}
+              >
+                Send OTP
+              </Button>
+            ) : !otpVerified ? (
               <Button
                 variant="contained"
                 onClick={handleVerifyOtp}
                 disabled={!otp || verifyingOtp}
+                sx={{ whiteSpace: "nowrap" }}
               >
                 Verify OTP
               </Button>
-            </>
-          ) : (
-            <Typography color="success.main">
-              Phone Verified ✔
-            </Typography>
+            ) : (
+              <Typography color="success.main" sx={{ whiteSpace: "nowrap" }}>
+                ✔ Verified
+              </Typography>
+            )}
+          </Stack>
+
+          {/* OTP INPUT */}
+          {otpSent && !otpVerified && (
+            <TextField
+              label="Enter OTP"
+              fullWidth
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
           )}
 
           <TextField
@@ -223,7 +192,7 @@ const Register = () => {
             variant="contained"
             disabled={!isFormValid || isLoading}
             onClick={handleSubmit}
-            sx={{ bgcolor: "#22a652" }}
+            sx={{ bgcolor: "#22a652", fontWeight: 600 }}
           >
             Register
           </Button>
@@ -234,18 +203,6 @@ const Register = () => {
           </Typography>
         </Stack>
       </Paper>
-
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle color={isSuccess ? "success.main" : "error.main"}>
-          {isSuccess ? "Success" : "Error"}
-        </DialogTitle>
-        <DialogContent>
-          <Typography>{dialogMessage}</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>OK</Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

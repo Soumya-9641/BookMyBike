@@ -3,29 +3,21 @@ import {
   Typography,
   TextField,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Stack,
 } from "@mui/material";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useResetPasswordMutation } from "../services/authApi";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 const ResetPassword = () => {
   const { token } = useParams<{ token: string }>();
-  const navigate = useNavigate();
 
   const [resetPassword, { isLoading }] =
     useResetPasswordMutation();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMessage, setDialogMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
 
   const isFormValid =
     password.length >= 6 && password === confirmPassword;
@@ -39,22 +31,11 @@ const ResetPassword = () => {
         password,
       }).unwrap();
 
-      setDialogMessage(res.message);
-      setIsSuccess(true);
-      setDialogOpen(true);
+      toast.success(res.message);
     } catch (err: any) {
-      setDialogMessage(
+      toast.error(
         err?.data?.message || "Reset failed"
       );
-      setIsSuccess(false);
-      setDialogOpen(true);
-    }
-  };
-
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    if (isSuccess) {
-      navigate("/login");
     }
   };
 
@@ -104,7 +85,7 @@ const ResetPassword = () => {
             }
             helperText={
               confirmPassword.length > 0 &&
-              password !== confirmPassword
+                password !== confirmPassword
                 ? "Passwords do not match"
                 : " "
             }
@@ -127,7 +108,7 @@ const ResetPassword = () => {
       </Box>
 
       {/* Dialog */}
-      <Dialog open={dialogOpen} onClose={handleDialogClose}>
+      {/* <Dialog open={dialogOpen} onClose={handleDialogClose}>
         <DialogTitle
           sx={{
             fontWeight: 700,
@@ -152,7 +133,7 @@ const ResetPassword = () => {
             OK
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
     </Box>
   );
 };

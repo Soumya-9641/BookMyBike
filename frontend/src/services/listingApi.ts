@@ -24,6 +24,7 @@ export const listingApi = baseApi.injectEndpoints({
         formData.append("size", data.size);
         formData.append("category", data.category);
         formData.append("depositAmount", String(data.depositAmount));
+        formData.append("pickupPoint", data.pickupPoint);
 
         formData.append("accessories", JSON.stringify(data.accessories));
         formData.append("rates", JSON.stringify(data.rates));
@@ -73,8 +74,19 @@ export const listingApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+    editListing: builder.mutation<
+      { listing: any },
+      { listingId: string; data: FormData }
+    >({
+      query: ({ listingId, data }) => ({
+        url: `/bike/listing/${listingId}/edit`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Listing"],
+    }),
   }),
 });
 
 export const { useCreateListingMutation, useGetAllBikesQuery,
-  useFilterBikesMutation, useGetHomeBikesQuery, useGetBikeByIdQuery,useSearchBikesMutation  } = listingApi;
+  useFilterBikesMutation, useGetHomeBikesQuery, useGetBikeByIdQuery, useSearchBikesMutation, useEditListingMutation } = listingApi;

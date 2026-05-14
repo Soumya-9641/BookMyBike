@@ -1,3 +1,4 @@
+import type { PriceBreakdownResponse } from "../types/listing";
 import { baseApi } from "./baseApi";
 
 export interface CreateCustomerResponse {
@@ -52,7 +53,7 @@ export const stripeApi = baseApi.injectEndpoints({
         body: { status },
       }),
     }),
-     getStripeStatus: builder.query<
+    getStripeStatus: builder.query<
       {
         success: boolean;
         data: {
@@ -87,6 +88,31 @@ export const stripeApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
+    cancelBooking: builder.mutation<
+      any,
+      { bookingId: string; reason?: string }
+    >({
+      query: ({ bookingId, reason }) => ({
+        url: `/checkout/${bookingId}/cancel`,
+        method: "PATCH",
+        body: { reason },
+      }),
+    }),
+    getPriceBreakdown: builder.mutation<
+      PriceBreakdownResponse,
+      {
+        listingId: string;
+        startDate: string;
+        endDate: string;
+        hours: number;
+      }
+    >({
+      query: (body) => ({
+        url: "/checkout/price-breakdown",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 })
 export const {
@@ -96,4 +122,6 @@ export const {
   useCompleteRideMutation,
   useGetStripeStatusQuery,
   useVerifyPaymentQuery,
+  useCancelBookingMutation,
+  useGetPriceBreakdownMutation,
 } = stripeApi;

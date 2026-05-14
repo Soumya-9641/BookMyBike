@@ -8,7 +8,17 @@ export const bookingApi = baseApi.injectEndpoints({
       CreateBookingPayload
     >({
       query: (body) => ({
-        url: "/checkout/create",
+        url: "/checkout/create-payment-intent",
+        method: "POST",
+        body,
+      }),
+    }),
+    confirmBooking: builder.mutation<
+      { success: boolean; booking: any },
+      { paymentIntentId: string }
+    >({
+      query: (body) => ({
+        url: "/checkout/confirm-booking",
         method: "POST",
         body,
       }),
@@ -56,8 +66,67 @@ export const bookingApi = baseApi.injectEndpoints({
       query: () => "/dashboard/mylistings",
       providesTags: ["Listing"],
     }),
+    createDispute: builder.mutation<
+      any,
+      FormData
+    >({
+      query: (formData) => ({
+        url: "/disputes/createDispute",
+        method: "POST",
+        body: formData,
+      }),
+
+    }),
+    requestRideStart: builder.mutation<
+      any,
+      { bookingId: string }
+    >({
+      query: ({ bookingId }) => ({
+        url: `/bike/listing/${bookingId}/request-start`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Booking"],
+    }),
+
+    acceptRideStart: builder.mutation<
+      any,
+      { bookingId: string }
+    >({
+      query: ({ bookingId }) => ({
+        url: `/bike/listing/${bookingId}/accept-start`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Booking"],
+    }),
+
+    /* ============================
+       RIDE COMPLETION FLOW
+    ============================ */
+
+    requestRideCompletion: builder.mutation<
+      any,
+      { bookingId: string }
+    >({
+      query: ({ bookingId }) => ({
+        url: `/bike/listing/${bookingId}/request-completion`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Booking"],
+    }),
+
+    confirmRideCompletion: builder.mutation<
+      any,
+      { bookingId: string }
+    >({
+      query: ({ bookingId }) => ({
+        url: `/bike/listing/${bookingId}/confirm-completion`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Booking"],
+    }),
+
   }),
 });
 
 export const { useCreateBookingMutation, useGetMyBookingsQuery,
-  useGetOwnerBookingsQuery, useGetProfileQuery, useUpdateProfileMutation, useGetMyRefundsQuery, useGetMyListingsQuery } = bookingApi;
+  useGetOwnerBookingsQuery, useGetProfileQuery, useUpdateProfileMutation, useGetMyRefundsQuery, useGetMyListingsQuery, useCreateDisputeMutation, useRequestRideStartMutation, useAcceptRideStartMutation, useRequestRideCompletionMutation, useConfirmRideCompletionMutation, useConfirmBookingMutation } = bookingApi;

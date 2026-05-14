@@ -1,56 +1,79 @@
-import { Stack, Button } from "@mui/material";
+import { Stack, Button, Box } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "../app/store";
 
 const AccountTabs = () => {
-    const { token, isOnboarded } = useSelector((state: RootState) => state.auth);
-    const canCreateListing = Boolean(token) && isOnboarded;
+  const { token, isOnboarded } = useSelector(
+    (state: RootState) => state.auth
+  );
 
-    const tabs = [
-        { label: "My Account", path: "/my-account" },
-        { label: "My Bookings", path: "/my-bookings" },
-        // 🔥 OWNER-ONLY TABS
-        ...(canCreateListing
-            ? [
-                { label: "Owner Bookings", path: "/owner-bookings" },
-                { label: "My Listings", path: "/my-listings" },
-            ]
-            : [{ label: "My Refunds", path: "/my-refunds" }]),
-        { label: "Change Password", path: "/change-password" },
-    ];
+  const canCreateListing = Boolean(token) && isOnboarded;
 
-    return (
-        <Stack direction="row" spacing={2} mb={4} flexWrap="wrap">
-            {tabs.map((tab) => (
-                <Button
-                    key={tab.path}
-                    component={NavLink}
-                    to={tab.path}
-                    disableRipple
-                    sx={{
-                        textTransform: "none",
-                        borderRadius: 3,
-                        px: 3,
-                        fontWeight: 600,
+  const tabs = [
+    { label: "My Account", path: "/my-account" },
+    { label: "My Bookings", path: "/my-bookings" },
+    ...(canCreateListing
+      ? [
+          { label: "Owner Bookings", path: "/owner-bookings" },
+          { label: "My Listings", path: "/my-listings" },
+        ]
+      : [{ label: "My Refunds", path: "/my-refunds" }]),
+    { label: "Change Password", path: "/change-password" },
+  ];
 
-                        "&.active": {
-                            bgcolor: "#22a652",
-                            color: "#fff",
-                            pointerEvents: "none",
-                        },
+  return (
+    <Box
+      sx={{
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
+        scrollbarWidth: "none",
+        "&::-webkit-scrollbar": { display: "none" },
+      }}
+    >
+      <Stack
+        direction="row"
+        spacing={1}
+        mb={3}
+        sx={{
+          minWidth: "max-content",
+          px: { xs: 1, sm: 0 },
+        }}
+      >
+        {tabs.map((tab) => (
+          <Button
+            key={tab.path}
+            component={NavLink}
+            to={tab.path}
+            disableRipple
+            sx={{
+              whiteSpace: "nowrap",
+              textTransform: "none",
+              borderRadius: 999,
+              px: 2.5,
+              py: 1,
+              fontSize: { xs: 13, sm: 14 },
+              fontWeight: 600,
+              flexShrink: 0,
 
-                        "&:not(.active)": {
-                            bgcolor: "#e0f2ea",
-                            color: "#22a652",
-                        },
-                    }}
-                >
-                    {tab.label}
-                </Button>
-            ))}
-        </Stack>
-    );
+              "&.active": {
+                bgcolor: "#22a652",
+                color: "#fff",
+                pointerEvents: "none",
+              },
+
+              "&:not(.active)": {
+                bgcolor: "#e0f2ea",
+                color: "#22a652",
+              },
+            }}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </Stack>
+    </Box>
+  );
 };
 
 export default AccountTabs;

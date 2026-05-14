@@ -45,7 +45,7 @@ const Hero = () => {
             </Typography>
 
             <Typography variant="h6" mt={1}>
-              Sharing On Your Terms
+              Sharing On Your Terms.
             </Typography>
 
             <Typography variant="h3" fontWeight="bold" mt={2}>

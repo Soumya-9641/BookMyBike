@@ -111,7 +111,7 @@ const FiltersSidebar = ({
 
       {/* Brand */}
       <FilterSection
-        title="Brand"
+        title="Popular Brands"
         items={availableFilters.brand}
         type="brand"
         selected={selectedFilters.brand}
@@ -122,7 +122,7 @@ const FiltersSidebar = ({
 
       {/* City */}
       <FilterSection
-        title="City"
+        title="Popular Cities"
         items={availableFilters.city}
         type="city"
         selected={selectedFilters.city}

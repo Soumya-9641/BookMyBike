@@ -14,6 +14,7 @@ export interface CreateListingPayload {
   size: string;
   category: string;
   accessories: string[];
+  pickupPoint: string;
   rates: {
     hourly?: number;
     daily?: number;
@@ -32,6 +33,7 @@ export interface Bike {
   modelbike: string;
   size: string;
   category: string;
+  pickupPoint: string;
   accessories: string[];
   rates: {
     hourly?: number;
@@ -90,44 +92,101 @@ export interface BikeDetails {
 
 export interface Booking {
   bookingId: string;
-  status: "upcoming" | "inprogress" | "completed" | "refunded";
+  status: "upcoming" | "inprogress" | "completed" | "cancelled" | "refunded" |
+  "startRequested"
+  | "completionRequested"
+  | "rejected";
+
   startDate: string;
   endDate: string;
+  totalDays: number;
+  notes?: string | null;
   createdAt: string;
 
   pricing: {
+    pricePerDay: number;
     totalAmount: number;
     securityDeposit: number;
     currency: string;
   };
 
-  payment: {
-    status?: string;
-  } | null;
+  ride: {
+    actualStartTime: string | null;
+    actualEndTime: string | null;
+    penaltyAmount?: number;
+    penaltyReason?: string | null;
+  };
+
+  flags: {
+    renterRequestedStart: boolean;
+    ownerAcceptedStart: boolean;
+    ownerRequestedCompletion: boolean;
+    renterConfirmedCompletion: boolean;
+    isSettlementDone: boolean;
+  };
+
+  cancellation?: {
+    cancelledBy: "renter" | "owner";
+    cancellationReason?: string;
+    cancelledAt: string;
+  };
+
+  owner?: {
+    ownerId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+  };
 
   bike: {
     bikeId: string;
     title: string;
-    modelbike: string;
     photos: string[];
     brand: string;
+    modelbike: string;
     category: string;
-    size: string;
+    size?: string;
+    rates?: {
+      hourly?: number;
+      daily?: number;
+    };
+    depositAmount?: number;
     location: {
       address: string;
       city: string;
+      coordinates?: [number, number];
     };
   };
-  ride: {
-    actualStartTime: string | null;
-    actualEndTime: string | null;
-    penaltyAmount: number;
-    penaltyReason: string | null;
-  },
-  owner?: {
-    firstName: string;
-    lastName: string;
-    email: string;
+
+  /** ✅ NORMAL PAYMENT (completed rides) */
+  payment?: {
+    paymentId: string;
+    status: string;
+    amount: number;
+    currency: string;
+    depositAmount: number;
+    platformFee: number;
+    vatAmount: number;
+    platformNet: number;
+    ownerPayout: number;
+    stripePaymentIntentId: string;
+    refundAmount?: number;
+    refundReason?: string;
+    refundedAt?: string;
+    paidAt: string;
+  };
+
+  /** ✅ REFUND FLOW (cancelled bookings) */
+  refund?: {
+    paymentStatus: "refunded";
+    amountCharged: number;
+    depositAmount: number;
+    refundAmount: number;
+    refundReason: string;
+    refundedAt: string;
+    stripeRefundId: string;
+    paidAt: string;
   };
 }
 
@@ -162,4 +221,23 @@ export interface UserProfileUpdatePayload {
   phone?: string;
   address?: string;
   city?: string;
+}
+
+export interface PriceBreakdownResponse {
+  success: boolean;
+  breakdown: {
+    hours: number;
+    totalDays: number;
+    pricePerDay: number;
+    rentalAmount: number;
+    depositAmount: number;
+    chargeAmount: number;
+
+    platformFee: number;
+    vatAmount: number;
+    platformNet: number;
+
+    ownerPayout: number;
+    currency: string;
+  };
 }

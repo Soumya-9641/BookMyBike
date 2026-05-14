@@ -1,13 +1,40 @@
 import { Box, Stack, Typography } from "@mui/material";
-import { useGetAllBikesQuery } from "../services/listingApi";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+
+import {
+  useGetAllBikesQuery,
+  useSearchBikesMutation,
+} from "../services/listingApi";
+
 import BikeCard from "../components/BikeCard";
 import FiltersSidebar from "../components/FiltersSidebar";
-import { useEffect, useState } from "react";
 
 const BrowseBikes = () => {
-  const { data, isLoading } = useGetAllBikesQuery();
+  const [searchParams] = useSearchParams();
 
-  const [allBikes, setAllBikes] = useState<any[]>([]);
+  const lat = searchParams.get("lat");
+  const lng = searchParams.get("lng");
+  const start = searchParams.get("start");
+  const end = searchParams.get("end");
+
+  const isSearchMode = Boolean(lat && lng && start && end);
+
+  /* ----------------------------------
+   API hooks
+  -----------------------------------*/
+  const { data: allBikesData, isLoading: loadingAll } =
+    useGetAllBikesQuery(undefined, {
+      skip: isSearchMode,
+    });
+
+  const [searchBikes, { isLoading: loadingSearch }] =
+    useSearchBikesMutation();
+
+  /* ----------------------------------
+   State
+  -----------------------------------*/
+  const [baseBikes, setBaseBikes] = useState<any[]>([]);
   const [filteredBikes, setFilteredBikes] = useState<any[]>([]);
 
   const [filters, setFilters] = useState<{
@@ -20,26 +47,66 @@ const BrowseBikes = () => {
     city: [],
   });
 
-  /* ---------------- LOAD DATA ---------------- */
-  useEffect(() => {
-    if (data?.bikes) {
-      setAllBikes(data.bikes);
-      setFilteredBikes(data.bikes);
-    }
-  }, [data]);
+  const isLoading = loadingAll || loadingSearch;
 
-  /* ---------------- FILTER HANDLERS ---------------- */
+  /* ----------------------------------
+   Load bikes (SEARCH MODE)
+  -----------------------------------*/
+  useEffect(() => {
+    if (isSearchMode) {
+      searchBikes({
+        lat: Number(lat),
+        lng: Number(lng),
+        startDate: start!,
+        endDate: end!,
+      })
+        .unwrap()
+        .then((res) => {
+          setBaseBikes(res.bikes);
+          setFilteredBikes(res.bikes);
+        })
+        .catch(() => {
+          setBaseBikes([]);
+          setFilteredBikes([]);
+        });
+    }
+  }, [isSearchMode, lat, lng, start, end, searchBikes]);
+
+  /* ----------------------------------
+   Load bikes (BROWSE MODE)
+  -----------------------------------*/
+  useEffect(() => {
+    if (!isSearchMode && allBikesData) {
+      setBaseBikes(allBikesData.bikes);
+      setFilteredBikes(allBikesData.bikes);
+    }
+  }, [allBikesData, isSearchMode]);
+
+  /* ----------------------------------
+   Reset filters when mode changes
+  -----------------------------------*/
+  useEffect(() => {
+    setFilters({
+      category: [],
+      brand: [],
+      city: [],
+    });
+  }, [isSearchMode]);
+
+  /* ----------------------------------
+   Filter handlers
+  -----------------------------------*/
   const handleCheck = (type: string, value: string) => {
-    setFilters((prev: any) => ({
+    setFilters((prev) => ({
       ...prev,
-      [type]: prev[type].includes(value)
-        ? prev[type].filter((v: string) => v !== value)
-        : [...prev[type], value],
+      [type]: prev[type as keyof typeof prev].includes(value)
+        ? prev[type as keyof typeof prev].filter((v) => v !== value)
+        : [...prev[type as keyof typeof prev], value],
     }));
   };
 
   const applyFilters = () => {
-    let result = [...allBikes];
+    let result = [...baseBikes];
 
     if (filters.category.length) {
       result = result.filter((bike) =>
@@ -62,7 +129,9 @@ const BrowseBikes = () => {
     setFilteredBikes(result);
   };
 
-  /* ---------------- UI ---------------- */
+  /* ----------------------------------
+   UI
+  -----------------------------------*/
   return (
     <Box maxWidth="xl" mx="auto" px={2} py={4}>
       <Typography
@@ -72,15 +141,17 @@ const BrowseBikes = () => {
         fontWeight={700}
         mb={4}
       >
-        Browse our bikes
+        {isSearchMode
+          ? "Available Bikes Near You"
+          : "Browse our bikes"}
       </Typography>
 
       <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
-        {/* Sidebar */}
+        {/* ---------------- Sidebar ---------------- */}
         <Box width={{ xs: "100%", md: "22%" }}>
-          {data?.filters && (
+          {allBikesData?.filters && (
             <FiltersSidebar
-              availableFilters={data.filters}
+              availableFilters={allBikesData.filters}
               selectedFilters={filters}
               onChange={handleCheck}
               onApply={applyFilters}
@@ -88,7 +159,7 @@ const BrowseBikes = () => {
           )}
         </Box>
 
-        {/* Bikes */}
+        {/* ---------------- Bikes ---------------- */}
         <Box width={{ xs: "100%", md: "78%" }}>
           {isLoading && <Typography>Loading...</Typography>}
 

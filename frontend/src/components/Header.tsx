@@ -8,6 +8,8 @@ import {
   Stack,
   Menu,
   MenuItem,
+  Typography,
+  Skeleton,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -17,12 +19,18 @@ import { useSelector, useDispatch } from "react-redux";
 import { logout, setOnboardingStatus } from "../features/auth/authSlice";
 import type { RootState } from "../app/store";
 import { useGetStripeStatusQuery } from "../services/stripeApi";
+import { useGetProfileQuery } from "../services/bookingApi";
 
 const Header = () => {
   const dispatch = useDispatch();
   const { token, isOnboarded } = useSelector((state: RootState) => state.auth);
   const isLoggedIn = Boolean(token);
-  const { data, isLoading } = useGetStripeStatusQuery();
+  const { data, isLoading } = useGetStripeStatusQuery(undefined, {
+    skip: !token, // 🔥 important
+  });
+  const { data: profile } = useGetProfileQuery(undefined, {
+    skip: !token, // 🔥 important
+  });
   useEffect(() => {
     if (!isLoading && data?.success) {
       if (data.data.isOnboarded) {
@@ -120,18 +128,39 @@ const Header = () => {
               </>
             ) : (
               <>
-                {canCreateListing && (
-                  <Button
-                    variant="contained"
-                    component={RouterLink}
-                    to="/create-listing"
-                  >
-                    Create Listing
-                  </Button>
+                {isLoggedIn && (
+                  canCreateListing ? (
+                    <Button
+                      variant="contained"
+                      component={RouterLink}
+                      to="/create-listing"
+                    >
+                      Create Listing
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      component={RouterLink}
+                      to="/verify-profile"
+                    >
+                      Register as Lister
+                    </Button>
+                  )
                 )}
-                <IconButton onClick={openAccountMenu}>
-                  <AccountCircleIcon />
-                </IconButton>
+                {isLoggedIn && (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <IconButton onClick={openAccountMenu}>
+                      <AccountCircleIcon />
+                    </IconButton>
+                    {profile ? (
+                      <Typography fontWeight={500}>
+                        Hi, {profile?.data?.first_name}
+                      </Typography>
+                    ) : (
+                      <Skeleton width={80} />
+                    )}
+                  </Stack>
+                )}
 
                 <Menu
                   anchorEl={anchorEl}
@@ -300,14 +329,26 @@ const Header = () => {
               </>
             )}
 
-            {canCreateListing && (
-              <Button
-                variant="contained"
-                component={RouterLink}
-                to="/create-listing"
-              >
-                Create Listing
-              </Button>
+            {isLoggedIn && (
+              canCreateListing ? (
+                <Button
+                  variant="contained"
+                  component={RouterLink}
+                  to="/create-listing"
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  Create Listing
+                </Button>
+              ) : (
+                <Button
+                  variant="outlined"
+                  component={RouterLink}
+                  to="/verify-profile"
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  Register as Lister
+                </Button>
+              )
             )}
           </Stack>
         </Box>
