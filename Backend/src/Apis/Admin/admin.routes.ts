@@ -151,7 +151,6 @@ router.patch(
       const user = await blockUserService(req.params.userId);
       res.status(200).json({
         success: true,
-        message: "User blocked successfully",
         user,
       });
     } catch (err: any) {
