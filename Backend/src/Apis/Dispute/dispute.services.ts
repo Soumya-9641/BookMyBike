@@ -196,12 +196,23 @@ export const getDisputeDetailService = async (disputeId: string) => {
   if (!dispute) throw new Error("Dispute not found");
 
   // Fetch booking and payment in parallel
-  const [booking, payment] = await Promise.all([
+  const [booking, payment,renter, owner] = await Promise.all([
     Booking.findById(dispute.bookingId)
       .select("startDate endDate totalDays pricePerDay totalAmount status isPaid currency")
       .lean(),
     Payment.findById(dispute.paymentId)
       .select("amount platformFee ownerPayout depositAmount status method stripePaymentIntentId currency createdAt")
+      .lean(),
+      User.findById(dispute.renterId)
+      .select(
+        "email personalProfile.firstName personalProfile.lastName personalProfile.phone"
+      )
+      .lean(),
+
+    User.findById(dispute.sellerId)
+      .select(
+        "email personalProfile.firstName personalProfile.lastName personalProfile.phone"
+      )
       .lean(),
   ]);
 
@@ -218,6 +229,32 @@ export const getDisputeDetailService = async (disputeId: string) => {
     },
     booking: booking ?? null,
     payment: payment ?? null,
+     ownerDetails: owner
+      ? {
+          ownerId: owner._id,
+          email: owner.email,
+          firstName:
+            owner.personalProfile?.firstName ?? null,
+          lastName:
+            owner.personalProfile?.lastName ?? null,
+          phone:
+            owner.personalProfile?.phone ?? null,
+        }
+      : null,
+
+    // ── Renter Details ──
+    renterDetails: renter
+      ? {
+          renterId: renter._id,
+          email: renter.email,
+          firstName:
+            renter.personalProfile?.firstName ?? null,
+          lastName:
+            renter.personalProfile?.lastName ?? null,
+          phone:
+            renter.personalProfile?.phone ?? null,
+        }
+      : null,
     refs: {
       bikeId:    dispute.bikeId,
       sellerId:  dispute.sellerId,
