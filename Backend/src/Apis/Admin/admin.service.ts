@@ -10,7 +10,7 @@ import Listing from "../../Models/Listing";
 // 1. GET ALL USERS
 // ─────────────────────────────────────────────────────────────
 export const getAllUsersService = async () => {
-  const users = await User.find()
+  const users = await User.find({ systemRole: { $ne: "admin" } })
     .select("-password -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -__v")
     .sort({ memberSince: -1 })
     .lean();
