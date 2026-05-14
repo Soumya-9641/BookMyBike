@@ -17,13 +17,16 @@ const VAT_RATE = 0.25; // 25% Swedish VAT , included in the 18%
 // ── 1. calculateRentalAmount ────────────────────────────────────
 // Mirrors the hourly/daily branching logic from your service exactly.
 export const calculateRentalAmount = (
-  listing: { rates?: { hourly?: number; daily?: number; weekly? :  number;
+  listing: {
+    rates?: {
+      hourly?: number; daily?: number; weekly?: number;
       monthly?: number;
- }; depositAmount?: number },
+    }; depositAmount?: number
+  },
   hours: number
 ): { rentalAmount: number; pricePerDay: number; totalDays: number } => {
-  
-const { hourly, daily, weekly, monthly } = listing.rates ?? {};
+
+  const { hourly, daily, weekly, monthly } = listing.rates ?? {};
 
   const totalDays = Math.ceil(hours / 24);
 
@@ -31,16 +34,16 @@ const { hourly, daily, weekly, monthly } = listing.rates ?? {};
     if (!hourly) throw new Error("Listing does not have an hourly rate set");
     return {
       rentalAmount: hours * hourly,
-      pricePerDay:  hourly * 24,   // informational
-      totalDays:    1,
+      pricePerDay: hourly * 24,   // informational
+      totalDays: 1,
     };
-  } 
+  }
   if (totalDays >= 30) {
     if (!monthly) throw new Error("Listing does not have a monthly rate set");
     const totalMonths = Math.ceil(totalDays / 30);
     return {
       rentalAmount: totalMonths * monthly,
-      pricePerDay:monthly / 30,   // informational
+      pricePerDay: monthly / 30,   // informational
       totalDays,
     };
   }
@@ -51,14 +54,14 @@ const { hourly, daily, weekly, monthly } = listing.rates ?? {};
     const totalWeeks = Math.ceil(totalDays / 7);
     return {
       rentalAmount: totalWeeks * weekly,
-      pricePerDay:  weekly / 7,   // informational
+      pricePerDay: weekly / 7,   // informational
       totalDays,
     };
   }
- if (!daily) throw new Error("Listing does not have a daily rate set");
+  if (!daily) throw new Error("Listing does not have a daily rate set");
   return {
-    rentalAmount:totalDays * daily,
-    pricePerDay:  daily,
+    rentalAmount: totalDays * daily,
+    pricePerDay: daily,
     totalDays,
   };
 };
@@ -106,26 +109,26 @@ export const createBookingPaymentService = async ({
   const hourlyRate = listing.rates?.hourly;
   const dailyRate = listing.rates?.daily;
   let rentalAmount: number;
-let pricePerDay: number;
-let totalDays: number;
+  let pricePerDay: number;
+  let totalDays: number;
   //Sif (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
 
   // ── Amount Calculations ──────────────────────────────────────
- // const rentalAmount = Math.round(hours * hourlyRate);
- //           // e.g. 100 kr
- if (hours < 24) {
-  // Charge hourly
-  if (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
-  rentalAmount = Math.round(hours * hourlyRate);
-  pricePerDay = hourlyRate * 24; // informational
-  totalDays = 1;
-} else {
-  // Charge daily — ceil so 25h = 2 days, 48h = 2 days, 49h = 3 days
-  if (!dailyRate) throw new Error("Listing does not have a daily rate set");
-  totalDays = Math.ceil(hours / 24);
-  pricePerDay = dailyRate;
-  rentalAmount = Math.round(totalDays * dailyRate);
-}
+  // const rentalAmount = Math.round(hours * hourlyRate);
+  //           // e.g. 100 kr
+  if (hours < 24) {
+    // Charge hourly
+    if (!hourlyRate) throw new Error("Listing does not have an hourly rate set");
+    rentalAmount = Math.round(hours * hourlyRate);
+    pricePerDay = hourlyRate * 24; // informational
+    totalDays = 1;
+  } else {
+    // Charge daily — ceil so 25h = 2 days, 48h = 2 days, 49h = 3 days
+    if (!dailyRate) throw new Error("Listing does not have a daily rate set");
+    totalDays = Math.ceil(hours / 24);
+    pricePerDay = dailyRate;
+    rentalAmount = Math.round(totalDays * dailyRate);
+  }
   const depositAmount = Math.round(listing.depositAmount ?? 0);   // e.g. 100 kr
 
   // Renter pays: rental + deposit only (fee is taken from rental internally)
@@ -255,50 +258,50 @@ export const confirmBookingService = async (
 
   // ── Create Booking ──
   const booking = await Booking.create({
-    bikeId:          m.listingId,
-    renterId:        m.renterId,
-    ownerId:         m.ownerId,
-    startDate:       new Date(m.startDate),
-    endDate:         new Date(m.endDate),
-    totalDays:       Number(m.totalDays),
-    pricePerDay:     Number(m.pricePerDay),
-    totalAmount:     Number(m.chargeAmount),
+    bikeId: m.listingId,
+    renterId: m.renterId,
+    ownerId: m.ownerId,
+    startDate: new Date(m.startDate),
+    endDate: new Date(m.endDate),
+    totalDays: Number(m.totalDays),
+    pricePerDay: Number(m.pricePerDay),
+    totalAmount: Number(m.chargeAmount),
     securityDeposit: Number(m.depositAmount),
-    currency:        "SEK",
-    status:          "upcoming",
+    currency: "SEK",
+    status: "upcoming",
   });
 
   // ── Create Payment record ──
   const payment = await Payment.create({
-    bookingId:              booking._id,
-    payerId:                m.renterId,
-    payeeId:                m.ownerId,
-    type:                   "booking",
-    method:                 "card",
-    status:                 "succeeded",                    // ← paid, not pending
-    amount:                 Number(m.chargeAmount),
-    currency:               "SEK",
-    platformFee:            Number(m.platformFee),
-    vatAmount:              Number(m.vatAmount),
-    platformNet:            Number(m.platformNet),
-    ownerPayout:            Number(m.ownerPayout),
-    depositAmount:          Number(m.depositAmount),
-    stripePaymentIntentId:  paymentIntentId,
-    paidAt:                 new Date(),
-    description:            `Rental payment for listing ${m.listingId} — ${m.hours}h`,
+    bookingId: booking._id,
+    payerId: m.renterId,
+    payeeId: m.ownerId,
+    type: "booking",
+    method: "card",
+    status: "succeeded",                    // ← paid, not pending
+    amount: Number(m.chargeAmount),
+    currency: "SEK",
+    platformFee: Number(m.platformFee),
+    vatAmount: Number(m.vatAmount),
+    platformNet: Number(m.platformNet),
+    ownerPayout: Number(m.ownerPayout),
+    depositAmount: Number(m.depositAmount),
+    stripePaymentIntentId: paymentIntentId,
+    paidAt: new Date(),
+    description: `Rental payment for listing ${m.listingId} — ${m.hours}h`,
   });
 
   booking.paymentId = payment._id as Types.ObjectId;
   await booking.save();
   const listing = await Listing.findById(m.listingId).lean();
- const firstName   = renter.personalProfile?.firstName ?? "there";
-  const startDate   = new Date(m.startDate);
-  const endDate     = new Date(m.endDate);
-   const bikeName  = listing?.title ?? "Your booked bike";
+  const firstName = renter.personalProfile?.firstName ?? "there";
+  const startDate = new Date(m.startDate);
+  const endDate = new Date(m.endDate);
+  const bikeName = listing?.title ?? "Your booked bike";
   const startDateFormatted = new Date(m.startDate).toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
-  const endDateFormatted   = new Date(m.endDate).toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
-  const bookingShortId     = booking._id.toString().slice(-8).toUpperCase();
-    await sendEmail(
+  const endDateFormatted = new Date(m.endDate).toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
+  const bookingShortId = booking._id.toString().slice(-8).toUpperCase();
+  await sendEmail(
     renter.email,
     "Booking Confirmed 🎉",
     `<!DOCTYPE html>
@@ -416,16 +419,16 @@ export const confirmBookingService = async (
     </html>`
   );
   return {
-    bookingId:  booking._id,
-    paymentId:  payment._id,
+    bookingId: booking._id,
+    paymentId: payment._id,
     breakdown: {
-      rentalAmount:  Number(m.rentalAmount),
+      rentalAmount: Number(m.rentalAmount),
       depositAmount: Number(m.depositAmount),
-      chargeAmount:  Number(m.chargeAmount),
-      platformFee:   Number(m.platformFee),
-      vatAmount:     Number(m.vatAmount),
-      platformNet:   Number(m.platformNet),
-      ownerPayout:   Number(m.ownerPayout),
+      chargeAmount: Number(m.chargeAmount),
+      platformFee: Number(m.platformFee),
+      vatAmount: Number(m.vatAmount),
+      platformNet: Number(m.platformNet),
+      ownerPayout: Number(m.ownerPayout),
     },
   };
 };
@@ -448,7 +451,7 @@ export const confirmBookingService = async (
 //                   → Stripe pulls from THAT specific charge directly
 //                   → no dependency on available balance → WORKS ✅
 // ─────────────────────────────────────────────────────────────
-export const completeRideService = async (bookingId: string,  status: "inprogress" | "completed") => {
+export const completeRideService = async (bookingId: string, status: "inprogress" | "completed") => {
   const booking = await Booking.findById(bookingId);
   if (!booking) throw new Error("Booking not found");
   // if (booking.status === "completed") throw new Error("Ride already completed");
@@ -457,7 +460,7 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
   // //   booking.status = "inprogress";           // marks ride as started/in-progress
   // //   booking.actualStartTime = new Date();
   // //   await booking.save();
- 
+
   // //   return {
   // //     message: "Ride marked as in progress.",
   // //     bookingId: booking._id,
@@ -469,9 +472,9 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
     type: "booking",
   });
 
-   if (!payment) throw new Error("Payment record not found for this booking");
+  if (!payment) throw new Error("Payment record not found for this booking");
   if (!payment.stripePaymentIntentId) throw new Error("Stripe PaymentIntent ID missing on payment record");
- 
+
   // ── Verify Stripe PaymentIntent ──
   const paymentIntent = await stripe.paymentIntents.retrieve(
     payment.stripePaymentIntentId
@@ -480,7 +483,7 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
   if (paymentIntent.status !== "succeeded") {
     throw new Error("Payment has not been confirmed yet");
   }
- 
+
   if (!paymentIntent.latest_charge) {
     throw new Error("No charge found on this payment");
   }
@@ -490,28 +493,28 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
   if (!owner?.businessProfile?.stripeIdentityId) {
     throw new Error("Owner Stripe account missing");
   }
-   const ownerAccount = await stripe.accounts.retrieve(
+  const ownerAccount = await stripe.accounts.retrieve(
     owner.businessProfile.stripeIdentityId
   );
   if (!ownerAccount.payouts_enabled) {
     throw new Error("Owner has not completed KYC verification");
   }
-   const depositAmount  = payment.depositAmount  ?? 0;  // refunded to renter
-  const ownerPayout    = payment.ownerPayout    ?? 0;  // transferred to owner
- 
-    const dispute = await Dispute.findOne({ bookingId: booking._id });
-      let renterRefund        = depositAmount;   // default: full deposit back to renter
+  const depositAmount = payment.depositAmount ?? 0;  // refunded to renter
+  const ownerPayout = payment.ownerPayout ?? 0;  // transferred to owner
+
+  const dispute = await Dispute.findOne({ bookingId: booking._id });
+  let renterRefund = depositAmount;   // default: full deposit back to renter
   let adjustedOwnerPayout = ownerPayout;
-    if (dispute) {
+  if (dispute) {
     if (dispute.status === "rejected") {
       // ── Dispute rejected → full deposit refunded to renter, normal owner payout ──
-      renterRefund        = depositAmount;
+      renterRefund = depositAmount;
       adjustedOwnerPayout = ownerPayout;
 
     } else if (dispute.status === "resolved") {
       // ── Dispute resolved → deduct disputeAmount from deposit, add to owner payout ──
       const penaltyAmount = dispute.disputeAmount ?? 0;
-      renterRefund        = Math.max(0, depositAmount - penaltyAmount);
+      renterRefund = Math.max(0, depositAmount - penaltyAmount);
       adjustedOwnerPayout = ownerPayout + penaltyAmount;
 
     } else if (dispute.status === "open") {
@@ -521,10 +524,10 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
   }
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
-    amount: renterRefund  * 100,        // convert to öre
+    amount: renterRefund * 100,        // convert to öre
     reason: "requested_by_customer",
   });
- const transfer = await stripe.transfers.create({
+  const transfer = await stripe.transfers.create({
     amount: adjustedOwnerPayout * 100,          // convert to öre
     currency: "sek",
     destination: owner.businessProfile.stripeIdentityId,
@@ -536,24 +539,24 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
   });
 
 
- payment.status           = "succeeded";
-  payment.stripeChargeId   = paymentIntent.latest_charge as string;
-  payment.stripeRefundId   = refund.id;
-  payment.refundAmount     = depositAmount;
-  payment.refundReason     = "Deposit returned after ride completion";
-  payment.refundedAt       = new Date();
-  payment.paidAt           = new Date();
+  payment.status = "succeeded";
+  payment.stripeChargeId = paymentIntent.latest_charge as string;
+  payment.stripeRefundId = refund.id;
+  payment.refundAmount = depositAmount;
+  payment.refundReason = "Deposit returned after ride completion";
+  payment.refundedAt = new Date();
+  payment.paidAt = new Date();
   await payment.save();
- 
+
   // STEP 4: Update Booking record
-  booking.status          = "completed";
-  booking.actualEndTime   = new Date();
+  booking.status = "completed";
+  booking.actualEndTime = new Date();
   booking.isSettlementDone = true;  // mark that payout/refund has been processed
   await booking.save();
-  const renter         = await User.findById(booking.renterId);
-  const firstName      = renter?.personalProfile?.firstName ?? "there";
+  const renter = await User.findById(booking.renterId);
+  const firstName = renter?.personalProfile?.firstName ?? "there";
   const bookingShortId = booking._id.toString().slice(-8).toUpperCase();
-  const hasDispute     = dispute && dispute.status === "resolved";
+  const hasDispute = dispute && dispute.status === "resolved";
 
   await sendEmail(
     renter?.email!,
@@ -587,8 +590,8 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
                 </h3>
                 <p style="font-size:20px; font-weight:400; margin:5px 0 10px;">
                   ${hasDispute
-                    ? "Our dispute resolution team has reviewed all evidence and made a decision based on this."
-                    : "Your ride has been completed successfully."}
+      ? "Our dispute resolution team has reviewed all evidence and made a decision based on this."
+      : "Your ride has been completed successfully."}
                 </p>
                 <h2 style="font-size:36px; font-weight:400; margin:5px 0 20px; text-transform:capitalize">
                   ${hasDispute ? "Deposit Released (Dispute Decision)" : "Deposit Released"}
@@ -656,6 +659,76 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
     </body>
     </html>`
   );
+  const ownerFirstName =
+    owner?.personalProfile?.firstName || "there";
+
+  await sendEmail(
+    owner.email,
+    "Payout Processed",
+    `<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Payout Processed</title>
+  </head>
+
+  <body style="
+    font-family: Arial, sans-serif;
+    background:#f5f5f5;
+    padding:30px;
+  ">
+
+    <div style="
+      max-width:600px;
+      margin:auto;
+      background:white;
+      padding:30px;
+      border-radius:8px;
+      border-top:6px solid #17a34a;
+    ">
+
+      <div style="text-align:center; margin-bottom:20px;">
+        <img
+          src="${process.env.LOGO_URL}"
+          width="130"
+          alt="Logo"
+        />
+      </div>
+
+      <h2 style="color:#111;">
+        Hi ${ownerFirstName},
+      </h2>
+
+      <p style="
+        font-size:16px;
+        color:#444;
+        line-height:1.7;
+      ">
+        Your payout of
+        <strong>${adjustedOwnerPayout.toFixed(2)} SEK</strong>
+        is on its way.
+      </p>
+
+      <p style="
+        font-size:16px;
+        color:#444;
+        line-height:1.7;
+      ">
+        It may take 3–5 working days to appear in your account.
+      </p>
+
+      <p style="
+        margin-top:30px;
+        color:#888;
+      ">
+        — RentMyBike Team
+      </p>
+
+    </div>
+
+  </body>
+  </html>`
+  );
   return {
     message: dispute?.status === "resolved"
       ? `Ride completed. ${dispute.disputeAmount} SEK penalty deducted from deposit.`
@@ -664,15 +737,15 @@ export const completeRideService = async (bookingId: string,  status: "inprogres
       ? { disputeId: dispute._id, status: dispute.status, disputeAmount: dispute.disputeAmount }
       : null,
     depositRefund: {
-      refundId:      refund.id,
-      amount:        renterRefund,
-      currency:      payment.currency,
+      refundId: refund.id,
+      amount: renterRefund,
+      currency: payment.currency,
     },
     ownerPayout: {
-      transferId:      transfer.id,
-      amount:          adjustedOwnerPayout,
+      transferId: transfer.id,
+      amount: adjustedOwnerPayout,
       penaltyIncluded: dispute?.status === "resolved" ? dispute.disputeAmount : 0,
-      currency:        payment.currency,
+      currency: payment.currency,
     },
   };
 };
@@ -692,7 +765,7 @@ export const refundDepositService = async (bookingId: string) => {
     }).lean(),
   ]);
   if (!booking) throw new Error("Booking not found");
- 
+
   // ── Fetch linked Payment record ──
   const payment = await Payment.findOne({
     bookingId: booking._id,
@@ -700,46 +773,46 @@ export const refundDepositService = async (bookingId: string) => {
   });
   if (!payment) throw new Error("Payment record not found for this booking");
   if (!payment.stripePaymentIntentId) throw new Error("Stripe PaymentIntent ID missing on payment record");
- 
+
   // ── Guard: already refunded ──
   if (payment.stripeRefundId) throw new Error("Deposit already refunded");
- 
+
   // ── Verify charge exists ──
   const paymentIntent = await stripe.paymentIntents.retrieve(
     payment.stripePaymentIntentId
   );
- 
+
   if (!paymentIntent.latest_charge) {
     throw new Error("No charge found for this payment");
   }
- 
+
   const depositAmount = payment.depositAmount ?? 0;
- 
+
   // STEP 1: Refund deposit → renter
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
     amount: depositAmount * 100,        // convert to öre
   });
- 
+
   // STEP 2: Update Payment record
-  payment.status       = "refunded";
+  payment.status = "refunded";
   payment.stripeRefundId = refund.id;
   payment.refundAmount = depositAmount;
   payment.refundReason = "Booking cancelled before ride started";
-  payment.refundedAt   = new Date();
+  payment.refundedAt = new Date();
   await payment.save();
- 
+
   // STEP 3: Update Booking record
-  booking.status             = "cancelled";
-  booking.cancelledBy        = "renter";
+  booking.status = "cancelled";
+  booking.cancelledBy = "renter";
   booking.cancellationReason = "Cancelled before ride started";
-  booking.cancelledAt        = new Date();
+  booking.cancelledAt = new Date();
   await booking.save();
- 
+
   return {
     message: "Deposit refunded successfully",
     refundId: refund.id,
-    amount:   depositAmount,
+    amount: depositAmount,
   };
 };
 
@@ -766,7 +839,7 @@ export const checkStripeOnboardingStatus = async (userId: Types.ObjectId) => {
     account.charges_enabled &&
     account.payouts_enabled &&
     account.details_submitted;
-console.log(isOnboarded);
+  console.log(isOnboarded);
   // Sync DB if status changed
   if (isOnboarded && !user.businessProfile!.isVerified) {
     user.businessProfile!.isVerified = true;
@@ -797,7 +870,7 @@ export const cancelBookingService = async (
 
   // ── Who is cancelling ──
   const isRenter = booking.renterId.toString() === userId;
-  const isOwner  = booking.ownerId.toString() === userId;
+  const isOwner = booking.ownerId.toString() === userId;
 
   if (!isRenter && !isOwner) {
     throw new Error("Only the renter or owner can cancel this booking");
@@ -840,8 +913,8 @@ export const cancelBookingService = async (
   }
 
   const depositAmount = payment.depositAmount ?? 0;   // refunded to renter
-  const ownerPayout   = payment.ownerPayout   ?? 0;   // sent to owner
-const fullRefundAmount = payment.amount ?? 0;
+  const ownerPayout = payment.ownerPayout ?? 0;   // sent to owner
+  const fullRefundAmount = payment.amount ?? 0;
 
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
@@ -861,26 +934,26 @@ const fullRefundAmount = payment.amount ?? 0;
   //   },
   // });
 
-  
-  payment.status         = "refunded";
+
+  payment.status = "refunded";
   payment.stripeChargeId = paymentIntent.latest_charge as string;
   payment.stripeRefundId = refund.id;
-  payment.refundAmount   = depositAmount;
-  payment.refundReason   = `Booking cancelled by ${isRenter ? "renter" : "owner"}`;
-  payment.refundedAt     = new Date();
-  payment.paidAt         = new Date();
+  payment.refundAmount = depositAmount;
+  payment.refundReason = `Booking cancelled by ${isRenter ? "renter" : "owner"}`;
+  payment.refundedAt = new Date();
+  payment.paidAt = new Date();
   await payment.save();
 
 
-  booking.status              = "cancelled";
-  booking.cancelledBy         = isRenter ? "renter" : "owner";
-  booking.cancellationReason  = reason ?? undefined;
-  booking.cancelledAt         = new Date();
+  booking.status = "cancelled";
+  booking.cancelledBy = isRenter ? "renter" : "owner";
+  booking.cancellationReason = reason ?? undefined;
+  booking.cancelledAt = new Date();
   await booking.save();
-  const renter    = await User.findById(booking.renterId);
+  const renter = await User.findById(booking.renterId);
   const firstName = renter?.personalProfile?.firstName ?? "there";
   const bookingShortId = booking._id;
-   await sendEmail(
+  await sendEmail(
     renter?.email!,
     "Booking Cancelled",
     `<!DOCTYPE html>
@@ -983,13 +1056,13 @@ const fullRefundAmount = payment.amount ?? 0;
     cancelledBy: booking.cancelledBy,
     depositRefund: {
       refundId: refund.id,
-      amount:   depositAmount,
+      amount: depositAmount,
       currency: payment.currency,
     },
     ownerPayout: {
       transferId: refund.id,
-      amount:     ownerPayout,
-      currency:   payment.currency,
+      amount: ownerPayout,
+      currency: payment.currency,
     },
   };
 };
