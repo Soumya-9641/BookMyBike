@@ -226,6 +226,8 @@ export const getDisputeDetailService = async (disputeId: string) => {
       time:          dispute.time,
       resolvedAt:    dispute.resolvedAt,
       createdAt:     dispute.createdAt,
+      images:        dispute.images,
+       type:          dispute.type,
     },
     booking: booking ?? null,
     payment: payment ?? null,
