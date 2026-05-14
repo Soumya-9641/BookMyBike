@@ -20,6 +20,7 @@ const MyRefunds = () => {
         },
         overflow: "hidden",
       }}
+      mt={4} mb={8} px={2}
     >
       <AccountTabs />
       {/* Header */}

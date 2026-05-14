@@ -9,7 +9,7 @@ const OwnerBookings = () => {
   if (isLoading) return <CircularProgress />;
 
   return (
-   <Box
+    <Box
       sx={{
         height: {
           xs: "calc(100vh - 120px)", // mobile: header + footer height
@@ -17,6 +17,7 @@ const OwnerBookings = () => {
         },
         overflow: "hidden",
       }}
+      mt={4} mb={8} px={2}
     >
       <AccountTabs />
       <Typography variant="h5" mb={2} fontWeight={700}>

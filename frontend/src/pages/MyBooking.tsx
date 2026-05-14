@@ -15,8 +15,10 @@ const MyBookings = () => {
           xs: "calc(100vh - 120px)", // mobile: header + footer height
           md: "auto",
         },
+
         overflow: "hidden",
       }}
+      mt={4} mb={8} px={2}
     >
       <AccountTabs />
 
@@ -24,7 +26,7 @@ const MyBookings = () => {
         My Bookings
       </Typography>
 
-      <BookingTable bookings={data?.bookings || []}  refetch={refetch} />
+      <BookingTable bookings={data?.bookings || []} refetch={refetch} />
     </Box>
 
   );
