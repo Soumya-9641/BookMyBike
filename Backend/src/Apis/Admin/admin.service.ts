@@ -357,23 +357,32 @@ systemRole
 };
 
 export const blockUserService = async (userId: string) => {
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
+if (!mongoose.Types.ObjectId.isValid(userId)) {
     throw new Error("Invalid userId");
   }
 
   const user = await User.findById(userId);
-  if (!user) throw new Error("User not found");
 
-  if (user.isBlocked) throw new Error("User is already blocked");
+  if (!user) {
+    throw new Error("User not found");
+  }
 
+  // Toggle block/unblock
   const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { isBlocked: true },
+    { isBlocked: !user.isBlocked },
     { new: true }
-  ).select("-password -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -__v");
+  ).select(
+    "-password -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -__v"
+  );
 
-  
-  return updatedUser;
+  return {
+    message: updatedUser?.isBlocked
+      ? "User blocked successfully"
+      : "User unblocked successfully",
+
+    user: updatedUser
+  };
 };
 
 
