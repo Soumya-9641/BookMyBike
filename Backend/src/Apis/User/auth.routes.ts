@@ -20,8 +20,8 @@ const router = Router();
 router.post("/signup", async (req: Request, res: Response) => {
   try {
     const { email, password, firstName, lastName , phoneNumber} = req.body;
-
-    const existingUser = await User.findOne({ email });
+  const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email:normalizedEmail  });
     if (existingUser) {
       return res.status(400).json({ message: "Email already registered" });
     }
@@ -31,7 +31,7 @@ router.post("/signup", async (req: Request, res: Response) => {
     let verificationToken = crypto.randomBytes(32).toString("hex");
 
    const user= await User.create({
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       emailVerified: false,
       emailVerificationToken: verificationToken,
@@ -47,7 +47,7 @@ console.log("Saved token:", user.emailVerificationToken);
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
   await sendEmail(
-  email,
+  normalizedEmail,
   "Verify your email",
   `<!DOCTYPE html>
   <html>
@@ -188,8 +188,9 @@ router.get("/verify-email", async (req: Request, res: Response) => {
 router.post("/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+const normalizedEmail = email.toLowerCase().trim();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
