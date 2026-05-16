@@ -69,17 +69,15 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
 
     const { listingId, startDate, endDate, hours } = req.body;
 
-    // Fetch listing to get amount
     const listing = await Listing.findById(listingId);
     if (!listing) return void res.status(404).json({ message: "Listing not found" });
 
-    // Check availability before charging
     const isAvailable = await checkAvailability(listingId, new Date(startDate), new Date(endDate));
     if (!isAvailable) return void res.status(409).json({ message: "Listing is not available for selected dates" });
 
     const { rentalAmount, pricePerDay, totalDays } = calculateRentalAmount(listing, hours);
-    const amount = rentalAmount; // Convert to smallest currency unit
-    //
+    const amount = rentalAmount; 
+    
     const depositAmount = to2dp(listing.depositAmount ?? 0);
     const chargeAmount = to2dp(rentalAmount + depositAmount);
     const platformFee = to2dp(rentalAmount * PLATFORM_FEE_RATE);
@@ -117,7 +115,7 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
       automatic_payment_methods: {
         enabled: true,
         allow_redirects: "never",
-      },
+      }, 
       metadata: {
         listingId,
         renterId,

@@ -4,6 +4,7 @@ import Listing from "../../Models/Listing";
 import User from "../../Models/User";
 import stripe from "../../Utils/stripe";
 import Payment from "../../Models/Payment";
+import Dispute from "../../Models/Dispute";
 
 export interface ProfileResponse {
   fullName: string;
@@ -160,11 +161,21 @@ export const getOwnerBookingsService = async (userId: Types.ObjectId) => {
     )
     .sort({ createdAt: -1 })
     .lean();
+   
+  const bookingIds = bookings.map((b) => b._id);
+  const disputes   = await Dispute.find({ bookingId: { $in: bookingIds } }).lean();
+
+  const disputeMap = new Map(
+    disputes.map((d:any) => [d.bookingId.toString(), d])
+  );
+
 
   return bookings.map((booking) => {
     const renter = booking.renterId as any;
     const bike = booking.bikeId as any;
     const payment = booking.paymentId as any;
+  const dispute          = disputeMap.get(booking._id.toString()) ?? null;
+    const isDisputeCreated = !!dispute;
 
     return {
       // ── Booking Core ──
@@ -212,7 +223,22 @@ export const getOwnerBookingsService = async (userId: Types.ObjectId) => {
         ownerRequestedCompletion: booking.ownerRequestedCompletion ?? false,
         renterConfirmedCompletion: booking.renterConfirmedCompletion ?? false,
         isSettlementDone: booking.isSettlementDone ?? false,
+        isDisputeCreated: isDisputeCreated,
       },
+       dispute: dispute
+        ? {
+            disputeId:     dispute._id,
+            status:        dispute.status,
+            type:          dispute.type,
+            disputeAmount: dispute.disputeAmount,
+            reason:        dispute.reason,
+            date:          dispute.date,
+            time:          dispute.time,
+            images:        dispute.images ?? [],
+            resolvedAt:    dispute.resolvedAt ?? null,
+            createdAt:     dispute.createdAt,
+          }
+        : null,
 
       // ── Renter Info ──
       renter: renter
