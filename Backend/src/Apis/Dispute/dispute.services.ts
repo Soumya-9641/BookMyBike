@@ -78,7 +78,7 @@ export const createDisputeService = async (
             <tr>
               <th>
                 <img alt="Logo"
-                  src="${process.env.LOGO_URL}"
+                  src="cid:rentmybikelogo"
                   width="140"
                   style="display:block; margin:0 auto;">
               </th>

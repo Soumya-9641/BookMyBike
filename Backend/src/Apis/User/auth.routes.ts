@@ -10,27 +10,38 @@ import dotenv from "dotenv";
 import { authMiddleware } from "../../Middlewares/auth.middleware";
 import { AuthRequest } from "../../types/auth-request";
 import { Types } from "mongoose";
+import fs from "fs";
+import path from "path";
 dotenv.config();
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
 const router = Router();
+const logoPath = path.join(
+  process.cwd(),
+  "uploads",
+  "logo",
+  "logo.jpeg"
+);
 
+const logoBase64 = fs.readFileSync(logoPath, {
+  encoding: "base64",
+});
 router.post("/signup", async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName , phoneNumber} = req.body;
-  const normalizedEmail = email.toLowerCase().trim();
-    const existingUser = await User.findOne({ email:normalizedEmail  });
+    const { email, password, firstName, lastName, phoneNumber } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); 
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     let verificationToken = crypto.randomBytes(32).toString("hex");
 
-   const user= await User.create({
+    const user = await User.create({
       email: normalizedEmail,
       password: hashedPassword,
       emailVerified: false,
@@ -43,13 +54,13 @@ router.post("/signup", async (req: Request, res: Response) => {
         phone: phoneNumber
       }
     });
-console.log("Saved token:", user.emailVerificationToken);
+    console.log("Saved token:", user.emailVerificationToken);
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
-  await sendEmail(
-  normalizedEmail,
-  "Verify your email",
-  `<!DOCTYPE html>
+    await sendEmail(
+      normalizedEmail,
+      "Verify your email",
+      `<!DOCTYPE html>
   <html>
   <head>
     <meta charset="utf-8">
@@ -62,9 +73,9 @@ console.log("Saved token:", user.emailVerificationToken);
         <tr>
           <th>
             <img alt="Logo"
-              src="${process.env.LOGO_URL}"
-              width="140"
-              style="display:block; margin:0 auto;">
+    src="cid:rentmybikelogo"
+    width="140"
+    style="display:block; margin:0 auto;">
           </th>
         </tr>
       </thead>
@@ -106,7 +117,7 @@ console.log("Saved token:", user.emailVerificationToken);
     </table>
   </body>
   </html>`
-);
+    );
 
     res.status(201).json({
       message: "Verification email sent. Please verify your email."
@@ -188,7 +199,7 @@ router.get("/verify-email", async (req: Request, res: Response) => {
 router.post("/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = email.toLowerCase().trim();
 
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
@@ -240,7 +251,7 @@ router.post("/resend-verification", async (req: Request, res: Response) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      
+
       return res.json({
         message: "If the email exists, a verification link has been sent"
       });
@@ -258,12 +269,12 @@ router.post("/resend-verification", async (req: Request, res: Response) => {
     user.emailVerificationToken = verificationToken;
     user.emailVerificationExpires = new Date(
       Date.now() + 24 * 60 * 60 * 1000
-    ); 
+    );
     await user.save();
 
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
-      await sendEmail(
+    await sendEmail(
       user.email,
       "Verify your email",
       `<!DOCTYPE html>
@@ -279,9 +290,9 @@ router.post("/resend-verification", async (req: Request, res: Response) => {
             <tr>
               <th>
                 <img alt="Logo"
-                  src="${process.env.LOGO_URL}"
-                  width="140"
-                  style="display:block; margin:0 auto;">
+    src="cid:rentmybikelogo"
+    width="140"
+    style="display:block; margin:0 auto;">
               </th>
             </tr>
           </thead>
@@ -346,7 +357,7 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
 
     const user = await User.findOne({ email });
 
-      if (!user) {
+    if (!user) {
       return res.status(400).json({
         message: "User with this email does not exist"
       });
@@ -362,9 +373,9 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     await sendEmail(
-  user.email,
-  "Reset your password",
-  `<!DOCTYPE html>
+      user.email,
+      "Reset your password",
+      `<!DOCTYPE html>
   <html>
     <head>
       <meta charset="utf-8"/>
@@ -379,10 +390,10 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
               <!-- Logo Section -->
               <tr>
                 <td align="center" style="background-color:#ffffff;padding:24px 40px;border-bottom:3px solid #2e7d32;">
-                  <img src="${process.env.LOGO_URL ?? 'https://placehold.co/140x45?text=Logo'}"
-                       alt="Logo"
-                       width="140"
-                       style="display:block;margin:0 auto;"/>
+                  <img  alt="Logo"
+    src="cid:rentmybikelogo"
+    width="140"
+    style="display:block; margin:0 auto;"/>
                 </td>
               </tr>
 
@@ -436,7 +447,8 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
       </table>
     </body>
   </html>`
-);
+  
+    );
 
     return res.status(200).json({
       message: "Password reset link sent successfully"
@@ -486,34 +498,34 @@ router.post("/reset-password", async (req: Request, res: Response) => {
 });
 
 
-router.post("/send-otp",async (req:AuthRequest, res:Response)=>{
+router.post("/send-otp", async (req: AuthRequest, res: Response) => {
 
-    try{
+  try {
 
-        const {phoneNumber}=req.body;
-        if(!phoneNumber){
-            return res.status(400).json({message:"Phone number is required"});
-        }
-         const existingUser = await User.findOne({
-        "personalProfile.phone": phoneNumber
-      });
+    const { phoneNumber } = req.body;
+    if (!phoneNumber) {
+      return res.status(400).json({ message: "Phone number is required" });
+    }
+    const existingUser = await User.findOne({
+      "personalProfile.phone": phoneNumber
+    });
 
-      // if (existingUser) {
-      //   return res.status(400).json({
-      //     message: "Phone number already in use"
-      //   });
-      // }
+    // if (existingUser) {
+    //   return res.status(400).json({
+    //     message: "Phone number already in use"
+    //   });
+    // }
 
-      //  await User.findByIdAndUpdate(
-      //   req.user!.userId,
-      //   {
-      //     $set: {
-      //       "personalProfile.phone": phoneNumber,
-      //       "personalProfile.isVerified": false
-      //     }   
-      //   }
-      // );
-         await client.verify.v2
+    //  await User.findByIdAndUpdate(
+    //   req.user!.userId,
+    //   {
+    //     $set: {
+    //       "personalProfile.phone": phoneNumber,
+    //       "personalProfile.isVerified": false
+    //     }   
+    //   }
+    // );
+    await client.verify.v2
       .services(process.env.TWILIO_VERIFY_SERVICE_SID as string)
       .verifications.create({
         to: phoneNumber,
@@ -525,22 +537,22 @@ router.post("/send-otp",async (req:AuthRequest, res:Response)=>{
       message: "OTP sent successfully",
     });
 
-    }catch(error:any){
-      console.log(error);
-        res.status(500).json({ message: error.message });
-    } 
+  } catch (error: any) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
 
-})  
+})
 
-router.post("/verify-otp",async(req:Request,res:Response)=>{
-  try{
-    const {phoneNumber,otp}=req.body;
+router.post("/verify-otp", async (req: Request, res: Response) => {
+  try {
+    const { phoneNumber, otp } = req.body;
 
-    if(!phoneNumber || !otp){
-        return res.status(400).json({message:"Phone number and OTP are required"});
+    if (!phoneNumber || !otp) {
+      return res.status(400).json({ message: "Phone number and OTP are required" });
     }
-       const verification = await client.verify.v2
-      .services(process.env.TWILIO_VERIFY_SERVICE_SID as string)  
+    const verification = await client.verify.v2
+      .services(process.env.TWILIO_VERIFY_SERVICE_SID as string)
       .verificationChecks.create({
         to: phoneNumber,
         code: otp,
@@ -565,15 +577,15 @@ router.post("/verify-otp",async(req:Request,res:Response)=>{
     //   });
     // }
 
-   
+
     return res.status(200).json({
       success: true,
       verified: true,
       message: "Phone number verified successfully"
     });
 
-  }catch(error:any){
-      res.status(500).json({ message: error.message });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
   }
 })
 
@@ -589,7 +601,7 @@ router.put("/change-password", authMiddleware, async (req: AuthRequest, res: Res
       return res.status(400).json({ success: false, message: "Passwords do not match" });
     }
 
-   
+
     await changeUserPassword(req.user!.userId, newPassword);
 
     return res.status(200).json({ success: true, message: "Password changed successfully" });

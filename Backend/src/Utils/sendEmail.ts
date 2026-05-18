@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-
+import path from "path";
 export const sendEmail = async (
   to: string,
   subject: string,
@@ -17,7 +17,14 @@ export const sendEmail = async (
     from: `"RentMyBike" <${process.env.EMAIL_USER}>`,
     to,
     subject,
-    html
+    html,
+    attachments: [
+      {
+        filename: "logo.jpg",
+        path: path.join(process.cwd(), "uploads", "logo", "logo.jpeg"),
+        cid: "rentmybikelogo"
+      }
+    ]
   };
 
   await transporter.sendMail(mailOptions);

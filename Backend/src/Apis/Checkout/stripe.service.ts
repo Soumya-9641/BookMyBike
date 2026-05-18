@@ -574,9 +574,9 @@ export const completeRideService = async (bookingId: string, status: "inprogress
           <tr>
             <th>
               <img alt="Logo"
-                src="${process.env.LOGO_URL}"
-                width="140"
-                style="display:block; margin:0 auto;">
+    src="cid:rentmybikelogo"
+    width="140"
+    style="display:block; margin:0 auto;">
             </th>
           </tr>
         </thead>
@@ -689,9 +689,10 @@ export const completeRideService = async (bookingId: string, status: "inprogress
 
       <div style="text-align:center; margin-bottom:20px;">
         <img
-          src="${process.env.LOGO_URL}"
-          width="130"
-          alt="Logo"
+         alt="Logo"
+    src="cid:rentmybikelogo"
+    width="140"
+    style="display:block; margin:0 auto;"
         />
       </div>
 
@@ -969,9 +970,9 @@ export const cancelBookingService = async (
           <tr>
             <th>
               <img alt="Logo"
-                src="${process.env.LOGO_URL}"
-                width="140"
-                style="display:block; margin:0 auto;">
+    src="cid:rentmybikelogo"
+    width="140"
+    style="display:block; margin:0 auto;">
             </th>
           </tr>
         </thead>

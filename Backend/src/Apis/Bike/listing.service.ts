@@ -506,9 +506,9 @@ const renter         = await User.findById(booking.renterId);
           <tr>
             <th>
               <img alt="Logo"
-                src="${process.env.LOGO_URL}"
-                width="140"
-                style="display:block; margin:0 auto;">
+    src="cid:rentmybikelogo"
+    width="140"
+    style="display:block; margin:0 auto;">
             </th>
           </tr>
         </thead>
@@ -582,7 +582,7 @@ const renter         = await User.findById(booking.renterId);
           <tr>
             <th>
               <img alt="Logo"
-                src="${process.env.LOGO_URL}"
+                src="cid:rentmybikelogo"
                 width="140"
                 style="display:block; margin:0 auto;">
             </th>
