@@ -63,8 +63,6 @@ const Footer = () => {
                   "About us",
                   "How it works",
                   "Browse bikes",
-                  "Categories",
-                  "Contact",
                 ].map((item) => (
                   <Typography key={item} variant="body2">
                     »{" "}
@@ -78,8 +76,8 @@ const Footer = () => {
               <Stack spacing={1}>
                 {[
                   "Privacy policy",
-                  "Terms of services",
-                  "Terms of Rental",
+                  "Terms and conditions",
+                  "Cancellation policy",
                   "Site Map",
                 ].map((item) => (
                   <Typography key={item} variant="body2">

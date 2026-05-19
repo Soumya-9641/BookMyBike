@@ -8,6 +8,7 @@ import {
   TableBody,
   Button,
   Stack,
+  Switch,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -43,6 +44,8 @@ const AdminUsers = () => {
         <TableHead>
           <TableRow>
             <TableCell>Email</TableCell>
+            <TableCell>Name</TableCell>
+            <TableCell>Phone</TableCell>
             <TableCell>Role</TableCell>
             <TableCell>Verified</TableCell>
             <TableCell>Is Renter</TableCell>
@@ -62,6 +65,8 @@ const AdminUsers = () => {
             return (
               <TableRow key={u.userId}>
                 <TableCell>{u.email}</TableCell>
+                <TableCell>{u?.personalProfile?.firstName} {u?.personalProfile?.lastName}</TableCell>
+                <TableCell>{u?.personalProfile?.phone}</TableCell>
                 <TableCell>{u.systemRole}</TableCell>
                 <TableCell>
                   {u.emailVerified ? <IconYes /> : <IconNo />}
@@ -92,7 +97,7 @@ const AdminUsers = () => {
                       Bookings
                     </Button>
 
-                    <Button
+                    {/* <Button
                       size="small"
                       color="error"
                       onClick={async () => {
@@ -102,7 +107,15 @@ const AdminUsers = () => {
                       }}
                     >
                       Delete
-                    </Button>
+                    </Button> */}
+                    <Switch 
+                    checked={!u?.isBlocked}
+                    onChange={async () => {
+                      {
+                        await deleteUser(u.userId).unwrap();
+                      }
+                    }
+                    } defaultChecked color="success" />
                   </Stack>
                 </TableCell>
               </TableRow>

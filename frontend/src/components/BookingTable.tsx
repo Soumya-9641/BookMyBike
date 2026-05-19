@@ -248,7 +248,7 @@ const handleDisputeSubmit = async (data: {
                               }
                             }}
                           >
-                            Request Start
+                            Pick it up
                           </Button>
                         )}
 
@@ -275,7 +275,7 @@ const handleDisputeSubmit = async (data: {
                               }
                             }}
                           >
-                            Accept Start
+                            Confirm Pick-up
                           </Button>
                         )}
 
@@ -302,7 +302,7 @@ const handleDisputeSubmit = async (data: {
                               }
                             }}
                           >
-                            End Ride
+                            Drop it off
                           </Button>
                         )}
 
@@ -329,7 +329,7 @@ const handleDisputeSubmit = async (data: {
                               }
                             }}
                           >
-                            Confirm Completion
+                            Confirm Drop-off
                           </Button>
                         )}
 

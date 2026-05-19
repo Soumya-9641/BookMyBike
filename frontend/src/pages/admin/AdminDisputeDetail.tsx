@@ -6,6 +6,8 @@ import {
   Stack,
   Select,
   MenuItem,
+  Dialog,
+  DialogContent,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import {
@@ -38,6 +40,7 @@ const AdminDisputeDetail = () => {
     useCompleteAdminRideMutation();
 
   const [status, setStatus] = useState<DisputeStatus | "">("");
+  const [imageOpen, setImageOpen] = useState(false);
 
   /* ───────── Sync backend status → UI ───────── */
   useEffect(() => {
@@ -56,8 +59,11 @@ const AdminDisputeDetail = () => {
   }
 
   /* ───────── Safe destructuring AFTER checks ───────── */
-  const { dispute, booking, payment } = data;
+  const { dispute, booking, payment, ownerDetails, renterDetails } = data;
   const isFinal = FINAL_STATUSES.includes(dispute.status);
+  const disputeImageUrl = dispute?.images
+    ? `${import.meta.env.VITE_API_BASE_URL}${dispute.images}`
+    : "";
 
   /* ───────── Actions ───────── */
   const handleUpdate = async () => {
@@ -96,13 +102,50 @@ const AdminDisputeDetail = () => {
       <Paper sx={{ p: 2, mb: 2 }}>
         <Typography fontWeight={600}>Dispute</Typography>
         <Typography>Status: {dispute.status}</Typography>
+        <Typography>Create date: {new Date(dispute.createdAt).toLocaleString()}</Typography>
         <Typography>Reason: {dispute.reason}</Typography>
         <Typography>Amount: SEK {dispute.disputeAmount}</Typography>
+        {disputeImageUrl && (
+          <>
+            <Box position="relative" sx={{ display: "inline-block", mt: 1 }}>
+              <Box
+                component="img"
+                src={disputeImageUrl}
+                alt="Dispute"
+                width={80}
+                height={80}
+                sx={{
+                  borderRadius: 2,
+                  cursor: "pointer",
+                  objectFit: "cover",
+                }}
+                onClick={() => setImageOpen(true)}
+              />
+            </Box>
+
+            <Dialog
+              open={imageOpen}
+              onClose={() => setImageOpen(false)}
+              maxWidth="md"
+              fullWidth
+            >
+              <DialogContent sx={{ p: 0, backgroundColor: "background.paper" }}>
+                <Box
+                  component="img"
+                  src={disputeImageUrl}
+                  alt="Dispute"
+                  sx={{ width: "100%", height: "auto", display: "block" }}
+                />
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
       </Paper>
 
       {booking && (
         <Paper sx={{ p: 2, mb: 2 }}>
           <Typography fontWeight={600}>Booking</Typography>
+          <Typography>ID: {booking._id}</Typography>
           <Typography>
             {new Date(booking.startDate).toLocaleString()} →{" "}
             {new Date(booking.endDate).toLocaleString()}
@@ -110,7 +153,22 @@ const AdminDisputeDetail = () => {
           <Typography>Total: SEK {booking.totalAmount}</Typography>
         </Paper>
       )}
-
+      {ownerDetails && (
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Typography fontWeight={600}>Owner details</Typography>
+          <Typography>Name: {ownerDetails?.firstName} {ownerDetails?.lastName}</Typography>
+          <Typography>Email: {ownerDetails.email}</Typography>
+          <Typography>Phone: {ownerDetails.phone}</Typography>
+        </Paper>
+      )}
+      {renterDetails && (
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Typography fontWeight={600}>Renter details</Typography>
+          <Typography>Name: {renterDetails?.firstName} {renterDetails?.lastName}</Typography>
+          <Typography>Email: {renterDetails.email}</Typography>
+          <Typography>Phone: {renterDetails.phone}</Typography>
+        </Paper>
+      )}
       {payment && (
         <Paper sx={{ p: 2, mb: 2 }}>
           <Typography fontWeight={600}>Payment</Typography>

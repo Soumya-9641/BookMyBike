@@ -111,8 +111,18 @@ const MyProfile = () => {
               />
             </Stack>
 
-            <Stack direction="row" spacing={2}>
-              <TextField label="Email" value={form.email} disabled fullWidth />
+            {/* Email / Phone / City */}
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+            >
+              <TextField
+                label="Email"
+                value={form.email}
+                disabled
+                fullWidth
+              />
+
               <TextField
                 label="Phone"
                 name="phone"
@@ -121,6 +131,7 @@ const MyProfile = () => {
                 onChange={handleChange}
                 fullWidth
               />
+
               <TextField
                 label="City"
                 name="city"

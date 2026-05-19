@@ -1,4 +1,4 @@
-import { Box, Typography, Stack, Button } from "@mui/material";
+import { Box, Typography, Stack, Button, Alert } from "@mui/material";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 
 import { useState } from "react";
@@ -132,6 +132,9 @@ const HowItWorks = () => {
           </Stack>
         ))}
       </Stack>
+      <Alert variant="filled" severity="info" sx={{ mt: 3, fontWeight:700 }}>
+        Confirm Pick-up in “My bookings” to activate your ride” & “Confirm Drop-off in “My bookings” to end your ride and initiate your payout
+      </Alert>
     </Box>
   );
 };

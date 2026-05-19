@@ -20,8 +20,8 @@ export const adminApi = createApi({
 
     deleteUser: builder.mutation<any, string>({
       query: (id) => ({
-        url: `/adminstats/users/${id}`,
-        method: "DELETE",
+        url: `/adminstats/block/${id}`,
+        method: "PATCH",
       }),
       invalidatesTags: ["Users"],
     }),

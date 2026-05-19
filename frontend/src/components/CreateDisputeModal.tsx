@@ -7,8 +7,9 @@ import {
   TextField,
   MenuItem,
   Stack,
+  Box,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   open: boolean;
@@ -24,15 +25,33 @@ interface Props {
   }) => void;
 }
 
-const CreateDisputeModal = ({
-  open,
-  onClose,
-  onSubmit,
-}: Props) => {
-  const [type, setType] = useState<"APPLICABLE" | "NOT_APPLICABLE">("APPLICABLE");
+const CreateDisputeModal = ({ open, onClose, onSubmit }: Props) => {
+  const [type, setType] =
+    useState<"APPLICABLE" | "NOT_APPLICABLE">("APPLICABLE");
   const [disputeAmount, setDisputeAmount] = useState("");
   const [reason, setReason] = useState("");
   const [image, setImage] = useState<File | undefined>();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  /* 🔁 CLEANUP OBJECT URL */
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  const handleImageChange = (file?: File) => {
+    if (!file) return;
+
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
+    setImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = () => {
     onSubmit({
@@ -43,10 +62,20 @@ const CreateDisputeModal = ({
       type,
       image,
     });
+
+    // reset
+    setImage(undefined);
+    setImagePreview(null);
+  };
+
+  const handleClose = () => {
+    setImage(undefined);
+    setImagePreview(null);
+    onClose();
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Settlement / Dispute</DialogTitle>
 
       <DialogContent>
@@ -83,7 +112,7 @@ const CreateDisputeModal = ({
             onChange={(e) => setReason(e.target.value)}
           />
 
-          {/* IMAGE */}
+          {/* IMAGE UPLOAD */}
           <Button
             component="label"
             variant="outlined"
@@ -94,14 +123,30 @@ const CreateDisputeModal = ({
               type="file"
               hidden
               accept="image/*"
-              onChange={(e) => setImage(e.target.files?.[0])}
+              onChange={(e) => handleImageChange(e.target.files?.[0])}
             />
           </Button>
+
+          {/* IMAGE PREVIEW */}
+          {imagePreview && (
+            <Box
+              component="img"
+              src={imagePreview}
+              alt="Dispute Preview"
+              sx={{
+                width: "100%",
+                maxHeight: 220,
+                objectFit: "contain",
+                borderRadius: 2,
+                border: "1px solid #e0e0e0",
+              }}
+            />
+          )}
         </Stack>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleClose}>Cancel</Button>
         <Button variant="contained" onClick={handleSubmit}>
           Submit
         </Button>

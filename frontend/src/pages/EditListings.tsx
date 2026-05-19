@@ -255,7 +255,7 @@ const EditListing = () => {
             />
 
             <TextField
-              label="Size"
+              label="Size (cm) *"
               name="size"
               value={form.size}
               onChange={handleChange}

@@ -192,7 +192,7 @@ const CreateListing = () => {
                 />
               </Paper>
 
-              <TextField label="Size *" name="size" onChange={handleChange} />
+              <TextField label="Size (cm) *" name="size" onChange={handleChange} />
               <TextField
                 label="Pickup Point"
                 name="pickupPoint"

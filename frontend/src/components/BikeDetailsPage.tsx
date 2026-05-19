@@ -133,7 +133,7 @@ const BikeDetails = () => {
           </Typography>
 
           <Typography color="text.secondary">
-            {data.brand} · {data.modelbike} · Size {data.size}
+            {data.brand} · {data.modelbike} · Size (cm) {data.size}
           </Typography>
 
           <Typography mt={1}>📍 {data.location.address}</Typography>
@@ -241,6 +241,7 @@ const BikeDetails = () => {
               <Typography variant="body2" color="text.secondary">
                 Platform Fee (18%): SEK{" "}
                 {priceData.breakdown.platformFee.toFixed(2)}
+                {" "}(Incl. VAT)
               </Typography>
               {/* 
               <Typography variant="body2" color="text.secondary">
@@ -258,6 +259,7 @@ const BikeDetails = () => {
               <Typography fontWeight={700} mt={1}>
                 Total to Pay: SEK{" "}
                 {priceData.breakdown.chargeAmount.toFixed(2)}
+                {" "} (Incl. VAT)
               </Typography>
             </>
           )}

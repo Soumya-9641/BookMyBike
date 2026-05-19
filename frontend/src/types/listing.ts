@@ -138,6 +138,13 @@ export interface Booking {
     lastName: string;
     phone: string | null;
   };
+  renter?: {
+    renterId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+  };
 
   bike: {
     bikeId: string;
