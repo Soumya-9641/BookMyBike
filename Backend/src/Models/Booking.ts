@@ -58,7 +58,7 @@ export interface IBooking extends Document {
 
   isSettlementDone?: boolean;          // whether payout/refund has been processed for this booking
 
-  penaltyAmount?: number;           
+  penaltyAmount?: number;
   penaltyReason?: string;
 
   // Cancellation
@@ -68,6 +68,12 @@ export interface IBooking extends Document {
 
   // Rejection
   rejectedReason?: string;
+  updatedBy?: "admin" | "lister";
+  completionConfirmedBy: {
+    type: String,
+    enum: ["renter", "owner"],
+    default: null,
+  },
 
   // Metadata
   notes?: string;                   // renter's note at booking time
@@ -182,8 +188,17 @@ const BookingSchema = new Schema<IBooking>(
       type: String,
       enum: ["renter", "owner", "admin"],
     },
+    completionConfirmedBy: {
+      type: String,
+      enum: ["renter", "owner"],
+      default: null,
+    },
     cancellationReason: { type: String },
     cancelledAt: { type: Date },
+    updatedBy: {
+      type: String,
+      enum: ["admin", "lister"],
+    },
 
     // ── Rejection ──
     rejectedReason: { type: String },
