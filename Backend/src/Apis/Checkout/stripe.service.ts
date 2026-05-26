@@ -19,50 +19,113 @@ const VAT_RATE = 0.25; // 25% Swedish VAT , included in the 18%
 export const calculateRentalAmount = (
   listing: {
     rates?: {
-      hourly?: number; daily?: number; weekly?: number;
+      hourly?:  number;
+      daily?:   number;
+      weekly?:  number;
       monthly?: number;
-    }; depositAmount?: number
+    };
+    depositAmount?: number;
   },
   hours: number
 ): { rentalAmount: number; pricePerDay: number; totalDays: number } => {
 
   const { hourly, daily, weekly, monthly } = listing.rates ?? {};
 
-  const totalDays = Math.ceil(hours / 24);
+  // ── Thresholds ──
+  const DAILY_THRESHOLD   = 24;           // 1 day
+  const WEEKLY_THRESHOLD  = 7  * 24;      // 168 hours
+  const MONTHLY_THRESHOLD = 30 * 24;      // 720 hours
 
-  if (hours < 24) {
+  // ── Hourly: less than 24h ──
+  if (hours < DAILY_THRESHOLD) {
     if (!hourly) throw new Error("Listing does not have an hourly rate set");
     return {
       rentalAmount: hours * hourly,
-      pricePerDay: hourly * 24,   // informational
-      totalDays: 1,
-    };
-  }
-  if (totalDays >= 30) {
-    if (!monthly) throw new Error("Listing does not have a monthly rate set");
-    const totalMonths = Math.ceil(totalDays / 30);
-    return {
-      rentalAmount: totalMonths * monthly,
-      pricePerDay: monthly / 30,   // informational
-      totalDays,
+      pricePerDay:  hourly * 24,
+      totalDays:    1,
     };
   }
 
-  // ── Weekly: 7 days or more (but less than 30) ──
-  if (totalDays >= 7) {
-    if (!weekly) throw new Error("Listing does not have a weekly rate set");
-    const totalWeeks = Math.ceil(totalDays / 7);
+  // ── Monthly: 30+ days ──
+  if (hours >= MONTHLY_THRESHOLD) {
+    if (!monthly) throw new Error("Listing does not have a monthly rate set");
+
+    const fullMonths        = Math.floor(hours / MONTHLY_THRESHOLD);
+    const remainingAfterMonth = hours % MONTHLY_THRESHOLD;             // leftover hours after full months
+
+    const fullWeeks         = Math.floor(remainingAfterMonth / WEEKLY_THRESHOLD);
+    const remainingAfterWeek  = remainingAfterMonth % WEEKLY_THRESHOLD; // leftover after weeks
+
+    const fullDays          = Math.floor(remainingAfterWeek / DAILY_THRESHOLD);
+    const remainingHours    = remainingAfterWeek % DAILY_THRESHOLD;    // leftover hours
+
+    let rentalAmount = fullMonths * monthly;
+
+    if (fullWeeks > 0) {
+      if (!weekly) throw new Error("Listing does not have a weekly rate set");
+      rentalAmount += fullWeeks * weekly;
+    }
+    if (fullDays > 0) {
+      if (!daily) throw new Error("Listing does not have a daily rate set");
+      rentalAmount += fullDays * daily;
+    }
+    if (remainingHours > 0) {
+      if (!hourly) throw new Error("Listing does not have an hourly rate set");
+      rentalAmount += remainingHours * hourly;
+    }
+
     return {
-      rentalAmount: totalWeeks * weekly,
-      pricePerDay: weekly / 7,   // informational
-      totalDays,
+      rentalAmount,
+      pricePerDay: monthly / 30,
+      totalDays:   Math.ceil(hours / 24),
     };
   }
+
+  // ── Weekly: 7+ days (but less than 30 days) ──
+  if (hours >= WEEKLY_THRESHOLD) {
+    if (!weekly) throw new Error("Listing does not have a weekly rate set");
+
+    const fullWeeks           = Math.floor(hours / WEEKLY_THRESHOLD);
+    const remainingAfterWeek  = hours % WEEKLY_THRESHOLD;              // leftover after full weeks
+
+    const fullDays            = Math.floor(remainingAfterWeek / DAILY_THRESHOLD);
+    const remainingHours      = remainingAfterWeek % DAILY_THRESHOLD;  // leftover hours
+
+    let rentalAmount = fullWeeks * weekly;
+
+    if (fullDays > 0) {
+      if (!daily) throw new Error("Listing does not have a daily rate set");
+      rentalAmount += fullDays * daily;
+    }
+    if (remainingHours > 0) {
+      if (!hourly) throw new Error("Listing does not have an hourly rate set");
+      rentalAmount += remainingHours * hourly;
+    }
+
+    return {
+      rentalAmount,
+      pricePerDay: weekly / 7,
+      totalDays:   Math.ceil(hours / 24),
+    };
+  }
+
+  // ── Daily: 1+ days (but less than 7 days) ──
   if (!daily) throw new Error("Listing does not have a daily rate set");
+
+  const fullDays       = Math.floor(hours / DAILY_THRESHOLD);
+  const remainingHours = hours % DAILY_THRESHOLD;              // leftover hours after full days
+
+  let rentalAmount = fullDays * daily;
+
+  if (remainingHours > 0) {
+    if (!hourly) throw new Error("Listing does not have an hourly rate set");
+    rentalAmount += remainingHours * hourly;
+  }
+
   return {
-    rentalAmount: totalDays * daily,
+    rentalAmount,
     pricePerDay: daily,
-    totalDays,
+    totalDays:   Math.ceil(hours / 24),
   };
 };
 
@@ -451,7 +514,7 @@ export const confirmBookingService = async (
 //                   → Stripe pulls from THAT specific charge directly
 //                   → no dependency on available balance → WORKS ✅
 // ─────────────────────────────────────────────────────────────
-export const completeRideService = async (bookingId: string, status: "inprogress" | "completed") => {
+export const completeRideService = async (bookingId: string, status: "inprogress" | "completed", userId: string) => {
   const booking = await Booking.findById(bookingId);
   if (!booking) throw new Error("Booking not found");
   // if (booking.status === "completed") throw new Error("Ride already completed");
@@ -467,6 +530,19 @@ export const completeRideService = async (bookingId: string, status: "inprogress
   // //     status: booking.status,
   // //   };
   // // }
+   const user = await User.findById(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  let updatedBy: "admin" | "lister";
+
+  if (user?.systemRole === "admin") {
+    updatedBy = "admin";
+  } else {
+    updatedBy = "lister";
+  }
   const payment = await Payment.findOne({
     bookingId: booking._id,
     type: "booking",
@@ -551,7 +627,8 @@ export const completeRideService = async (bookingId: string, status: "inprogress
   // STEP 4: Update Booking record
   booking.status = "completed";
   booking.actualEndTime = new Date();
-  booking.isSettlementDone = true;  // mark that payout/refund has been processed
+  booking.isSettlementDone = true;
+  booking.updatedBy = updatedBy;
   await booking.save();
   const renter = await User.findById(booking.renterId);
   const firstName = renter?.personalProfile?.firstName ?? "there";

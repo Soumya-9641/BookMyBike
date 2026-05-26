@@ -267,7 +267,7 @@ router.post("/:id/complete-ride", authMiddleware, async (req: AuthRequest, res: 
     //     message: "Invalid status. Allowed values: 'inprogress' | 'completed'",
     //   });
     // }
-    const result = await completeRideService(req.params.id, status);
+    const result = await completeRideService(req.params.id, status,   req.user!.userId.toString());
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ message: err.message });

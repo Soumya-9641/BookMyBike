@@ -458,8 +458,11 @@ export const confirmRideCompletionService = async (bookingId: string, renterId: 
   const booking = await Booking.findById(bookingId);
   if (!booking) throw new Error("Booking not found");
 
-  if (booking.renterId.toString() !== renterId) {
-    throw new Error("Only the renter can confirm completion");
+  const isRenter = booking.renterId.toString() === renterId;
+  const isOwner  = booking.ownerId.toString()  === renterId;
+
+  if (!isRenter && !isOwner) {
+    throw new Error("Only the renter or owner can confirm completion");
   }
   if (booking.status !== "completionRequested") {
     throw new Error(`Cannot confirm completion. Current status: ${booking.status}`);
@@ -472,6 +475,7 @@ export const confirmRideCompletionService = async (bookingId: string, renterId: 
   }
 
   // ... your existing stripe payout + refund logic ...
+  const confirmedBy = isRenter ? "renter" : "owner";  
 
   const updated = await Booking.findByIdAndUpdate(
     bookingId,
@@ -481,6 +485,7 @@ export const confirmRideCompletionService = async (bookingId: string, renterId: 
       completionConfirmedAt:     new Date(),
       actualEndTime:             new Date(),
       payoutStatus:              "pending",
+        completionConfirmedBy:     confirmedBy,   
       depositRefundStatus:       "pending",
     },
     { new: true }
