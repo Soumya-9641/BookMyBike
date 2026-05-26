@@ -28,9 +28,9 @@ export const createDisputeService = async (
   const booking = await Booking.findById(bookingId);
   if (!booking) throw new Error("Booking not found");
 
-  if (booking.ownerId.toString() !== userId.toString()) {
-    throw new Error("Only the bike owner can raise a dispute");
-  }
+  // if (booking.ownerId.toString() !== userId.toString()) {
+  //   throw new Error("Only the bike owner can raise a dispute");
+  // }
 
   const payment =await Payment.findOne({ bookingId });
   if (!payment) throw new Error("Associated payment not found");    
