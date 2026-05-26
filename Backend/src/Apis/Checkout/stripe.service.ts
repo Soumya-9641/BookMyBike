@@ -16,6 +16,120 @@ const VAT_RATE = 0.25; // 25% Swedish VAT , included in the 18%
 
 // ── 1. calculateRentalAmount ────────────────────────────────────
 // Mirrors the hourly/daily branching logic from your service exactly.
+// export const calculateRentalAmount = (
+//   listing: {
+//     rates?: {
+//       hourly?:  number;
+//       daily?:   number;
+//       weekly?:  number;
+//       monthly?: number;
+//     };
+//     depositAmount?: number;
+//   },
+//   hours: number
+// ): { rentalAmount: number; pricePerDay: number; totalDays: number } => {
+
+//   const { hourly, daily, weekly, monthly } = listing.rates ?? {};
+
+//   // ── Thresholds ──
+//   const DAILY_THRESHOLD   = 24;           // 1 day
+//   const WEEKLY_THRESHOLD  = 7  * 24;      // 168 hours
+//   const MONTHLY_THRESHOLD = 30 * 24;      // 720 hours
+
+//   // ── Hourly: less than 24h ──
+//   if (hours < DAILY_THRESHOLD) {
+//     if (!hourly) throw new Error("Listing does not have an hourly rate set");
+//     return {
+//       rentalAmount: hours * hourly,
+//       pricePerDay:  hourly * 24,
+//       totalDays:    1,
+//     };
+//   }
+
+//   // ── Monthly: 30+ days ──
+//   if (hours >= MONTHLY_THRESHOLD) {
+//     if (!monthly) throw new Error("Listing does not have a monthly rate set");
+
+//     const fullMonths        = Math.floor(hours / MONTHLY_THRESHOLD);
+//     const remainingAfterMonth = hours % MONTHLY_THRESHOLD;             // leftover hours after full months
+
+//     const fullWeeks         = Math.floor(remainingAfterMonth / WEEKLY_THRESHOLD);
+//     const remainingAfterWeek  = remainingAfterMonth % WEEKLY_THRESHOLD; // leftover after weeks
+
+//     const fullDays          = Math.floor(remainingAfterWeek / DAILY_THRESHOLD);
+//     const remainingHours    = remainingAfterWeek % DAILY_THRESHOLD;    // leftover hours
+
+//     let rentalAmount = fullMonths * monthly;
+
+//     if (fullWeeks > 0) {
+//       if (!weekly) throw new Error("Listing does not have a weekly rate set");
+//       rentalAmount += fullWeeks * weekly;
+//     }
+//     if (fullDays > 0) {
+//       if (!daily) throw new Error("Listing does not have a daily rate set");
+//       rentalAmount += fullDays * daily;
+//     }
+//     if (remainingHours > 0) {
+//       if (!hourly) throw new Error("Listing does not have an hourly rate set");
+//       rentalAmount += remainingHours * hourly;
+//     }
+
+//     return {
+//       rentalAmount,
+//       pricePerDay: monthly / 30,
+//       totalDays:   Math.ceil(hours / 24),
+//     };
+//   }
+
+//   // ── Weekly: 7+ days (but less than 30 days) ──
+//   if (hours >= WEEKLY_THRESHOLD) {
+//     if (!weekly) throw new Error("Listing does not have a weekly rate set");
+
+//     const fullWeeks           = Math.floor(hours / WEEKLY_THRESHOLD);
+//     const remainingAfterWeek  = hours % WEEKLY_THRESHOLD;              // leftover after full weeks
+
+//     const fullDays            = Math.floor(remainingAfterWeek / DAILY_THRESHOLD);
+//     const remainingHours      = remainingAfterWeek % DAILY_THRESHOLD;  // leftover hours
+
+//     let rentalAmount = fullWeeks * weekly;
+
+//     if (fullDays > 0) {
+//       if (!daily) throw new Error("Listing does not have a daily rate set");
+//       rentalAmount += fullDays * daily;
+//     }
+//     if (remainingHours > 0) {
+//       if (!hourly) throw new Error("Listing does not have an hourly rate set");
+//       rentalAmount += remainingHours * hourly;
+//     }
+
+//     return {
+//       rentalAmount,
+//       pricePerDay: weekly / 7,
+//       totalDays:   Math.ceil(hours / 24),
+//     };
+//   }
+
+//   // ── Daily: 1+ days (but less than 7 days) ──
+//   if (!daily) throw new Error("Listing does not have a daily rate set");
+
+//   const fullDays       = Math.floor(hours / DAILY_THRESHOLD);
+//   const remainingHours = hours % DAILY_THRESHOLD;              // leftover hours after full days
+
+//   let rentalAmount = fullDays * daily;
+
+//   if (remainingHours > 0) {
+//     if (!hourly) throw new Error("Listing does not have an hourly rate set");
+//     rentalAmount += remainingHours * hourly;
+//   }
+
+//   return {
+//     rentalAmount,
+//     pricePerDay: daily,
+//     totalDays:   Math.ceil(hours / 24),
+//   };
+// };
+
+
 export const calculateRentalAmount = (
   listing: {
     rates?: {
@@ -31,13 +145,48 @@ export const calculateRentalAmount = (
 
   const { hourly, daily, weekly, monthly } = listing.rates ?? {};
 
-  // ── Thresholds ──
-  const DAILY_THRESHOLD   = 24;           // 1 day
-  const WEEKLY_THRESHOLD  = 7  * 24;      // 168 hours
-  const MONTHLY_THRESHOLD = 30 * 24;      // 720 hours
+  const HOURLY_THRESHOLD  = 24;
+  const DAILY_THRESHOLD   = 7  * 24;   // 168h
+  const WEEKLY_THRESHOLD  = 30 * 24;   // 720h
 
-  // ── Hourly: less than 24h ──
-  if (hours < DAILY_THRESHOLD) {
+  const totalDays = Math.ceil(hours / 24);
+
+  // ── Helper: calculate amount for a given combination ──
+  const calcAmount = (
+    months:  number,
+    weeks:   number,
+    days:    number,
+    hrs:     number
+  ): number | null => {
+    let amount = 0;
+    if (months > 0) {
+      if (!monthly) return null;
+      amount += months * monthly;
+    }
+    if (weeks > 0) {
+      if (!weekly) return null;
+      amount += weeks * weekly;
+    }
+    if (days > 0) {
+      if (!daily) return null;
+      amount += days * daily;
+    }
+    if (hrs > 0) {
+      if (!hourly) return null;
+      amount += hrs * hourly;
+    }
+    return amount;
+  };
+
+  // ── Helper: get lowest valid amount from candidates ──
+  const lowest = (candidates: (number | null)[]): number => {
+    const valid = candidates.filter((c): c is number => c !== null);
+    if (!valid.length) throw new Error("No valid rate combination found for given hours");
+    return Math.min(...valid);
+  };
+
+  // ── Pure hourly: less than 24h ──
+  if (hours < HOURLY_THRESHOLD) {
     if (!hourly) throw new Error("Listing does not have an hourly rate set");
     return {
       rentalAmount: hours * hourly,
@@ -46,89 +195,87 @@ export const calculateRentalAmount = (
     };
   }
 
-  // ── Monthly: 30+ days ──
-  if (hours >= MONTHLY_THRESHOLD) {
-    if (!monthly) throw new Error("Listing does not have a monthly rate set");
+  // ── Daily range: 24h to <168h (1 day to <7 days) ──
+  if (hours < DAILY_THRESHOLD) {
+    const fullDays       = Math.floor(hours / HOURLY_THRESHOLD);
+    const remainingHours = hours % HOURLY_THRESHOLD;
 
-    const fullMonths        = Math.floor(hours / MONTHLY_THRESHOLD);
-    const remainingAfterMonth = hours % MONTHLY_THRESHOLD;             // leftover hours after full months
-
-    const fullWeeks         = Math.floor(remainingAfterMonth / WEEKLY_THRESHOLD);
-    const remainingAfterWeek  = remainingAfterMonth % WEEKLY_THRESHOLD; // leftover after weeks
-
-    const fullDays          = Math.floor(remainingAfterWeek / DAILY_THRESHOLD);
-    const remainingHours    = remainingAfterWeek % DAILY_THRESHOLD;    // leftover hours
-
-    let rentalAmount = fullMonths * monthly;
-
-    if (fullWeeks > 0) {
-      if (!weekly) throw new Error("Listing does not have a weekly rate set");
-      rentalAmount += fullWeeks * weekly;
-    }
-    if (fullDays > 0) {
-      if (!daily) throw new Error("Listing does not have a daily rate set");
-      rentalAmount += fullDays * daily;
-    }
-    if (remainingHours > 0) {
-      if (!hourly) throw new Error("Listing does not have an hourly rate set");
-      rentalAmount += remainingHours * hourly;
-    }
+    const candidates: (number | null)[] = [
+      // General: fullDays days + remaining hours
+      calcAmount(0, 0, fullDays, remainingHours),
+      // Special: ceil days (round up to next full day)
+      calcAmount(0, 0, fullDays + (remainingHours > 0 ? 1 : 0), 0),
+    ];
 
     return {
-      rentalAmount,
-      pricePerDay: monthly / 30,
-      totalDays:   Math.ceil(hours / 24),
+      rentalAmount: lowest(candidates),
+      pricePerDay:  daily ?? 0,
+      totalDays,
     };
   }
 
-  // ── Weekly: 7+ days (but less than 30 days) ──
-  if (hours >= WEEKLY_THRESHOLD) {
-    if (!weekly) throw new Error("Listing does not have a weekly rate set");
+  // ── Weekly range: 168h to <720h (7 days to <30 days) ──
+  if (hours < WEEKLY_THRESHOLD) {
+    const fullWeeks          = Math.floor(hours / DAILY_THRESHOLD);
+    const remainingAfterWeek = hours % DAILY_THRESHOLD;
+    const fullDays           = Math.floor(remainingAfterWeek / HOURLY_THRESHOLD);
+    const remainingHours     = remainingAfterWeek % HOURLY_THRESHOLD;
 
-    const fullWeeks           = Math.floor(hours / WEEKLY_THRESHOLD);
-    const remainingAfterWeek  = hours % WEEKLY_THRESHOLD;              // leftover after full weeks
+    const candidates: (number | null)[] = [
+      // General: fullWeeks weeks + fullDays days + remaining hours
+      calcAmount(0, fullWeeks, fullDays, remainingHours),
 
-    const fullDays            = Math.floor(remainingAfterWeek / DAILY_THRESHOLD);
-    const remainingHours      = remainingAfterWeek % DAILY_THRESHOLD;  // leftover hours
+      // Special case 1: round up to next full week
+      calcAmount(0, fullWeeks + 1, 0, 0),
 
-    let rentalAmount = fullWeeks * weekly;
+      // Special case 2: fullWeeks weeks + (fullDays + 1) days
+      calcAmount(0, fullWeeks, fullDays + (remainingHours > 0 ? 1 : 0), 0),
 
-    if (fullDays > 0) {
-      if (!daily) throw new Error("Listing does not have a daily rate set");
-      rentalAmount += fullDays * daily;
-    }
-    if (remainingHours > 0) {
-      if (!hourly) throw new Error("Listing does not have an hourly rate set");
-      rentalAmount += remainingHours * hourly;
-    }
+      // Special case 3: pure days (no weeks)
+     // calcAmount(0, 0, Math.ceil(hours / HOURLY_THRESHOLD), 0),
+    ];
 
     return {
-      rentalAmount,
-      pricePerDay: weekly / 7,
-      totalDays:   Math.ceil(hours / 24),
+      rentalAmount: lowest(candidates),
+      pricePerDay:  weekly ? weekly / 7 : (daily ?? 0),
+      totalDays,
     };
   }
 
-  // ── Daily: 1+ days (but less than 7 days) ──
-  if (!daily) throw new Error("Listing does not have a daily rate set");
+  // ── Monthly range: 720h+ (30+ days) ──
+  const fullMonths          = Math.floor(hours / WEEKLY_THRESHOLD);
+  const remainingAfterMonth = hours % WEEKLY_THRESHOLD;
+  const fullWeeks           = Math.floor(remainingAfterMonth / DAILY_THRESHOLD);
+  const remainingAfterWeek  = remainingAfterMonth % DAILY_THRESHOLD;
+  const fullDays            = Math.floor(remainingAfterWeek / HOURLY_THRESHOLD);
+  const remainingHours      = remainingAfterWeek % HOURLY_THRESHOLD;
 
-  const fullDays       = Math.floor(hours / DAILY_THRESHOLD);
-  const remainingHours = hours % DAILY_THRESHOLD;              // leftover hours after full days
+  const candidates: (number | null)[] = [
+    // General: fullMonths + fullWeeks + fullDays + remaining hours
+    calcAmount(fullMonths, fullWeeks, fullDays, remainingHours),
 
-  let rentalAmount = fullDays * daily;
+    // Special case 1: round up to next full month
+    calcAmount(fullMonths + 1, 0, 0, 0),
 
-  if (remainingHours > 0) {
-    if (!hourly) throw new Error("Listing does not have an hourly rate set");
-    rentalAmount += remainingHours * hourly;
-  }
+    // Special case 2: fullMonths + (fullWeeks + 1) weeks
+    calcAmount(fullMonths, fullWeeks + 1, 0, 0),
+
+    // Special case 3: fullMonths + fullWeeks + (fullDays + 1) days
+    calcAmount(fullMonths, fullWeeks, fullDays + (remainingHours > 0 ? 1 : 0), 0),
+
+    // Special case 4: pure months + weeks (no leftover days)
+  //  calcAmount(fullMonths, fullWeeks, fullDays, 0),
+
+    // Special case 5: (fullMonths + 1) months, no weeks/days
+  //  calcAmount(fullMonths + 1, 0, 0, 0),
+  ];
 
   return {
-    rentalAmount,
-    pricePerDay: daily,
-    totalDays:   Math.ceil(hours / 24),
+    rentalAmount: lowest(candidates),
+    pricePerDay:  monthly ? monthly / 30 : (weekly ? weekly / 7 : (daily ?? 0)),
+    totalDays,
   };
 };
-
 export const checkAvailability = async (
   listingId: string,
   startDate: Date,
