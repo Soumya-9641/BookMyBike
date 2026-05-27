@@ -14,7 +14,7 @@ export const sendEmail = async (
   });
 
   const mailOptions = {
-    from: `"RentMyBike" <${process.env.EMAIL_USER}>`,
+    from: `support@rentmy.bike`,
     to,
     subject,
     html,

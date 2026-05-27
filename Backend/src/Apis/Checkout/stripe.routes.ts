@@ -421,7 +421,7 @@ router.patch(
   }
 );
 
-router.post("/price-breakdown", authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post("/price-breakdown", async (req: AuthRequest, res: Response) => {
   try {
     const { listingId, startDate, endDate, hours } = req.body;
    const to2dp = (n: number) => Math.round(n * 100) / 100;
