@@ -109,6 +109,20 @@ export const getAllBookingsService = async () => {
         isSettlementDone:         booking.isSettlementDone ?? false,
         isDisputeCreated: isDisputeCreated,
       },
+       dispute: dispute
+        ? {
+            disputeId:     dispute._id,
+            status:        dispute.status,
+            type:          dispute.type,
+            disputeAmount: dispute.disputeAmount,
+            reason:        dispute.reason,
+            date:          dispute.date,
+            time:          dispute.time,
+            images:        dispute.images ?? [],
+            resolvedAt:    dispute.resolvedAt ?? null,
+            createdAt:     dispute.createdAt,
+          }
+        : null,
 
       // ── Cancellation (only if cancelled) ──
       ...(booking.status === "cancelled" && {
