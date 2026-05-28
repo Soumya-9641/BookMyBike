@@ -461,9 +461,9 @@ export const confirmRideCompletionService = async (bookingId: string, renterId: 
   const isRenter = booking.renterId.toString() === renterId;
   const isOwner  = booking.ownerId.toString()  === renterId;
 
-  if (!isRenter && !isOwner) {
-    throw new Error("Only the renter or owner can confirm completion");
-  }
+  // if (!isRenter && !isOwner) {
+  //   throw new Error("Only the renter or owner can confirm completion");
+  // }
   if (booking.status !== "completionRequested") {
     throw new Error(`Cannot confirm completion. Current status: ${booking.status}`);
   }

@@ -4,6 +4,7 @@ import User from "../../Models/User";
 import Booking from "../../Models/Booking";
 import Payment from "../../Models/Payment";
 import Listing from "../../Models/Listing";
+import Dispute from "../../Models/Dispute";
 
 
 // ─────────────────────────────────────────────────────────────
@@ -59,12 +60,19 @@ export const getAllBookingsService = async () => {
     .sort({ createdAt: -1 })
     .lean();
 
+    const bookingIds = bookings.map((b) => b._id);
+      const disputes   = await Dispute.find({ bookingId: { $in: bookingIds } }).lean();
+    
+      const disputeMap = new Map(
+        disputes.map((d:any) => [d.bookingId.toString(), d])
+      );
   return bookings.map((booking) => {
     const renter  = booking.renterId as any;
     const owner   = booking.ownerId as any;
     const bike    = booking.bikeId as any;
     const payment = booking.paymentId as any;
-
+    const dispute          = disputeMap.get(booking._id.toString()) ?? null;
+  const isDisputeCreated = !!dispute;
     return {
       // ── Booking Core ──
       bookingId: booking._id,
@@ -93,11 +101,13 @@ export const getAllBookingsService = async () => {
 
       // ── Flags ──
       flags: {
+
         renterRequestedStart:     booking.renterRequestedStart ?? false,
         ownerAcceptedStart:       booking.ownerAcceptedStart ?? false,
         ownerRequestedCompletion: booking.ownerRequestedCompletion ?? false,
         renterConfirmedCompletion: booking.renterConfirmedCompletion ?? false,
         isSettlementDone:         booking.isSettlementDone ?? false,
+        isDisputeCreated: isDisputeCreated,
       },
 
       // ── Cancellation (only if cancelled) ──
