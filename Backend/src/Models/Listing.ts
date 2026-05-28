@@ -32,6 +32,7 @@ export interface IListing extends Document {
 
 
   isPublished: boolean;
+  isBlocked: boolean;
   createdAt: Date;
 }
 
@@ -81,6 +82,11 @@ const ListingSchema: Schema<IListing> = new Schema({
   },
 
   isPublished: { type: Boolean, default: false },
+  isBlocked: {
+    type: Boolean,
+    default: false,
+  },
+
   createdAt: { type: Date, default: Date.now }
 });
 ListingSchema.index({ location: "2dsphere" });

@@ -139,7 +139,7 @@ export const searchListingsService = async (params: SearchParams) => {
 
 
 export const getFirstFourBikesService = async () => {
-  const bikes = await Listing.find({ isPublished: true })
+  const bikes = await Listing.find({ isPublished: true , isBlocked:false })
     .sort({ createdAt: -1 }) // latest first
     .limit(4);
 
@@ -156,7 +156,8 @@ export const filterListingsService = async (payload: FilterPayload) => {
   const skip = (page - 1) * limit;
 
   const query: any = {
-    isPublished: true
+    isPublished: true,
+    isBlocked: false
   };
 
 
@@ -215,6 +216,7 @@ export const searchAvailableBikesService = async ({
 
   const bikes = await Listing.find({
     isPublished: true,
+    isBlocked: false,
     _id: { $nin: unavailableBikeIds }
   }).lean();
 
@@ -247,7 +249,7 @@ return { bikes: availableBikes, filters };
 };
 
 export const getAllListingsService = async () => {
-  const bikes = await Listing.find({ isPublished: true })
+  const bikes = await Listing.find({ isPublished: true , isBlocked:false })
     .sort({ createdAt: -1 })
     .lean();
 
@@ -711,4 +713,28 @@ export const updateListingService = async (
   );
 
   return updated;
+};
+
+export const blockUnblockListingService = async (
+  listingId: string,
+  userId: string
+) => {
+
+  const listing = await Listing.findById(listingId);
+
+  if (!listing) {
+    throw new Error("Listing not found");
+  }
+
+  // check actual owner
+  if (listing.ownerId.toString() !== userId) {
+    throw new Error("You are not authorized to modify this listing");
+  }
+
+  // toggle block status
+  listing.isBlocked = !listing.isBlocked;
+
+  await listing.save();
+
+  return listing;
 };
