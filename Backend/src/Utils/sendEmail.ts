@@ -14,13 +14,6 @@ export const sendEmail = async (
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     }
-  // host: "smtp.office365.com",
-  // port: 587,
-  // secure: false,
-  // auth: {
-  //   user: "support@rentmy.bike",
-  //   pass: "Torquay90!"
-  // }
   });
 
   const mailOptions = {
