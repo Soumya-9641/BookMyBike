@@ -5,7 +5,7 @@ import Booking from "../../Models/Booking";
 import Payment from "../../Models/Payment";
 import Listing from "../../Models/Listing";
 import Dispute from "../../Models/Dispute";
-
+import stripe from "../../Utils/stripe";
 
 // ─────────────────────────────────────────────────────────────
 // 1. GET ALL USERS
@@ -688,3 +688,134 @@ export const getAllListingsService = async () => {
   return listings;
 };
 
+export const initiateAdminRefundService = async (
+  bookingId: string,
+  userId: string
+) => {
+  const admin = await User.findById(userId);
+
+  if (!admin || admin.systemRole !== "admin") {
+    throw new Error("Only admin can perform this action");
+  }
+
+  const booking = await Booking.findById(bookingId);
+
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
+
+  // Owner already accepted ride start
+  if (booking.ownerAcceptedStart) {
+    throw new Error(
+      "Ride was already accepted by owner. Admin refund not allowed."
+    );
+  }
+
+  // Ride period not yet over
+  if (new Date() < booking.endDate) {
+    throw new Error(
+      "Ride period has not ended yet."
+    );
+  }
+
+  const payment = await Payment.findOne({
+    bookingId: booking._id,
+    status: "succeeded",
+  });
+
+  if (!payment) {
+    throw new Error("Successful payment not found");
+  }
+
+  if (payment.status === "refunded") {
+    throw new Error("Payment already refunded");
+  }
+
+  if (payment.isRefundInitiatedByAdmin) {
+    throw new Error("Admin refund already initiated");
+  }
+
+  if (!payment.stripePaymentIntentId) {
+    throw new Error("Stripe Payment Intent not found");
+  }
+
+
+  // Create Stripe Refund
+  const refund = await stripe.refunds.create({
+    payment_intent: payment.stripePaymentIntentId,
+    amount: payment.amount * 100,
+     reason: "requested_by_admin",
+  });
+
+  const now = new Date();
+
+  // Update Payment
+  payment.status = "refunded";
+  payment.refundAmount = payment.amount;
+  payment.refundedAt = now;
+  payment.stripeRefundId = refund.id;
+
+  payment.isRefundInitiatedByAdmin = true;
+  payment.adminRefundInitiatedAt = now;
+ 
+
+  payment.refundReason =
+    "Admin initiated refund because owner never accepted ride start request.";
+
+  await payment.save();
+
+  // Update Booking
+  booking.status = "cancelled";
+  booking.cancelledBy = "admin";
+  booking.cancelledAt = now;
+  booking.cancellationReason =
+    "Booking automatically cancelled. Owner never accepted ride start request before ride end time.";
+
+  await booking.save();
+
+  return {
+    success: true,
+    bookingId: booking._id,
+    paymentId: payment._id,
+    refundId: refund.id,
+    refundedAmount: payment.amount,
+    refundedAt: now,
+    message:
+      "Refund successfully initiated because owner never accepted ride start request.",
+  };
+};
+
+
+export const getAdminRefundEligibleBookingsService = async (
+  userId: string
+) => {
+  const admin = await User.findById(userId);
+
+  if (!admin || admin.systemRole !== "admin") {
+    throw new Error("Only admin can access this resource");
+  }
+
+  const currentDate = new Date();
+
+  const bookings = await Booking.find({
+    ownerAcceptedStart: false,
+    endDate: { $lt: currentDate },
+  })
+    .select("_id")
+    .lean();
+
+  const bookingIds = bookings.map((booking) => booking._id);
+
+  const payments = await Payment.find({
+    bookingId: { $in: bookingIds },
+    status: "succeeded",
+    isRefundInitiatedByAdmin: false,
+  })
+    .select("bookingId")
+    .lean();
+
+  return {
+    count: payments.length,
+    bookingIds: payments.map((payment) => payment.bookingId),
+  };
+};

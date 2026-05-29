@@ -49,7 +49,8 @@ export interface IPayment extends Document {
   refundAmount?: number;
   refundReason?: string;
   refundedAt?: Date;
-
+  isRefundInitiatedByAdmin?: boolean;
+adminRefundInitiatedAt?: Date;
   // Metadata
   description?: string;
   failureReason?: string;
@@ -171,6 +172,14 @@ const PaymentSchema = new Schema<IPayment>(
     refundedAt: {
       type: Date,
     },
+    isRefundInitiatedByAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    adminRefundInitiatedAt: {
+  type: Date,
+  default: null,
+},
 
     // ── Metadata ──
     description: {
@@ -184,7 +193,7 @@ const PaymentSchema = new Schema<IPayment>(
     },
   },
   {
-    timestamps: true, // createdAt, updatedAt auto-managed
+    timestamps: true,
   }
 );
 
@@ -194,6 +203,5 @@ PaymentSchema.index({ bookingId: 1, type: 1 });
 PaymentSchema.index({ payerId: 1, status: 1 });
 PaymentSchema.index({ stripePaymentIntentId: 1 });
 
-// ─── Export ───────────────────────────────────────────────────────────────────
 
 export default mongoose.model<IPayment>("Payment", PaymentSchema);
