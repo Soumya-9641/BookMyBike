@@ -2,10 +2,12 @@ import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
 import AuthWatcher from "./components/Authwatcher";
 import AdminAuthHydrator from "./components/AdminAuthHyderator";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AdminAuthHydrator />
       <AuthWatcher />
       <AppRoutes />

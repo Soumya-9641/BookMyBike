@@ -133,7 +133,7 @@ const HowItWorks = () => {
         ))}
       </Stack>
       <Alert variant="filled" severity="info" sx={{ mt: 3, fontWeight:700 }}>
-        Confirm Pick-up in “My bookings” to activate your ride” & “Confirm Drop-off in “My bookings” to end your ride and initiate your payout
+        Confirm Pick-up in “My Rides” to activate your ride” & “Confirm Drop-off in “My Rides” to end your ride and initiate your payout
       </Alert>
     </Box>
   );

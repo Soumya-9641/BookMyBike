@@ -9,10 +9,7 @@ import {
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useSignupMutation } from "../services/authApi";
-import {
-  useSendOtpMutation,
-  useVerifyOtpMutation,
-} from "../services/authApi";
+import { useSendOtpMutation, useVerifyOtpMutation } from "../services/authApi";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
@@ -30,7 +27,7 @@ const Register = () => {
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",        // international format without +
+    phone: "", // international format without +
     password: "",
   });
 
@@ -57,9 +54,9 @@ const Register = () => {
   /* -------------------- HANDLERS -------------------- */
   const handleChange =
     (field: keyof typeof formData) =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [field]: e.target.value });
-      };
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData({ ...formData, [field]: e.target.value });
+    };
 
   const handleSendOtp = async () => {
     try {
@@ -105,15 +102,17 @@ const Register = () => {
 
   /* -------------------- UI -------------------- */
   return (
-    <Box sx={{
-      minHeight: "calc(100vh - 160px)",
-      background:
-        "radial-gradient(circle at center, #a8e6c2 0%, #c9f3dc 40%, #2faa54 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      py: 6,
-    }}>
+    <Box
+      sx={{
+        minHeight: "calc(100vh - 160px)",
+        background:
+          "radial-gradient(circle at center, #a8e6c2 0%, #c9f3dc 40%, #2faa54 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        py: 6,
+      }}
+    >
       <Box maxWidth="lg" mx="auto" px={2} mt={4} mb={8}>
         <Paper sx={{ p: 4, maxWidth: 600, mx: "auto" }}>
           <Typography fontWeight={700} mb={3}>
@@ -219,11 +218,48 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange("password")}
             />
-            <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Checkbox required checked={termsChecked} onChange={(e) => setTermsChecked(e.target.checked)} /> By Registering, I agree to the
-              <RouterLink to="/termsConditions" style={{ textDecoration: "none", color: "#22a652", fontWeight: 600 }}>
-                Terms and Conditions.
-              </RouterLink>
+            <div style={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+              <Checkbox
+                required
+                checked={termsChecked}
+                onChange={(e) => setTermsChecked(e.target.checked)}
+                sx={{ p: 0, mt: 0 }}
+              />
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 0.5,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  By Registering, I agree to the
+                  <RouterLink
+                    to="/termsConditions"
+                    style={{
+                      textDecoration: "none",
+                      color: "#22a652",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Terms Of Service
+                  </RouterLink>
+                  {" "} and
+                </div>
+                <RouterLink
+                  to="/user-agreement"
+                  style={{
+                    textDecoration: "none",
+                    color: "#22a652",
+                    fontWeight: 600,
+                  }}
+                >
+                  User(rental) Agreement
+                </RouterLink>
+              </div>
             </div>
             <Button
               variant="contained"

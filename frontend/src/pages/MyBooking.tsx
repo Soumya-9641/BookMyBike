@@ -23,7 +23,7 @@ const MyBookings = () => {
       <AccountTabs />
 
       <Typography variant="h5" mb={3} fontWeight={700}>
-        My Bookings
+        My Rides
       </Typography>
 
       <BookingTable bookings={data?.bookings || []} refetch={refetch} />

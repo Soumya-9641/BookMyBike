@@ -21,7 +21,7 @@ const OwnerBookings = () => {
     >
       <AccountTabs />
       <Typography variant="h5" mb={2} fontWeight={700}>
-        Owner Bookings
+        My Rentals
       </Typography>
 
       <BookingTable

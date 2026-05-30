@@ -12,10 +12,10 @@ const AccountTabs = () => {
 
   const tabs = [
     { label: "My Account", path: "/my-account" },
-    { label: "My Bookings", path: "/my-bookings" },
+    { label: "My Rides", path: "/my-bookings" },
     ...(canCreateListing
       ? [
-          { label: "Owner Bookings", path: "/owner-bookings" },
+          { label: "My Rentals", path: "/owner-bookings" },
           { label: "My Listings", path: "/my-listings" },
         ]
       : [{ label: "My Refunds", path: "/my-refunds" }]),

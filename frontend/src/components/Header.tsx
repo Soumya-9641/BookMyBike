@@ -180,7 +180,7 @@ const Header = () => {
                     to="/my-bookings"
                     onClick={closeAccountMenu}
                   >
-                    My Bookings
+                    My Rides
                   </MenuItem>
                   {canCreateListing && (
                     <MenuItem
@@ -188,7 +188,7 @@ const Header = () => {
                       to="/owner-bookings"
                       onClick={closeAccountMenu}
                     >
-                      Owner Bookings
+                      My Rentals
                     </MenuItem>)}
                   {!canCreateListing ? (
                     <MenuItem
@@ -298,7 +298,7 @@ const Header = () => {
                   to="/my-bookings"
                   onClick={() => setDrawerOpen(false)}
                 >
-                  My Bookings
+                  My Rides
                 </Button>
                 {canCreateListing && (
                   <Button
@@ -306,7 +306,7 @@ const Header = () => {
                     to="/owner-bookings"
                     onClick={() => setDrawerOpen(false)}
                   >
-                    Owner Bookings
+                    My Rentals
                   </Button>)}
                 {!canCreateListing ? (
                   <Button

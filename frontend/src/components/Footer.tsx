@@ -6,6 +6,7 @@ import {
   IconButton,
   Divider,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import XIcon from "@mui/icons-material/X";
 import InstagramIcon from "@mui/icons-material/Instagram";
@@ -39,8 +40,7 @@ const Footer = () => {
             </Typography>
 
             <Typography variant="body2">
-              AB Org.nr:{" "}
-              <span style={{ color: "#22a652" }}>559542-5843</span>
+              AB Org.nr: <span style={{ color: "#22a652" }}>559542-5843</span>
             </Typography>
 
             <Typography variant="body2">Registered in Sweden</Typography>
@@ -50,52 +50,101 @@ const Footer = () => {
 
           {/* CENTER: Important Links */}
           <Stack spacing={2}>
-            <Typography
-              sx={{ color: "#22a652", fontWeight: 600 }}
-            >
+            <Typography sx={{ color: "#22a652", fontWeight: 600 }}>
               IMPORTANT LINKS
             </Typography>
 
             <Stack direction="row" spacing={6}>
               <Stack spacing={1}>
-                {[
-                  "Home",
-                  "About us",
-                  "How it works",
-                  "Browse bikes",
-                ].map((item) => (
+                {["Home", "How it works", "Browse bikes"].map((item) => (
                   <Typography key={item} variant="body2">
                     »{" "}
-                    <Link href="#" underline="none" color="inherit">
-                      {item}
-                    </Link>
+                    {item === "Home" ? (
+                      <Link component={RouterLink} to="/home" underline="none" color="inherit">
+                        {item}
+                      </Link>
+                    ) : item === "Browse bikes" ? (
+                      <Link component={RouterLink} to="/browse-bikes" underline="none" color="inherit">
+                        {item}
+                      </Link>
+                    ) : (
+                      <Link href="#" underline="none" color="inherit">
+                        {item}
+                      </Link>
+                    )}
                   </Typography>
                 ))}
               </Stack>
 
               <Stack spacing={1}>
-                {[
-                  "Privacy policy",
-                  "Terms and conditions",
-                  "Cancellation policy",
-                  "Site Map",
-                ].map((item) => (
-                  <Typography key={item} variant="body2">
-                    »{" "}
-                    <Link href="#" underline="none" color="inherit">
-                      {item}
-                    </Link>
-                  </Typography>
-                ))}
+                <Typography variant="body2">
+                  »{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/user-agreement"
+                    underline="none"
+                    color="inherit"
+                  >
+                    User agreement
+                  </Link>
+                </Typography>
+                <Typography variant="body2">
+                  »{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/privacy-policy"
+                    underline="none"
+                    color="inherit"
+                  >
+                    Privacy policy
+                  </Link>
+                </Typography>
+                <Typography variant="body2">
+                  »{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/termsConditions"
+                    underline="none"
+                    color="inherit"
+                  >
+                    Terms and conditions
+                  </Link>
+                </Typography>
+                <Typography variant="body2">
+                  »{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/cancellation-policy"
+                    underline="none"
+                    color="inherit"
+                  >
+                    Cancellation policy
+                  </Link>
+                </Typography>
+                <Typography variant="body2">
+                  »{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/dispute-resolution"
+                    underline="none"
+                    color="inherit"
+                  >
+                    Dispute resolution
+                  </Link>
+                </Typography>
+                <Typography variant="body2">
+                  »{" "}
+                  <Link href="#" underline="none" color="inherit">
+                    Site Map
+                  </Link>
+                </Typography>
               </Stack>
             </Stack>
           </Stack>
 
           {/* RIGHT: Social Links */}
           <Stack spacing={2}>
-            <Typography
-              sx={{ color: "#22a652", fontWeight: 600 }}
-            >
+            <Typography sx={{ color: "#22a652", fontWeight: 600 }}>
               FOLLOW US ON
             </Typography>
 

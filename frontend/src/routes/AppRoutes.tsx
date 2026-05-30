@@ -29,6 +29,10 @@ import ComingSoon from "../pages/ComingSoon";
 import MyRefunds from "../pages/MyRefunds";
 import MyListings from "../pages/MyListing";
 import EditListing from "../pages/EditListings";
+import UserAgreement from "../components/legal/UserAgreement";
+import TermsOfService from "../components/legal/TermsOfService";
+import DisputeResolution from "../components/legal/DisputeResolution";
+import CancellationPolicy from "../components/legal/CancellationPolicy";
 
 /* Admin Pages */
 import AdminLogin from "../pages/admin/AdminLogin";
@@ -41,6 +45,7 @@ import AdminChangePassword from "../components/admin/AdminChangePassword";
 import AdminListings from "../pages/admin/AdminListings";
 import AdminBookings from "../pages/admin/AdminBookings";
 import AdminEditListingModal from "../pages/admin/AdminEditListingModal";
+import PrivacyPolicy from "../components/legal/PrivacyPolicy";
 
 const AppRoutes = () => {
   return (
@@ -82,6 +87,11 @@ const AppRoutes = () => {
         <Route path="/browse-bikes" element={<BrowseBikes />} />
         <Route path="/bikes/:id" element={<BikeDetails />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/user-agreement" element={<UserAgreement />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/termsConditions" element={<TermsOfService />} />
+        <Route path="/dispute-resolution" element={<DisputeResolution />} />
+        <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/create-listing" element={<CreateListing />} />

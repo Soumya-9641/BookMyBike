@@ -7,10 +7,13 @@ import {
   Stack,
   Button,
   Box,
+  Switch,
 } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import ListingDetailsModal from "./ListingDetailsModal";
+import { useBlockUnblockListingMutation } from "../services/listingApi";
+import { toast } from "react-hot-toast";
 
 interface Props {
   listing: any;
@@ -29,7 +32,8 @@ const ListingCard = ({ listing, isAdmin = false }: Props) => {
   const model = listing?.bike?.modelbike ?? listing?.modelbike ?? "—";
   const category = listing?.bike?.category ?? listing?.category ?? "—";
   const rates = listing?.rates ?? {};
-
+  const [blockUnblockListing, { isLoading: isBlocking }] =
+    useBlockUnblockListingMutation();
   return (
     <>
       <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -80,9 +84,7 @@ const ListingCard = ({ listing, isAdmin = false }: Props) => {
           {/* PRICING */}
           <Box mt={2}>
             {rates.daily && (
-              <Typography variant="body2">
-                Daily: SEK {rates.daily}
-              </Typography>
+              <Typography variant="body2">Daily: SEK {rates.daily}</Typography>
             )}
             {rates.hourly && (
               <Typography variant="body2">
@@ -104,6 +106,29 @@ const ListingCard = ({ listing, isAdmin = false }: Props) => {
 
         {/* ACTIONS */}
         <Stack direction="row" spacing={1} p={2} pt={0}>
+          <Switch
+            checked={!listing?.isBlocked}
+            color="success"
+            disabled={isBlocking}
+            onChange={async () => {
+              try {
+                await blockUnblockListing(
+                  listing.listingId || listing._id,
+                ).unwrap();
+
+                toast.success(
+                  listing?.isBlocked
+                    ? "Listing unblocked successfully"
+                    : "Listing blocked successfully",
+                );
+              } catch (error: any) {
+                toast.error(
+                  error?.data?.message || "Failed to update listing status",
+                );
+              }
+            }}
+          />
+
           <Button
             size="small"
             variant="outlined"
@@ -120,10 +145,11 @@ const ListingCard = ({ listing, isAdmin = false }: Props) => {
               color="warning"
               fullWidth
               component={RouterLink}
-            to={`/edit-listing/${listing.listingId}`}
-          >
-            Edit
-          </Button>)}
+              to={`/edit-listing/${listing.listingId}`}
+            >
+              Edit
+            </Button>
+          )}
         </Stack>
       </Card>
 
