@@ -5,7 +5,9 @@ import { addAdminService, deleteUserService, getAdminStatsService, getAllUsersSe
    getAllBookingsService, 
    changeAdminPasswordService,
    getAllListingsService,
-   updateListingService} from "./admin.service";
+   updateListingService,
+   initiateAdminRefundService,
+   getAdminRefundEligibleBookingsService} from "./admin.service";
 import { AuthRequest } from "../../types/auth-request";
 import mongoose from "mongoose";
 import { uploadBikeImages } from "../../Middlewares/upload.middleware";
@@ -123,6 +125,23 @@ router.get(
       res.status(500).json({
         success: false,
         message: error.message || "Failed to fetch bookings",
+      });
+    }
+  }
+);
+
+router.get(
+  "/admin-refund-eligible-bookings",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await getAdminRefundEligibleBookingsService(
+        req.user!.userId.toString()
+      );
+
+      res.status(200).json(result);
+    } catch (error: any) {
+      res.status(400).json({
+        message: error.message,
       });
     }
   }
@@ -273,6 +292,26 @@ router.put(
     } catch (error: any) {
       res.status(500).json({
         message: error.message || "Failed to update listing",
+      });
+    }
+  }
+);
+
+
+router.post(
+  "/:bookingId/admin-refund",
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await initiateAdminRefundService(
+        req.params.bookingId,
+        req.user!.userId.toString()
+      );
+
+      res.status(200).json(result);
+    } catch (error: any) {
+      res.status(400).json({
+        message: error.message,
       });
     }
   }

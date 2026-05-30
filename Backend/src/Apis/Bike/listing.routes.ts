@@ -8,7 +8,8 @@ import {
   searchAvailableBikesService, getAllListingsService, getListingByIdService,
   requestRideStartService, acceptRideStartService, requestRideCompletionService,
   updateListingService,
-  confirmRideCompletionService
+  confirmRideCompletionService,
+  blockUnblockListingService
 } from "./listing.service";
 import { uploadBikeImages } from "../../Middlewares/upload.middleware";
 import { AuthRequest } from "../../types/auth-request";
@@ -464,4 +465,29 @@ router.patch(
   }
 );
 
+router.patch(
+  "/:id/block-listing",
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+
+      const listing = await blockUnblockListingService(
+        req.params.id,
+        req.user!.userId.toString()
+      );
+
+      res.status(200).json({
+        message: listing.isBlocked
+          ? "Listing blocked successfully"
+          : "Listing unblocked successfully",
+        listing,
+      });
+
+    } catch (error: any) {
+      res.status(400).json({
+        message: error.message,
+      });
+    }
+  }
+);
 export default router;
