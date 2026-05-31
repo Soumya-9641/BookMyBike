@@ -727,9 +727,9 @@ export const blockUnblockListingService = async (
   }
 
   // check actual owner
-  if (listing.ownerId.toString() !== userId) {
-    throw new Error("You are not authorized to modify this listing");
-  }
+  // if (listing.ownerId.toString() !== userId) {
+  //   throw new Error("You are not authorized to modify this listing");
+  // }
 
   // toggle block status
   listing.isBlocked = !listing.isBlocked;

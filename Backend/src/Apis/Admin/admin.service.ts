@@ -71,8 +71,10 @@ export const getAllBookingsService = async () => {
     const owner   = booking.ownerId as any;
     const bike    = booking.bikeId as any;
     const payment = booking.paymentId as any;
+
     const dispute          = disputeMap.get(booking._id.toString()) ?? null;
   const isDisputeCreated = !!dispute;
+  
     return {
       // ── Booking Core ──
       bookingId: booking._id,
@@ -85,7 +87,7 @@ export const getAllBookingsService = async () => {
 
       // ── Pricing Snapshot ──
       pricing: {
-        pricePerDay:     booking.pricePerDay,
+        pricePerDay:    bike?.rates?.daily,
         totalAmount:     booking.totalAmount,
         securityDeposit: booking.securityDeposit ?? 0,
         currency:        booking.currency,

@@ -304,7 +304,8 @@ export const getOwnerListingsService = async (ownerId: Types.ObjectId) => {
     description: listing.description ?? null,
     isPublished: listing.isPublished,
     createdAt: listing.createdAt,
-
+    isBlocked: listing.isBlocked ?? false,
+    
     // ── Bike Details ──
     bike: {
       brand: listing.brand,
