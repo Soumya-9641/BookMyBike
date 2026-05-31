@@ -46,6 +46,7 @@ import AdminListings from "../pages/admin/AdminListings";
 import AdminBookings from "../pages/admin/AdminBookings";
 import AdminEditListingModal from "../pages/admin/AdminEditListingModal";
 import PrivacyPolicy from "../components/legal/PrivacyPolicy";
+import HowItWorksFooter from "../components/HowItWorksFooter";
 
 const AppRoutes = () => {
   return (
@@ -92,6 +93,7 @@ const AppRoutes = () => {
         <Route path="/termsConditions" element={<TermsOfService />} />
         <Route path="/dispute-resolution" element={<DisputeResolution />} />
         <Route path="/cancellation-policy" element={<CancellationPolicy />} />
+        <Route path="/how-it-works" element={<HowItWorksFooter />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/create-listing" element={<CreateListing />} />

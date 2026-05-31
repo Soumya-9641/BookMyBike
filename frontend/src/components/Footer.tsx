@@ -60,11 +60,30 @@ const Footer = () => {
                   <Typography key={item} variant="body2">
                     »{" "}
                     {item === "Home" ? (
-                      <Link component={RouterLink} to="/home" underline="none" color="inherit">
+                      <Link
+                        component={RouterLink}
+                        to="/home"
+                        underline="none"
+                        color="inherit"
+                      >
                         {item}
                       </Link>
                     ) : item === "Browse bikes" ? (
-                      <Link component={RouterLink} to="/browse-bikes" underline="none" color="inherit">
+                      <Link
+                        component={RouterLink}
+                        to="/browse-bikes"
+                        underline="none"
+                        color="inherit"
+                      >
+                        {item}
+                      </Link>
+                    ) : item === "How it works" ? (
+                      <Link
+                        component={RouterLink}
+                        to="/how-it-works"
+                        underline="none"
+                        color="inherit"
+                      >
                         {item}
                       </Link>
                     ) : (
@@ -130,12 +149,6 @@ const Footer = () => {
                     color="inherit"
                   >
                     Dispute resolution
-                  </Link>
-                </Typography>
-                <Typography variant="body2">
-                  »{" "}
-                  <Link href="#" underline="none" color="inherit">
-                    Site Map
                   </Link>
                 </Typography>
               </Stack>

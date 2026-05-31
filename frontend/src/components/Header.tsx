@@ -104,10 +104,6 @@ const Header = () => {
               Home
             </Button>
 
-            <Button component={RouterLink} to="/about">
-              About
-            </Button>
-
             <Button component={RouterLink} to="/browse-bikes">
               Browse Bikes
             </Button>
@@ -249,14 +245,6 @@ const Header = () => {
               onClick={() => setDrawerOpen(false)}
             >
               Home
-            </Button>
-
-            <Button
-              component={RouterLink}
-              to="/about"
-              onClick={() => setDrawerOpen(false)}
-            >
-              About
             </Button>
 
             <Button component={RouterLink}

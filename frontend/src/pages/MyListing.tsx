@@ -9,7 +9,7 @@ import ListingCard from "../components/ListingCard";
 import AccountTabs from "../components/AccountTabs";
 
 const MyListings = () => {
-    const { data, isLoading } = useGetMyListingsQuery();
+    const { data, isLoading , refetch} = useGetMyListingsQuery();
     if (isLoading)
         return (
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
@@ -32,7 +32,8 @@ const MyListings = () => {
             ) : (
                 <Grid container spacing={3}>
                     {data?.listings.map((listing) => (
-                        <ListingCard listing={listing} key={listing.listingId} />
+                        <ListingCard listing={listing} key={listing.listingId} 
+                        refetch={refetch} />
                     ))}
                 </Grid>
             )}

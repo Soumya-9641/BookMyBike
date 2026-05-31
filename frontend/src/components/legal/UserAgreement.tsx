@@ -1,4 +1,4 @@
-import { Typography, Box } from "@mui/material";
+import { Typography, Box, Link } from "@mui/material";
 import LegalLayout from "./LegalLayout";
 
 const UserAgreement = () => {
@@ -10,10 +10,9 @@ const UserAgreement = () => {
       </Typography>
 
       <Typography paragraph>
-        NOTE: RentMyBike (RM Platforms AB) is an intermediary only.
-        RentMyBike (RM Platforms AB) facilitates listings, bookings, payments,
-        and deposits between Owners and Renters but is not a party to the rental
-        contract.
+        NOTE: RentMyBike (RM Platforms AB) is an intermediary only. RentMyBike
+        (RM Platforms AB) facilitates listings, bookings, payments, and deposits
+        between Owners and Renters but is not a party to the rental contract.
       </Typography>
 
       <Typography variant="h6" fontWeight={600} mt={3}>
@@ -22,8 +21,8 @@ const UserAgreement = () => {
       <Typography paragraph>
         This User (Rental) Agreement (“Agreement”) governs each individual
         bicycle rental transaction between a Bicycle Owner (“Owner”) and a
-        Renter (“Renter”) conducted through the platform operated by RM Platforms
-        AB (“RentMyBike”, “we”, “us”, or “the Platform”).
+        Renter (“Renter”) conducted through the platform operated by RM
+        Platforms AB (“RentMyBike”, “we”, “us”, or “the Platform”).
       </Typography>
 
       <Typography variant="h6" fontWeight={600} mt={3}>
@@ -31,8 +30,8 @@ const UserAgreement = () => {
       </Typography>
       <Box component="ul" sx={{ pl: 3, mb: 2 }}>
         <Typography component="li" paragraph>
-          <strong>Owner:</strong> The individual or entity offering a bicycle for
-          rent on the platform.
+          <strong>Owner:</strong> The individual or entity offering a bicycle
+          for rent on the platform.
         </Typography>
         <Typography component="li" paragraph>
           <strong>Renter:</strong> The individual or entity renting a bicycle
@@ -56,8 +55,8 @@ const UserAgreement = () => {
       </Box>
       <Typography paragraph>
         At that moment, both Owner and Renter agree to comply with this
-        Agreement, the Terms of Service, the Cancellation Policy, and the Dispute
-        Resolution Policy.
+        Agreement, the Terms of Service, the Cancellation Policy, and the
+        Dispute Resolution Policy.
       </Typography>
 
       <Typography variant="h6" fontWeight={600} mt={3}>
@@ -125,9 +124,9 @@ const UserAgreement = () => {
       </Typography>
       <Box component="ul" sx={{ pl: 3, mb: 2 }}>
         <Typography component="li" paragraph>
-          All payments and deposits are processed securely through Stripe. Payment
-          processing services are provided by Stripe and subject to Stripe’s own
-          terms and privacy practices.
+          All payments and deposits are processed securely through Stripe.
+          Payment processing services are provided by Stripe and subject to
+          Stripe’s own terms and privacy practices.
         </Typography>
         <Typography component="li" paragraph>
           A security deposit may be pre-authorized at the time of booking.
@@ -139,8 +138,8 @@ const UserAgreement = () => {
         <Typography component="li" paragraph>
           In the event of a claim or dispute, RentMyBike (RM Platforms AB) may
           review evidence submitted by both parties in good faith and determine
-          whether to release or withhold all or part of the deposit. Evidence may
-          include photographs, timestamps, repair invoices, police reports,
+          whether to release or withhold all or part of the deposit. Evidence
+          may include photographs, timestamps, repair invoices, police reports,
           communication records, and other relevant documentation.
         </Typography>
         <Typography component="li" paragraph>
@@ -174,8 +173,8 @@ const UserAgreement = () => {
         RentMyBike may offer optional insurance coverage via a third-party
         provider that can be purchased at checkout. Any insurance product
         offered through the platform is provided by a third-party insurer and
-        subject to separate policy terms, conditions, exclusions, and eligibility
-        requirements.
+        subject to separate policy terms, conditions, exclusions, and
+        eligibility requirements.
       </Typography>
 
       <Typography variant="h6" fontWeight={600} mt={3}>
@@ -207,10 +206,10 @@ const UserAgreement = () => {
           listing, booking terms, or applicable platform policies.
         </Typography>
         <Typography component="li" paragraph>
-          To the maximum extent permitted by applicable law, RentMyBike shall not
-          be liable for indirect, incidental, special, or consequential damages.
-          Nothing in this Agreement excludes or limits liability that cannot be
-          excluded under applicable law.
+          To the maximum extent permitted by applicable law, RentMyBike shall
+          not be liable for indirect, incidental, special, or consequential
+          damages. Nothing in this Agreement excludes or limits liability that
+          cannot be excluded under applicable law.
         </Typography>
       </Box>
 
@@ -220,8 +219,8 @@ const UserAgreement = () => {
       <Box component="ul" sx={{ pl: 3, mb: 2 }}>
         <Typography component="li" paragraph>
           Users must first attempt to resolve disputes directly through the
-          platform’s communication system or email with disputes@rentmy.bike on CC
-          for the entire conversation thread.
+          platform’s communication system or email with disputes@rentmy.bike on
+          CC for the entire conversation thread.
         </Typography>
         <Typography component="li" paragraph>
           If unresolved, RentMyBike may act as a neutral intermediary for the
@@ -295,16 +294,20 @@ const UserAgreement = () => {
       </Box>
 
       <Typography paragraph>
-        NOTE: RentMyBike (RM Platforms AB) is an intermediary only.
-        RentMyBike (RM Platforms AB) facilitates listings, bookings, payments,
-        and deposits between Owners and Renters but is not a party to the rental
-        contract.
+        NOTE: RentMyBike (RM Platforms AB) is an intermediary only. RentMyBike
+        (RM Platforms AB) facilitates listings, bookings, payments, and deposits
+        between Owners and Renters but is not a party to the rental contract.
       </Typography>
 
-      <Typography paragraph>
+      <Typography variant="h6" fontWeight={600} mt={3}>
         Contact
+      </Typography>
+      <Typography paragraph>
         If you have questions or concerns, contact us at:
-        Email: support@rentmy.bike
+        <br />
+        Email:{" "}
+        <Link href="mailto:support@rentmy.bike">support@rentmy.bike</Link>
+        <br />
         RM Platforms AB
       </Typography>
     </LegalLayout>

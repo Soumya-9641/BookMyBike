@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import { Link, Typography } from "@mui/material";
 import LegalLayout from "./LegalLayout";
 
 const DisputeResolution = () => {
@@ -116,9 +116,9 @@ const DisputeResolution = () => {
       <Typography paragraph>
         For support, dispute submissions, or legal inquiries, contact us at:
         <br />
-        Email: <a href="mailto:support@rentmy.bike">support@rentmy.bike</a>
+        Email: <Link href="mailto:support@rentmy.bike">support@rentmy.bike</Link>
         <br />
-        Disputes: <a href="mailto:disputes@rentmy.bike">disputes@rentmy.bike</a>
+        Disputes: <Link href="mailto:disputes@rentmy.bike">disputes@rentmy.bike</Link>
       </Typography>
     </LegalLayout>
   );

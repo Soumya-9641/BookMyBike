@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import { Link, Typography } from "@mui/material";
 import LegalLayout from "./LegalLayout";
 
 const CancellationPolicy = () => {
@@ -86,7 +86,7 @@ const CancellationPolicy = () => {
       <Typography paragraph>
         If you have questions or concerns, contact us at:
         <br />
-        Email: <a href="mailto:support@rentmy.bike">support@rentmy.bike</a>
+        Email: <Link href="mailto:support@rentmy.bike">support@rentmy.bike</Link>
         <br />
         RM Platforms AB
       </Typography>

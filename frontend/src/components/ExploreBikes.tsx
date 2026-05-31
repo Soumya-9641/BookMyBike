@@ -3,7 +3,8 @@ import { useGetHomeBikesQuery } from "../services/listingApi";
 import BikeCard from "./BikeCard";
 
 const ExploreBikes = () => {
-  const { data, isLoading, isError } = useGetHomeBikesQuery();
+  // pass undefined as the query arg and provide options as the second parameter
+  const { data, isLoading, isError } = useGetHomeBikesQuery(undefined, { refetchOnMountOrArgChange: true });
 
   if (isLoading) {
     return (

@@ -10,7 +10,14 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Users", "Stats", "Disputes", "Dispute", "AdminListings"],
+  tagTypes: [
+    "Users",
+    "Stats",
+    "Disputes",
+    "Dispute",
+    "AdminListings",
+    "AdminBookings",
+  ],
   endpoints: (builder) => ({
     /* ---------------- USERS ---------------- */
     getAllUsers: builder.query<any, void>({
@@ -80,6 +87,22 @@ export const adminApi = createApi({
       transformResponse: (res: any) => res.bookings,
     }),
 
+    adminRefundEligibleBookings: builder.query<
+      { count: number; bookingIds: string[] },
+      void
+    >({
+      query: () => "/adminstats/admin-refund-eligible-bookings",
+      providesTags: ["AdminBookings"],
+    }),
+
+    adminRefundBooking: builder.mutation<any, string>({
+      query: (bookingId) => ({
+        url: `/adminstats/${bookingId}/admin-refund`,
+        method: "POST",
+      }),
+      invalidatesTags: ["AdminBookings"],
+    }),
+
     getAllListings: builder.query<any[], void>({
       query: () => "/adminstats/alllistings",
       transformResponse: (res: any) => res.listings,
@@ -94,7 +117,6 @@ export const adminApi = createApi({
         method: "PATCH",
         body,
       }),
-      
     }),
     completeAdminRide: builder.mutation<
       { success: boolean },
@@ -117,10 +139,7 @@ export const adminApi = createApi({
       }),
       invalidatesTags: ["AdminListings"],
     }),
-    
-
   }),
-
 });
 
 export const {
@@ -133,6 +152,8 @@ export const {
   useGetDisputeDetailQuery,
   useUpdateDisputeMutation,
   useGetAllBookingsQuery,
+  useAdminRefundEligibleBookingsQuery,
+  useAdminRefundBookingMutation,
   useGetAllListingsQuery,
   useChangeAdminPasswordMutation,
   useEditListingAsAdminMutation,

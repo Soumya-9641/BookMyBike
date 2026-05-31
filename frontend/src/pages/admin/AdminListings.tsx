@@ -23,9 +23,9 @@ import ListingDetailsModal from "../../components/ListingDetailsModal";
 import { toast } from "react-hot-toast";
 
 const AdminListings = () => {
-  const { data, isLoading } = useGetAllListingsQuery();
+  const { data, isLoading, refetch } = useGetAllListingsQuery();
   const navigate = useNavigate();
-  const [blockUnblockListing] = useBlockUnblockListingMutation();
+  const [blockUnblockListing, { isLoading: isToggling }] = useBlockUnblockListingMutation();
   const [selectedListing, setSelectedListing] = useState<any>(null);
 
   if (isLoading) {
@@ -113,6 +113,7 @@ const AdminListings = () => {
                       <Switch
                         checked={!listing?.isBlocked}
                         color="success"
+                        disabled={isToggling}
                         onChange={async () => {
                           try {
                             await blockUnblockListing(
@@ -124,6 +125,8 @@ const AdminListings = () => {
                                 ? "Listing unblocked successfully"
                                 : "Listing blocked successfully",
                             );
+
+                            refetch();
                           } catch (error: any) {
                             toast.error(
                               error?.data?.message ||

@@ -18,9 +18,10 @@ import { toast } from "react-hot-toast";
 interface Props {
   listing: any;
   isAdmin?: boolean;
+  refetch?: () => void;
 }
 
-const ListingCard = ({ listing, isAdmin = false }: Props) => {
+const ListingCard = ({ listing, isAdmin = false, refetch }: Props) => {
   const [open, setOpen] = useState(false);
 
   /**
@@ -116,6 +117,7 @@ const ListingCard = ({ listing, isAdmin = false }: Props) => {
                   listing.listingId || listing._id,
                 ).unwrap();
 
+                refetch?.();
                 toast.success(
                   listing?.isBlocked
                     ? "Listing unblocked successfully"

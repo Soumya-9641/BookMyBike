@@ -20,7 +20,10 @@ import {
   useCreateDisputeMutation,
 } from "../../services/bookingApi";
 import { useCompleteRideMutation } from "../../services/stripeApi";
-
+import {
+  useAdminRefundBookingMutation,
+  useAdminRefundEligibleBookingsQuery,
+} from "../../services/adminApi";
 interface Props {
   bookings: any[];
   refetch?: () => void;
@@ -32,7 +35,25 @@ const AdminBookingTable = ({ bookings, refetch }: Props) => {
   const [confirmCompletion] = useConfirmRideCompletionMutation();
   const [createDispute] = useCreateDisputeMutation();
   const [completeRide] = useCompleteRideMutation();
+  const { data: refundEligibleData } = useAdminRefundEligibleBookingsQuery();
 
+  const [adminRefundBooking] = useAdminRefundBookingMutation();
+
+  const refundableBookingIds = new Set(
+    refundEligibleData?.bookingIds?.map(String) || [],
+  );
+
+  const handleAdminRefund = async (booking: any) => {
+    try {
+      await adminRefundBooking(booking.bookingId || booking._id).unwrap();
+
+      toast.success("Refund initiated successfully");
+
+      refetch?.();
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to initiate refund");
+    }
+  };
   /* -------------------- CONFIRM DROP-OFF -------------------- */
   const handleConfirmDropOff = async (booking: any) => {
     try {
@@ -110,11 +131,12 @@ const AdminBookingTable = ({ bookings, refetch }: Props) => {
           <TableBody>
             {bookings.map((b: any, idx: number) => {
               const flags = b.flags || {};
+              const bookingId = String(b.bookingId || b._id);
 
+              const showRefundButton = refundableBookingIds.has(bookingId);
               /* ✅ EXACT SAME HIDE LOGIC AS LISTER */
               const hideSettlementButton =
-                (b.dispute?.type === "APPLICABLE" &&
-                  flags.isDisputeCreated) ||
+                (b.dispute?.type === "APPLICABLE" && flags.isDisputeCreated) ||
                 (b.dispute?.type === "NOT_APPLICABLE" &&
                   flags.isDisputeCreated &&
                   flags.isSettlementDone);
@@ -129,9 +151,7 @@ const AdminBookingTable = ({ bookings, refetch }: Props) => {
                   <TableCell>
                     {new Date(b.startDate).toLocaleString()}
                   </TableCell>
-                  <TableCell>
-                    {new Date(b.endDate).toLocaleString()}
-                  </TableCell>
+                  <TableCell>{new Date(b.endDate).toLocaleString()}</TableCell>
                   <TableCell>
                     <Chip
                       label={b.status.toUpperCase()}
@@ -168,7 +188,16 @@ const AdminBookingTable = ({ bookings, refetch }: Props) => {
                             Confirm Drop-off
                           </Button>
                         )}
-
+                      {showRefundButton && (
+                        <Button
+                          size="small"
+                          color="warning"
+                          variant="contained"
+                          onClick={() => handleAdminRefund(b)}
+                        >
+                          Refund
+                        </Button>
+                      )}
                       {/* SETTLEMENT */}
                       {flags.renterConfirmedCompletion &&
                         !hideSettlementButton && (
