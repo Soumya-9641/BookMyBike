@@ -188,8 +188,16 @@ export const calculateRentalAmount = (
   // ── Pure hourly: less than 24h ──
   if (hours < HOURLY_THRESHOLD) {
     if (!hourly) throw new Error("Listing does not have an hourly rate set");
+
+    const candidates: (number | null)[] = [
+      // General: hours × hourly rate
+      calcAmount(0, 0, 0, hours),
+      // Special: check if 1 full day is cheaper
+      calcAmount(0, 0, 1, 0),
+    ];
+
     return {
-      rentalAmount: hours * hourly,
+      rentalAmount: lowest(candidates),
       pricePerDay:  hourly * 24,
       totalDays:    1,
     };
