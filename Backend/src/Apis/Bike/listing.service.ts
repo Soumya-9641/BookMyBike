@@ -6,7 +6,7 @@ import { haversineDistance } from "../../Utils/haversine";
 import { sendEmail } from "../../Utils/sendEmail";
 import User from "../../Models/User";
 interface CreateListingInput {
-  ownerId:Types.ObjectId;
+  ownerId: Types.ObjectId;
 
   title: string;
   description?: string;
@@ -28,7 +28,7 @@ interface CreateListingInput {
 
   depositAmount: number;
 
- location: {
+  location: {
     type: "Point";
     coordinates: [number, number]; // [lng, lat]
     address?: string;
@@ -59,7 +59,7 @@ interface FilterPayload {
 export const createListingService = async (
   data: CreateListingInput
 ) => {
-  // ✅ At least one rate must exist
+  
   if (
     !data.rates ||
     (!data.rates.hourly &&
@@ -81,7 +81,7 @@ export const createListingService = async (
     modelbike: data.modelbike,
     size: data.size,
     category: data.category,
-      pickupPoint: data.pickupPoint?.trim() || undefined,
+    pickupPoint: data.pickupPoint?.trim() || undefined,
     accessories: data.accessories || [],
 
     rates: data.rates,
@@ -139,7 +139,7 @@ export const searchListingsService = async (params: SearchParams) => {
 
 
 export const getFirstFourBikesService = async () => {
-  const bikes = await Listing.find({ isPublished: true , isBlocked:false })
+  const bikes = await Listing.find({ isPublished: true, isBlocked: false })
     .sort({ createdAt: -1 }) // latest first
     .limit(4);
 
@@ -169,7 +169,7 @@ export const filterListingsService = async (payload: FilterPayload) => {
     query.brand = { $in: filters.brand };
   }
 
- 
+
   if (filters.modelbike?.length) {
     query.modelbike = { $in: filters.modelbike };
   }
@@ -207,7 +207,7 @@ export const searchAvailableBikesService = async ({
   endDate: string;
 }) => {
 
-   const unavailableBikeIds = await Booking.find({
+  const unavailableBikeIds = await Booking.find({
     status: "confirmed",
     startDate: { $lte: new Date(endDate) },
     endDate: { $gte: new Date(startDate) }
@@ -220,7 +220,7 @@ export const searchAvailableBikesService = async ({
     _id: { $nin: unavailableBikeIds }
   }).lean();
 
-  
+
   const availableBikes = bikes
     .map(bike => {
       const [bikeLng, bikeLat] = bike.location.coordinates;
@@ -239,17 +239,17 @@ export const searchAvailableBikesService = async ({
     })
     .filter(bike => bike.distanceInKm <= 8)
     .sort((a, b) => a.distanceInKm - b.distanceInKm);
- const filters = {
-    category:  [...new Set(availableBikes.map((b) => b.category).filter(Boolean))],
-    brand:     [...new Set(availableBikes.map((b) => b.brand).filter(Boolean))],
+  const filters = {
+    category: [...new Set(availableBikes.map((b) => b.category).filter(Boolean))],
+    brand: [...new Set(availableBikes.map((b) => b.brand).filter(Boolean))],
     modelbike: [...new Set(availableBikes.map((b) => b.modelbike).filter(Boolean))],
-    city:      [...new Set(availableBikes.map((b) => b.location?.city).filter(Boolean))],
+    city: [...new Set(availableBikes.map((b) => b.location?.city).filter(Boolean))],
   };
-return { bikes: availableBikes, filters };
+  return { bikes: availableBikes, filters };
 };
 
 export const getAllListingsService = async () => {
-  const bikes = await Listing.find({ isPublished: true , isBlocked:false })
+  const bikes = await Listing.find({ isPublished: true, isBlocked: false })
     .sort({ createdAt: -1 })
     .lean();
 
@@ -269,15 +269,15 @@ export const getAllListingsService = async () => {
     }
   }
   const topCities = Object.entries(cityCount)
-    .sort((a, b) => b[1] - a[1])      
-    .slice(0, 10)                        
-    .map(([city]) => city);              
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([city]) => city);
 
   const filters = {
-    category:  [...new Set(bikes.map((b) => b.category).filter(Boolean))],
+    category: [...new Set(bikes.map((b) => b.category).filter(Boolean))],
     modelbike: [...new Set(bikes.map((b) => b.modelbike).filter(Boolean))],
-    brand:     latestBrands,             
-    city:      topCities,                 
+    brand: latestBrands,
+    city: topCities,
   };
 
   return { bikes, filters };
@@ -317,7 +317,7 @@ export const requestRideStartService = async (bookingId: string, renterId: strin
     { new: true }
   );
 
-   
+
   return updated;
 };
 export const acceptRideStartService = async (bookingId: string, ownerId: string) => {
@@ -342,10 +342,10 @@ export const acceptRideStartService = async (bookingId: string, ownerId: string)
     },
     { new: true }
   );
-const renter         = await User.findById(booking.renterId);
-  const firstName      = renter?.personalProfile?.firstName ?? "there";
+  const renter = await User.findById(booking.renterId);
+  const firstName = renter?.personalProfile?.firstName ?? "there";
   const bookingShortId = booking._id.toString().slice(-8).toUpperCase();
-  const startedAt      = new Date().toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
+  const startedAt = new Date().toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
 
   await sendEmail(
     renter?.email!,
@@ -448,7 +448,7 @@ export const requestRideCompletionService = async (bookingId: string, ownerId: s
       status: "completionRequested",
       completionRequestedAt: new Date(),
       completionRequestedBy: ownerId,
-        ownerRequestedCompletion: true,
+      ownerRequestedCompletion: true,
     },
     { new: true }
   );
@@ -461,7 +461,7 @@ export const confirmRideCompletionService = async (bookingId: string, renterId: 
   if (!booking) throw new Error("Booking not found");
 
   const isRenter = booking.renterId.toString() === renterId;
-  const isOwner  = booking.ownerId.toString()  === renterId;
+  const isOwner = booking.ownerId.toString() === renterId;
 
   // if (!isRenter && !isOwner) {
   //   throw new Error("Only the renter or owner can confirm completion");
@@ -477,25 +477,25 @@ export const confirmRideCompletionService = async (bookingId: string, renterId: 
   }
 
   // ... your existing stripe payout + refund logic ...
-  const confirmedBy = isRenter ? "renter" : "owner";  
+  const confirmedBy = isRenter ? "renter" : "owner";
 
   const updated = await Booking.findByIdAndUpdate(
     bookingId,
     {
-      status:                    "completed",
-       renterConfirmedCompletion: true,   
-      completionConfirmedAt:     new Date(),
-      actualEndTime:             new Date(),
-      payoutStatus:              "pending",
-        completionConfirmedBy:     confirmedBy,   
-      depositRefundStatus:       "pending",
+      status: "completed",
+      renterConfirmedCompletion: true,
+      completionConfirmedAt: new Date(),
+      actualEndTime: new Date(),
+      payoutStatus: "pending",
+      completionConfirmedBy: confirmedBy,
+      depositRefundStatus: "pending",
     },
     { new: true }
   );
-const renter         = await User.findById(booking.renterId);
-  const firstName      = renter?.personalProfile?.firstName ?? "there";
+  const renter = await User.findById(booking.renterId);
+  const firstName = renter?.personalProfile?.firstName ?? "there";
   const bookingShortId = booking._id.toString().slice(-8).toUpperCase();
-  const startedAt      = new Date().toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
+  const startedAt = new Date().toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
 
   await sendEmail(
     renter?.email!,
@@ -569,11 +569,11 @@ const renter         = await User.findById(booking.renterId);
     </body>
     </html>`
   );
-   const owner          = await User.findById(booking.ownerId);
-  const listing        = await Listing.findById(booking.bikeId).lean();
+  const owner = await User.findById(booking.ownerId);
+  const listing = await Listing.findById(booking.bikeId).lean();
   const ownerFirstName = owner?.personalProfile?.firstName ?? "there";
-  const bikeName       = listing?.title ?? "Your bike";
-   await sendEmail(
+  const bikeName = listing?.title ?? "Your bike";
+  await sendEmail(
     owner?.email!,
     "Rental Completed – Your Bike Has Been Returned 🚲",
     `<!DOCTYPE html>
@@ -733,7 +733,7 @@ export const blockUnblockListingService = async (
 
   // toggle block status
   listing.isBlocked = !listing.isBlocked;
-
+  listing.isPublished = listing.isBlocked ? false : listing.isPublished;
   await listing.save();
 
   return listing;
