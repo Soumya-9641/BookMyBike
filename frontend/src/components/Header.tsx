@@ -39,17 +39,13 @@ const Header = () => {
     }
   }, [isLoading, data]);
 
-
   const canCreateListing = Boolean(token) && isOnboarded;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [anchorEl, setAnchorEl] =
-    useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   /* ---------------- Account Menu ---------------- */
-  const openAccountMenu = (
-    event: React.MouseEvent<HTMLElement>
-  ) => {
+  const openAccountMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -95,11 +91,7 @@ const Header = () => {
           </Box>
 
           {/* ---------------- Desktop Navigation ---------------- */}
-          <Box
-            display={{ xs: "none", md: "flex" }}
-            alignItems="center"
-            gap={2}
-          >
+          <Box display={{ xs: "none", md: "flex" }} alignItems="center" gap={2}>
             <Button component={RouterLink} to="/home">
               Home
             </Button>
@@ -124,8 +116,8 @@ const Header = () => {
               </>
             ) : (
               <>
-                {isLoggedIn && (
-                  canCreateListing ? (
+                {isLoggedIn &&
+                  (canCreateListing ? (
                     <Button
                       variant="contained"
                       component={RouterLink}
@@ -141,8 +133,7 @@ const Header = () => {
                     >
                       Register as Lister
                     </Button>
-                  )
-                )}
+                  ))}
                 {isLoggedIn && (
                   <Stack direction="row" spacing={1} alignItems="center">
                     <IconButton onClick={openAccountMenu}>
@@ -185,16 +176,16 @@ const Header = () => {
                       onClick={closeAccountMenu}
                     >
                       My Rentals
-                    </MenuItem>)}
-                  {!canCreateListing ? (
-                    <MenuItem
+                    </MenuItem>
+                  )}
+                   <MenuItem
                       component={RouterLink}
                       to="/my-refunds"
                       onClick={closeAccountMenu}
                     >
                       My Refunds
                     </MenuItem>
-                  ) :
+                  {canCreateListing && (
                     <MenuItem
                       component={RouterLink}
                       to="/my-listings"
@@ -202,8 +193,7 @@ const Header = () => {
                     >
                       My Listings
                     </MenuItem>
-                  }
-
+                  )}
 
                   <MenuItem
                     component={RouterLink}
@@ -213,9 +203,7 @@ const Header = () => {
                     Change Password
                   </MenuItem>
 
-                  <MenuItem onClick={handleLogout}>
-                    Logout
-                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>
               </>
             )}
@@ -247,8 +235,11 @@ const Header = () => {
               Home
             </Button>
 
-            <Button component={RouterLink}
-              to="/browse-bikes" onClick={() => setDrawerOpen(false)}>
+            <Button
+              component={RouterLink}
+              to="/browse-bikes"
+              onClick={() => setDrawerOpen(false)}
+            >
               Browse Bikes
             </Button>
 
@@ -295,30 +286,30 @@ const Header = () => {
                     onClick={() => setDrawerOpen(false)}
                   >
                     My Rentals
-                  </Button>)}
-                {!canCreateListing ? (
-                  <Button
-                    component={RouterLink}
-                    to="/my-refunds"
-                    onClick={closeAccountMenu}
-                  >
-                    My Refunds
-                  </Button>) :
+                  </Button>
+                )}
+                <Button
+                  component={RouterLink}
+                  to="/my-refunds"
+                  onClick={closeAccountMenu}
+                >
+                  My Refunds
+                </Button>
+                {canCreateListing && (
                   <Button
                     component={RouterLink}
                     to="/my-listings"
                     onClick={closeAccountMenu}
                   >
                     My Listings
-                  </Button>}
-                <Button onClick={handleLogout}>
-                  Logout
-                </Button>
+                  </Button>
+                )}
+                <Button onClick={handleLogout}>Logout</Button>
               </>
             )}
 
-            {isLoggedIn && (
-              canCreateListing ? (
+            {isLoggedIn &&
+              (canCreateListing ? (
                 <Button
                   variant="contained"
                   component={RouterLink}
@@ -336,8 +327,7 @@ const Header = () => {
                 >
                   Register as Lister
                 </Button>
-              )
-            )}
+              ))}
           </Stack>
         </Box>
       </Drawer>

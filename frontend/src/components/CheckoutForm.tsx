@@ -3,7 +3,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { Button, CircularProgress } from "@mui/material";
+import { Button, CircularProgress, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useConfirmBookingMutation } from "../services/bookingApi";
@@ -35,7 +35,6 @@ const CheckoutForm = () => {
       return;
     }
 
-    /* ✅ PAYMENT SUCCESS */
     if (paymentIntent?.status === "succeeded") {
       try {
         await confirmBooking({
@@ -44,9 +43,7 @@ const CheckoutForm = () => {
 
         navigate("/payment-success", { replace: true });
       } catch (err: any) {
-        toast.error(
-          err?.data?.message || "Booking confirmation failed"
-        );
+        toast.error(err?.data?.message || "Booking confirmation failed");
       }
     }
 
@@ -57,15 +54,27 @@ const CheckoutForm = () => {
     <form onSubmit={handleSubmit}>
       <PaymentElement />
 
-      <Button
-        type="submit"
-        variant="contained"
-        fullWidth
-        sx={{ mt: 3, mb: 3, ml:2 }}
-        disabled={!stripe || loading}
+      {/* ✅ Centered button */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          mt: 3,
+        }}
       >
-        {loading ? <CircularProgress size={24} /> : "Pay Now"}
-      </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={!stripe || loading}
+          sx={{
+            minWidth: 160,
+            height: 44,
+            fontWeight: 600,
+          }}
+        >
+          {loading ? <CircularProgress size={22} /> : "Pay Now"}
+        </Button>
+      </Box>
     </form>
   );
 };

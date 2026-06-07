@@ -154,7 +154,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
           <TableBody>
             {bookings.map((b, idx) => {
               const flags = b.flags || {};
-              const paymentStatus = b.payment?.status || "pending";
+              const paymentStatus = b.payment?.status || b.refund?.paymentStatus || "pending";
               const displayStatus = getDisplayStatus(b.status);
 
               const amountToShow =

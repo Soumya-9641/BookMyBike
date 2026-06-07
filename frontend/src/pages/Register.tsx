@@ -93,7 +93,9 @@ const Register = () => {
         phoneNumber: fullPhoneNumber,
       }).unwrap();
 
-      toast.success("Registration successful");
+      toast.success(
+        "Registration successful. Verify your email before logging in.",
+      );
       navigate("/login");
     } catch (err: any) {
       toast.error(err?.data?.message || "Registration failed");
@@ -218,49 +220,48 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange("password")}
             />
-            <div style={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+            <Stack direction="row" spacing={1} alignItems="flex-start">
               <Checkbox
                 required
                 checked={termsChecked}
                 onChange={(e) => setTermsChecked(e.target.checked)}
-                sx={{ p: 0, mt: 0 }}
+                sx={{ p: 0, mt: "2px" }}
               />
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 0.5 }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 0.5,
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
+
+              <Stack spacing={0.5}>
+                <Typography variant="body2">
                   By Registering, I agree to the
-                  <RouterLink
-                    to="/termsConditions"
-                    style={{
-                      textDecoration: "none",
-                      color: "#22a652",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Terms Of Service
-                  </RouterLink>
-                  {" "} and
-                </div>
-                <RouterLink
-                  to="/user-agreement"
-                  style={{
-                    textDecoration: "none",
-                    color: "#22a652",
-                    fontWeight: 600,
-                  }}
-                >
-                  User(rental) Agreement
-                </RouterLink>
-              </div>
-            </div>
+                  <Box component="span" sx={{ mx: 0.5 }}>
+                    <RouterLink
+                      to="/termsConditions"
+                      style={{
+                        textDecoration: "none",
+                        color: "#22a652",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Terms Of Service
+                    </RouterLink>
+                  </Box>
+                </Typography>
+
+                <Typography variant="body2">
+                  and
+                  <Box component="span" sx={{ mx: 0.5 }}>
+                    <RouterLink
+                      to="/user-agreement"
+                      style={{
+                        textDecoration: "none",
+                        color: "#22a652",
+                        fontWeight: 600,
+                      }}
+                    >
+                      User (Rental) Agreement
+                    </RouterLink>
+                  </Box>
+                </Typography>
+              </Stack>
+            </Stack>
             <Button
               variant="contained"
               disabled={!isFormValid || isLoading}

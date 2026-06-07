@@ -208,7 +208,7 @@ const BikeDetails = () => {
               <Typography color="text.secondary">No time selected</Typography>
             )}
 
-            <Button variant="outlined" onClick={() => setDialogOpen(true)}>
+            <Button variant="outlined" sx={{ width: 250 }} onClick={() => setDialogOpen(true)}>
               Select Date & Time
             </Button>
           </Stack>

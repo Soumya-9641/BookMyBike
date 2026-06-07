@@ -168,10 +168,22 @@ const Footer = () => {
               <IconButton sx={{ color: "#9e9e9e" }}>
                 <XIcon />
               </IconButton>
-              <IconButton sx={{ color: "#9e9e9e" }}>
+              <IconButton
+                component="a"
+                href="https://www.instagram.com/rentmy.bike?utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ color: "#9e9e9e" }}
+              >
                 <InstagramIcon />
               </IconButton>
-              <IconButton sx={{ color: "#9e9e9e" }}>
+              <IconButton
+                component="a"
+                href="https://www.linkedin.com/company/rentmybike/"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ color: "#9e9e9e" }}
+              >
                 <LinkedInIcon />
               </IconButton>
             </Stack>

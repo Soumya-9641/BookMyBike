@@ -4,21 +4,18 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../app/store";
 
 const AccountTabs = () => {
-  const { token, isOnboarded } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const { token, isOnboarded } = useSelector((state: RootState) => state.auth);
 
   const canCreateListing = Boolean(token) && isOnboarded;
 
   const tabs = [
     { label: "My Account", path: "/my-account" },
     { label: "My Rides", path: "/my-bookings" },
-    ...(canCreateListing
-      ? [
-          { label: "My Rentals", path: "/owner-bookings" },
-          { label: "My Listings", path: "/my-listings" },
-        ]
-      : [{ label: "My Refunds", path: "/my-refunds" }]),
+    ...(canCreateListing ? [
+      { label: "My Rentals", path: "/owner-bookings" },
+      { label: "My Listings", path: "/my-listings" },
+    ] : []),
+    { label: "My Refunds", path: "/my-refunds" },
     { label: "Change Password", path: "/change-password" },
   ];
 
