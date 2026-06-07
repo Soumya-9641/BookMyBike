@@ -714,9 +714,9 @@ export const initiateAdminRefundService = async (
   }
 
   // Ride period not yet over
-  if (new Date() < booking.endDate) {
+  if (new Date() < booking.startDate) {
     throw new Error(
-      "Ride period has not ended yet."
+      "Ride period has not started yet."
     );
   }
 
