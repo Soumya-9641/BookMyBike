@@ -109,7 +109,14 @@ export interface Booking {
     securityDeposit: number;
     currency: string;
   };
-
+  dispute: {
+    disputeId: string,
+    type: string,
+    disputeAmount: number,
+    reason: string,
+    date: string,
+    time: string,
+  },
   ride: {
     actualStartTime: string | null;
     actualEndTime: string | null;
@@ -123,6 +130,7 @@ export interface Booking {
     ownerRequestedCompletion: boolean;
     renterConfirmedCompletion: boolean;
     isSettlementDone: boolean;
+    isDisputeCreated: boolean;
   };
 
   cancellation?: {
@@ -133,6 +141,13 @@ export interface Booking {
 
   owner?: {
     ownerId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+  };
+  renter?: {
+    renterId: string;
     email: string;
     firstName: string;
     lastName: string;

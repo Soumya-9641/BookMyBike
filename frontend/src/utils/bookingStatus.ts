@@ -15,3 +15,6 @@ export const getDisplayStatus = (status: string) => {
 
 export const formatStatusLabel = (status: string) =>
   status.replace("_", " ").toUpperCase();
+
+export const isPositiveNumber = (value: any) =>
+  value !== "" && !isNaN(value) && Number(value) > 0;

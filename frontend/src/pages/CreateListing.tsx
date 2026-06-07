@@ -15,6 +15,7 @@ import { useCreateListingMutation } from "../services/listingApi";
 import { toast } from "react-hot-toast";
 import LocationAutocomplete from "../components/LocationAutocomplete";
 import CategorySelector from "../components/create-listing/CategorySelector";
+import { isPositiveNumber } from "../utils/bookingStatus";
 
 const accessoriesList = [
   "Helmet",
@@ -94,33 +95,37 @@ const CreateListing = () => {
   /* -------------------- Validation -------------------- */
   const isFormValid = useMemo(() => {
     if (
-      !form.title ||
-      !form.brand ||
-      !form.modelbike ||
-      !form.size ||
-      !form.depositAmount ||
+      !form.title.trim() ||
+      !form.brand.trim() ||
+      !form.modelbike.trim() ||
+      !form.size.trim() ||
+      !isPositiveNumber(form.depositAmount) ||
       !form.pickupPoint ||
       !mainCategory ||
       !subCategory ||
       !location ||
-      !photos.length
+      photos.length === 0
     ) {
       return false;
     }
 
     const hasRate =
-      form.rates.hourly ||
-      form.rates.daily ||
-      form.rates.weekly ||
-      form.rates.monthly;
+      !isPositiveNumber(form.rates.hourly) ||
+      !isPositiveNumber(form.rates.daily) ||
+      !isPositiveNumber(form.rates.weekly) ||
+      !isPositiveNumber(form.rates.monthly);
 
     return Boolean(hasRate);
   }, [form, mainCategory, subCategory, location, photos]);
-
   /* -------------------- Submit -------------------- */
   const handleSubmit = async () => {
-    if (!isFormValid || !location) {
-      toast.error("Please complete all required fields");
+    if (!isFormValid) {
+      toast.error("Please fill all mandatory fields with valid values");
+      return;
+    }
+
+    if (!location) {
+      toast.error("Please select a valid location");
       return;
     }
 
@@ -192,7 +197,7 @@ const CreateListing = () => {
                 />
               </Paper>
 
-              <TextField label="Size *" name="size" onChange={handleChange} />
+              <TextField label="Size (cm) *" name="size" onChange={handleChange} />
               <TextField
                 label="Pickup Point"
                 name="pickupPoint"
@@ -227,11 +232,48 @@ const CreateListing = () => {
           {/* PRICING */}
           <Paper variant="outlined" sx={{ p: 3 }}>
             <Stack spacing={2}>
-              <TextField label="Hourly Rate" name="hourly" onChange={handleRateChange} />
-              <TextField label="Daily Rate" name="daily" onChange={handleRateChange} />
-              <TextField label="Weekly Rate" name="weekly" onChange={handleRateChange} />
-              <TextField label="Monthly Rate" name="monthly" onChange={handleRateChange} />
-              <TextField label="Deposit Amount *" name="depositAmount" onChange={handleChange} />
+              <TextField
+                label="Hourly Rate"
+                name="hourly"
+                type="number"
+                inputProps={{ min: 1 }}
+                error={!isPositiveNumber((form.rates.hourly))}
+                helperText="Must be greater than 0"
+                onChange={handleRateChange}
+              />
+              <TextField 
+                label="Daily Rate" 
+                name="daily" 
+                type="number"
+                inputProps={{ min: 1 }} 
+                error={!isPositiveNumber((form.rates.daily))}
+                helperText="Must be greater than 0" 
+                onChange={handleRateChange} />
+              <TextField 
+                label="Weekly Rate" 
+                name="weekly" 
+                type="number"
+                inputProps={{ min: 1 }} 
+                error={!isPositiveNumber((form.rates.weekly))}
+                helperText="Must be greater than 0" 
+                onChange={handleRateChange} />
+              <TextField 
+                label="Monthly Rate" 
+                name="monthly" 
+                type="number"
+                inputProps={{ min: 1 }} 
+                error={!isPositiveNumber((form.rates.monthly))}
+                helperText="Must be greater than 0" 
+                onChange={handleRateChange} />
+              <TextField
+                label="Deposit Amount *"
+                name="depositAmount"
+                type="number"
+                inputProps={{ min: 1 }}
+                error={!isPositiveNumber(form.depositAmount)}
+                helperText="Must be greater than 0"
+                onChange={handleChange}
+              />
             </Stack>
           </Paper>
 

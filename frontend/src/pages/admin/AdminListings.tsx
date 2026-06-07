@@ -12,17 +12,20 @@ import {
   Button,
   Avatar,
   Stack,
+  Switch,
 } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useGetAllListingsQuery } from "../../services/adminApi";
+import { useBlockUnblockListingMutation } from "../../services/listingApi";
 import ListingDetailsModal from "../../components/ListingDetailsModal";
+import { toast } from "react-hot-toast";
 
 const AdminListings = () => {
-  const { data, isLoading } = useGetAllListingsQuery();
+  const { data, isLoading, refetch } = useGetAllListingsQuery();
   const navigate = useNavigate();
-
+  const [blockUnblockListing, { isLoading: isToggling }] = useBlockUnblockListingMutation();
   const [selectedListing, setSelectedListing] = useState<any>(null);
 
   if (isLoading) {
@@ -55,8 +58,7 @@ const AdminListings = () => {
 
           <TableBody>
             {data?.map((listing: any) => {
-              const brand =
-                listing?.bike?.brand ?? listing?.brand ?? "—";
+              const brand = listing?.bike?.brand ?? listing?.brand ?? "—";
               const category =
                 listing?.bike?.category ?? listing?.category ?? "—";
 
@@ -102,7 +104,38 @@ const AdminListings = () => {
 
                   {/* ACTIONS */}
                   <TableCell align="right">
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      justifyContent="flex-end"
+                      alignItems="center"
+                    >
+                      <Switch
+                        checked={!listing?.isBlocked}
+                        color="success"
+                        disabled={isToggling}
+                        onChange={async () => {
+                          try {
+                            await blockUnblockListing(
+                              listing._id || listing.listingId,
+                            ).unwrap();
+
+                            toast.success(
+                              listing?.isBlocked
+                                ? "Listing unblocked successfully"
+                                : "Listing blocked successfully",
+                            );
+
+                            refetch();
+                          } catch (error: any) {
+                            toast.error(
+                              error?.data?.message ||
+                                "Failed to update listing",
+                            );
+                          }
+                        }}
+                      />
+
                       <Button
                         size="small"
                         variant="outlined"

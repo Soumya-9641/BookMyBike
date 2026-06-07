@@ -7,7 +7,9 @@ export const baseApi = createApi({
     prepareHeaders: (headers) => {
       const token =
         localStorage.getItem("token") ||
-        sessionStorage.getItem("token");
+        sessionStorage.getItem("token") ||
+        localStorage.getItem("adminToken")
+
 
       if (token) {
         headers.set("authorization", `Bearer ${token}`);

@@ -1,5 +1,9 @@
 import { baseApi } from "./baseApi";
-import type { Bike, CreateListingPayload, GetAllBikesResponse } from "../types/listing";
+import type {
+  Bike,
+  CreateListingPayload,
+  GetAllBikesResponse,
+} from "../types/listing";
 export interface SearchPayload {
   lat: number;
   lng: number;
@@ -57,10 +61,7 @@ export const listingApi = baseApi.injectEndpoints({
         body: payload,
       }),
     }),
-    getHomeBikes: builder.query<
-      { count: number; bikes: any[] },
-      void
-    >({
+    getHomeBikes: builder.query<{ count: number; bikes: any[] }, void>({
       query: () => "/bike/listing/bikes/home",
       providesTags: ["Listing"],
     }),
@@ -85,8 +86,22 @@ export const listingApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Listing"],
     }),
+    blockUnblockListing: builder.mutation<any, string>({
+      query: (listingId) => ({
+        url: `bike/listing/${listingId}/block-listing`,
+        method: "PATCH",
+      }),
+    }),
   }),
 });
 
-export const { useCreateListingMutation, useGetAllBikesQuery,
-  useFilterBikesMutation, useGetHomeBikesQuery, useGetBikeByIdQuery, useSearchBikesMutation, useEditListingMutation } = listingApi;
+export const {
+  useCreateListingMutation,
+  useGetAllBikesQuery,
+  useFilterBikesMutation,
+  useGetHomeBikesQuery,
+  useGetBikeByIdQuery,
+  useSearchBikesMutation,
+  useEditListingMutation,
+  useBlockUnblockListingMutation,
+} = listingApi;

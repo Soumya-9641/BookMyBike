@@ -1,4 +1,4 @@
-import { Box, Typography, Stack, Button } from "@mui/material";
+import { Box, Typography, Stack, Button, Alert } from "@mui/material";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 
 import { useState } from "react";
@@ -12,10 +12,18 @@ const steps = [
   "Secure payments with Stripe, trusted by millions of users worldwide.",
   "Deposit is released back to you when the bike is returned in good condition.",
 ];
-
+const listerTextSteps = [
+  "Sign up & verify your identity",
+  "List your bike with pricing & photos",
+  "Approve or reject booking requests",
+  "Hand over the bike securely",
+  "Get paid after ride completion",
+  "All payments are secured by Stripe",
+  "Confirm return to release deposit",
+];
 const HowItWorks = () => {
   const [active, setActive] = useState<"renter" | "lister">("renter");
-
+  const textSteps = active === "renter" ? steps : listerTextSteps;
   return (
     <Box>
       {/* Header */}
@@ -25,11 +33,7 @@ const HowItWorks = () => {
         justifyContent="space-between"
         mb={3}
       >
-        <Typography
-          variant="h4"
-          fontWeight={600}
-          color="#22a652"
-        >
+        <Typography variant="h4" fontWeight={600} color="#22a652">
           How it works
         </Typography>
 
@@ -50,15 +54,10 @@ const HowItWorks = () => {
               borderRadius: 1,
               textTransform: "none",
               fontWeight: 600,
-              bgcolor:
-                active === "renter" ? "#22a652" : "#fff",
-              color:
-                active === "renter" ? "#fff" : "#000",
+              bgcolor: active === "renter" ? "#22a652" : "#fff",
+              color: active === "renter" ? "#fff" : "#000",
               "&:hover": {
-                bgcolor:
-                  active === "renter"
-                    ? "#1e8e4a"
-                    : "#fff",
+                bgcolor: active === "renter" ? "#1e8e4a" : "#fff",
               },
             }}
           >
@@ -73,15 +72,10 @@ const HowItWorks = () => {
               borderRadius: 1,
               textTransform: "none",
               fontWeight: 600,
-              bgcolor:
-                active === "lister" ? "#22a652" : "#fff",
-              color:
-                active === "lister" ? "#fff" : "#000",
+              bgcolor: active === "lister" ? "#22a652" : "#fff",
+              color: active === "lister" ? "#fff" : "#000",
               "&:hover": {
-                bgcolor:
-                  active === "lister"
-                    ? "#1e8e4a"
-                    : "#fff",
+                bgcolor: active === "lister" ? "#1e8e4a" : "#fff",
               },
             }}
           >
@@ -96,7 +90,7 @@ const HowItWorks = () => {
       </Typography>
 
       <Stack spacing={1.5}>
-        {steps.map((step, index) => (
+        {textSteps.map((step, index) => (
           <Stack
             key={index}
             direction="row"
@@ -124,14 +118,14 @@ const HowItWorks = () => {
               />
             </Box>
 
-
-
-            <Typography variant="body2">
-              {step}
-            </Typography>
+            <Typography variant="body2">{step}</Typography>
           </Stack>
         ))}
       </Stack>
+      <Alert variant="filled" severity="info" sx={{ mt: 3, fontWeight: 700 }}>
+        Confirm Pick-up in “My Rides” to activate your ride” & “Confirm Drop-off
+        in “My Rides” to end your ride and initiate your payout
+      </Alert>
     </Box>
   );
 };

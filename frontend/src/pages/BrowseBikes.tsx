@@ -26,6 +26,7 @@ const BrowseBikes = () => {
   const { data: allBikesData, isLoading: loadingAll } =
     useGetAllBikesQuery(undefined, {
       skip: isSearchMode,
+      refetchOnMountOrArgChange: true,
     });
 
   const [searchBikes, { isLoading: loadingSearch }] =

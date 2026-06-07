@@ -20,7 +20,7 @@ interface Props {
 
 const formatDate = (date?: string | null) =>
   date ? new Date(date).toLocaleString() : "—";
-
+const adminRaw = localStorage.getItem("admin");
 const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
   const payment = booking.payment;
   const displayStatus = getDisplayStatus(booking.status);
@@ -59,13 +59,34 @@ const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
             </Typography>
           </Stack>
 
+          <Typography variant="h6">Owner Details</Typography>
+          <Divider />
+
+          <Stack spacing={1}>
+            <Typography>
+              {booking?.owner?.firstName} {booking?.owner?.lastName}
+            </Typography>
+            <Typography>Email: {booking?.owner?.email}</Typography>
+            <Typography>Phone: {booking?.owner?.phone}</Typography>
+          </Stack>
+
+          <Typography variant="h6">Renter Details</Typography>
+          <Divider />
+
+          <Stack spacing={1}>
+            <Typography>
+              {booking?.renter?.firstName} {booking?.renter?.lastName}
+            </Typography>
+            <Typography>Email: {booking?.renter?.email}</Typography>
+            <Typography>Phone: {booking?.renter?.phone}</Typography>
+          </Stack>
           {/* ───────────── BIKE DETAILS ───────────── */}
           <Typography variant="h6">Bike Details</Typography>
           <Divider />
 
           <Stack spacing={1}>
             <Typography fontWeight={600}>
-              {booking.bike.title}
+              {booking?.bike?.title}
             </Typography>
 
             <Typography>
@@ -205,17 +226,13 @@ const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
                   Platform Fee: SEK {payment?.platformFee}
                 </Typography>
 
-                <Typography>
+                {adminRaw && (<><Typography>
                   VAT Amount: SEK {payment?.vatAmount}
                 </Typography>
-
-                {/* <Typography>
-                  Platform Net: SEK {payment?.platformNet}
-                </Typography> */}
-
-                <Typography fontWeight={600}>
-                  Owner Payout: SEK {payment?.ownerPayout}
-                </Typography>
+                  <Typography fontWeight={600}>
+                    Owner Payout: SEK {payment?.ownerPayout}
+                  </Typography>
+                </>)}
 
                 {/* Refund Info */}
                 {payment.refundAmount !== undefined && (
@@ -270,7 +287,7 @@ const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
           </Stack>
 
           {/* ───────────── OWNER INFO ───────────── */}
-          <Typography variant="h6">Owner</Typography>
+          {/* <Typography variant="h6">Owner</Typography>
           <Divider />
 
           <Stack spacing={1}>
@@ -278,7 +295,8 @@ const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
               {booking?.owner?.firstName} {booking?.owner?.lastName}
             </Typography>
             <Typography>Email: {booking?.owner?.email}</Typography>
-          </Stack>
+             <Typography>Phone: {booking?.owner?.phone}</Typography>
+          </Stack> */}
         </Stack>
       </DialogContent>
 

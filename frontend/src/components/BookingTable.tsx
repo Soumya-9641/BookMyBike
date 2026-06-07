@@ -19,7 +19,7 @@ import { toast } from "react-hot-toast";
 import { statusColorMap } from "../constant/bikecategories";
 import {
   useCancelBookingMutation,
-  useCompleteRideMutation
+  useCompleteRideMutation,
 } from "../services/stripeApi";
 
 import {
@@ -27,7 +27,7 @@ import {
   useAcceptRideStartMutation,
   useRequestRideCompletionMutation,
   useConfirmRideCompletionMutation,
-  useCreateDisputeMutation
+  useCreateDisputeMutation,
 } from "../services/bookingApi";
 import CreateDisputeModal from "./CreateDisputeModal";
 import { getDisplayStatus, formatStatusLabel } from "../utils/bookingStatus";
@@ -76,79 +76,68 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
   };
 
   /* -------------------- DISPUTE + SETTLEMENT -------------------- */
-const handleDisputeSubmit = async (data: {
-  disputeAmount: number;
-  reason: string;
-  date: Date;
-  time: string;
-  type: "APPLICABLE" | "NOT_APPLICABLE";
-  image?: File;
-}) => {
-  if (!pendingBooking) return;
+  const handleDisputeSubmit = async (data: {
+    disputeAmount: number;
+    reason: string;
+    date: Date;
+    time: string;
+    type: "APPLICABLE" | "NOT_APPLICABLE";
+    image?: File;
+  }) => {
+    if (!pendingBooking) return;
 
-  const formData = new FormData();
-  formData.append("bookingId", pendingBooking.bookingId);
-  formData.append("disputeAmount", String(data.disputeAmount));
-  formData.append("reason", data.reason);
-  formData.append("date", data.date.toISOString());
-  formData.append("time", data.time);
-  formData.append("type", data.type);
+    const formData = new FormData();
+    formData.append("bookingId", pendingBooking.bookingId);
+    formData.append("disputeAmount", String(data.disputeAmount));
+    formData.append("reason", data.reason);
+    formData.append("date", data.date.toISOString());
+    formData.append("time", data.time);
+    formData.append("type", data.type);
 
-  if (data.image) {
-    formData.append("images", data.image);
-  }
-
-  try {
-    await createDispute(formData).unwrap();
-    toast.success("Dispute created");
-
-    // ✅ ONLY for NOT_APPLICABLE → complete ride
-    if (data.type === "NOT_APPLICABLE") {
-      await completeRide({
-        bookingId: pendingBooking.bookingId,
-        status: "completed",
-      }).unwrap();
-
-      toast.success("Ride completed");
+    if (data.image) {
+      formData.append("images", data.image);
     }
 
-    setOpenDispute(false);
-    setPendingBooking(null);
-    refetch?.();
+    try {
+      await createDispute(formData).unwrap();
+      toast.success("Dispute created");
 
-  } catch (err: any) {
-    if (err?.status === 409) {
-      toast("Dispute already exists", { icon: "ℹ️" });
-    } else {
-      toast.error(err?.data?.message || "Failed to submit dispute");
+      // ONLY for NOT_APPLICABLE → complete ride
+      if (data.type === "NOT_APPLICABLE") {
+        await completeRide({
+          bookingId: pendingBooking.bookingId,
+          status: "completed",
+        }).unwrap();
+
+        toast.success("Ride completed");
+      }
+
+      // ✅ close modal ONLY on success
+      setOpenDispute(false);
+      setPendingBooking(null);
+      refetch?.();
+    } catch (err: any) {
+      // ❌ modal stays open
+      if (err?.status === 409) {
+        toast("Dispute already exists", { icon: "ℹ️" });
+      } else {
+        toast.error(err?.data?.message || "Failed to submit dispute");
+      }
     }
-  }
-};
+  };
 
   return (
     <>
       <TableContainer
         component={Paper}
-        sx={{
-          height: "100%",              // 🔥 fill parent height
-          overflowX: "auto",
-          overflowY: "auto",
-        }}
+        sx={{ height: "100%", overflowX: "auto", overflowY: "auto" }}
       >
-        <Table
-          sx={{
-            minWidth: 900,        // ✅ forces table wider than mobile
-          }}
-        >
+        <Table sx={{ minWidth: 900 }}>
           <TableHead>
             <TableRow
               sx={{
                 backgroundColor: "#22a652",
-                "& th": {
-                  color: "#fff",
-                  fontWeight: 600,
-                  py: 2,
-                },
+                "& th": { color: "#fff", fontWeight: 600, py: 2 },
               }}
             >
               <TableCell>Start</TableCell>
@@ -165,13 +154,21 @@ const handleDisputeSubmit = async (data: {
           <TableBody>
             {bookings.map((b, idx) => {
               const flags = b.flags || {};
-              const paymentStatus = b.payment?.status || "pending";
+              const paymentStatus = b.payment?.status || b.refund?.paymentStatus || "pending";
               const displayStatus = getDisplayStatus(b.status);
 
               const amountToShow =
                 b.refund?.refundAmount ??
                 b.payment?.refundAmount ??
                 b.pricing.totalAmount;
+
+              // ✅ NEW settlement hide logic (ONLY ADDITION)
+              const hideSettlementButton =
+                (b.dispute?.type === "APPLICABLE" &&
+                  flags.isDisputeCreated) ||
+                (b.dispute?.type === "NOT_APPLICABLE" &&
+                  flags.isDisputeCreated &&
+                  flags.isSettlementDone);
 
               return (
                 <TableRow
@@ -187,10 +184,8 @@ const handleDisputeSubmit = async (data: {
                     {new Date(b.endDate).toLocaleString()}
                   </TableCell>
                   <TableCell>{b.bike?.title}</TableCell>
-
                   <TableCell>SEK {amountToShow}</TableCell>
 
-                  {/* STATUS */}
                   <TableCell>
                     <Chip
                       label={formatStatusLabel(displayStatus)}
@@ -199,7 +194,6 @@ const handleDisputeSubmit = async (data: {
                     />
                   </TableCell>
 
-                  {/* PAYMENT */}
                   <TableCell>
                     <Chip
                       label={paymentStatus.toUpperCase()}
@@ -208,7 +202,6 @@ const handleDisputeSubmit = async (data: {
                     />
                   </TableCell>
 
-                  {/* DETAILS */}
                   <TableCell>
                     <Button
                       size="small"
@@ -222,7 +215,6 @@ const handleDisputeSubmit = async (data: {
                     </Button>
                   </TableCell>
 
-                  {/* ACTIONS */}
                   <TableCell>
                     <Stack direction="row" spacing={1} flexWrap="wrap">
 
@@ -248,7 +240,7 @@ const handleDisputeSubmit = async (data: {
                               }
                             }}
                           >
-                            Request Start
+                            Pick it up
                           </Button>
                         )}
 
@@ -275,7 +267,7 @@ const handleDisputeSubmit = async (data: {
                               }
                             }}
                           >
-                            Accept Start
+                            Confirm Pick-up
                           </Button>
                         )}
 
@@ -302,7 +294,7 @@ const handleDisputeSubmit = async (data: {
                               }
                             }}
                           >
-                            End Ride
+                            Drop it off
                           </Button>
                         )}
 
@@ -329,13 +321,14 @@ const handleDisputeSubmit = async (data: {
                               }
                             }}
                           >
-                            Confirm Completion
+                            Confirm Drop-off
                           </Button>
                         )}
 
                       {/* SETTLEMENT / DISPUTE */}
-                      {editable && flags.renterConfirmedCompletion &&
-                        !flags.isSettlementDone && (
+                      {editable &&
+                        flags.renterConfirmedCompletion &&
+                        !hideSettlementButton && (
                           <Button
                             size="small"
                             color="error"
@@ -350,7 +343,8 @@ const handleDisputeSubmit = async (data: {
                         )}
 
                       {/* CANCEL */}
-                      {(b.status === "upcoming" || b.status === "startRequested") && (
+                      {(b.status === "upcoming" ||
+                        b.status === "startRequested") && (
                         <IconButton
                           color="error"
                           disabled={isCanceling}
@@ -368,7 +362,6 @@ const handleDisputeSubmit = async (data: {
         </Table>
       </TableContainer>
 
-      {/* DETAILS MODAL */}
       {selectedBooking && (
         <BookingDetailsModal
           open={open}
@@ -377,7 +370,6 @@ const handleDisputeSubmit = async (data: {
         />
       )}
 
-      {/* DISPUTE MODAL */}
       {pendingBooking && (
         <CreateDisputeModal
           open={openDispute}
