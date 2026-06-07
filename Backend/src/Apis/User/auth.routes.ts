@@ -205,7 +205,11 @@ router.post("/login", async (req: Request, res: Response) => {
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-
+    if (user.systemRole !== "user") {
+      const error: any = new Error("Access denied: Not an user account");
+      error.statusCode = 403;
+      throw error;
+    }
     if (!user.emailVerified) {
       return res.status(400).json({
         message: "Please verify your email before logging in"
@@ -447,7 +451,7 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
       </table>
     </body>
   </html>`
-  
+
     );
 
     return res.status(200).json({
