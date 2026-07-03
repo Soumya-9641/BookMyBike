@@ -114,7 +114,6 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
       customer: stripeCustomerId,
       automatic_payment_methods: {
         enabled: true,
-        allow_redirects: "never",
       }, 
       metadata: {
         listingId,

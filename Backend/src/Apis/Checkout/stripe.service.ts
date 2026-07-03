@@ -292,7 +292,7 @@ export const checkAvailability = async (
   // Check if any active booking overlaps with the requested date range
   const conflictingBooking = await Booking.findOne({
     bikeId: listingId,
-    status: { $in: ["upcoming", "active"] }, // only block on live bookings
+    status: { $in: ["upcoming", "inprogress"] }, // only block on live bookings
     $or: [
       // Case 1: existing booking starts inside requested range
       { startDate: { $gte: startDate, $lt: endDate } },
@@ -381,7 +381,6 @@ export const createBookingPaymentService = async ({
     customer: stripeCustomerId,
     automatic_payment_methods: {
       enabled: true,
-      allow_redirects: "never",
     },
     metadata: {
       listingId,
@@ -1133,7 +1132,7 @@ export const cancelBookingService = async (
     throw new Error("No charge found on this payment");
   }
 
-  // ── Check owner KYC (needed for transfer) ──
+  // ── Check owner KYC (needed for transfer) ── 
   const owner = await User.findById(booking.ownerId);
   if (!owner?.businessProfile?.stripeIdentityId) {
     throw new Error("Owner Stripe account missing");
@@ -1171,7 +1170,7 @@ export const cancelBookingService = async (
   payment.status = "refunded";
   payment.stripeChargeId = paymentIntent.latest_charge as string;
   payment.stripeRefundId = refund.id;
-  payment.refundAmount = depositAmount;
+  payment.refundAmount = fullRefundAmount;
   payment.refundReason = `Booking cancelled by ${isRenter ? "renter" : "owner"}`;
   payment.refundedAt = new Date();
   payment.paidAt = new Date();
