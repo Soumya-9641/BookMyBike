@@ -13,7 +13,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Slider from "react-slick";
 import { useGetPriceBreakdownMutation } from "../services/stripeApi";
 import { useGetBikeByIdQuery } from "../services/listingApi";
@@ -35,7 +35,60 @@ const BikeDetails = () => {
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(null);
   const [endDateTime, setEndDateTime] = useState<Dayjs | null>(null);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [geoLocation, setGeoLocation] = useState({ street: "", city: "", country: "" });
+  const [isGeocoding, setIsGeocoding] = useState(false);
   const [lng, lat] = data?.location?.coordinates || [0, 0];
+
+  useEffect(() => {
+    const address = data?.location?.address;
+
+    if (!address || typeof window === "undefined" || !window.google?.maps?.Geocoder) {
+      setGeoLocation({ street: "", city: "", country: "" });
+      setIsGeocoding(false);
+      return;
+    }
+
+    setIsGeocoding(true);
+    setGeoLocation({ street: "", city: "", country: "" });
+
+    const geocoder = new window.google.maps.Geocoder();
+
+    geocoder.geocode({ address }, (results, status) => {
+      if (status === "OK" && results?.[0]) {
+        const components = results[0].address_components || [];
+
+        let street = "";
+        let city = "";
+        let country = "";
+
+        components.forEach((component) => {
+          if (component.types.includes("route")) {
+            street = component.long_name;
+          }
+
+          if (
+            component.types.includes("locality") ||
+            component.types.includes("postal_town")
+          ) {
+            city = component.long_name;
+          }
+
+          if (component.types.includes("country")) {
+            country = component.long_name;
+          }
+        });
+
+        setGeoLocation({ street, city, country });
+      }
+
+      setIsGeocoding(false);
+    });
+  }, [data?.location?.address]);
+
+  const formattedLocation = [geoLocation.street, geoLocation.city, geoLocation.country]
+    .filter(Boolean)
+    .join(", ") || (isGeocoding ? "Loading location..." : data?.location?.address || "Location not available");
+
   if (isLoading) {
     return (
       <Box minHeight="400px" display="flex" justifyContent="center" alignItems="center">
@@ -136,7 +189,7 @@ const BikeDetails = () => {
             {data.brand} · {data.modelbike} · Size (cm) {data.size}
           </Typography>
 
-          <Typography mt={1}>📍 {data.location.address}</Typography>
+          <Typography mt={1}>📍 {formattedLocation}</Typography>
 
           {data.pickupPoint && (
             <Typography mt={0.5} color="text.secondary">
@@ -149,7 +202,7 @@ const BikeDetails = () => {
           <BikeLocationMap
             lat={lat}
             lng={lng}
-            address={data?.location?.address}
+            address={isGeocoding ? "" : formattedLocation}
           />
 
           <Divider sx={{ my: 2 }} />

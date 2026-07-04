@@ -53,7 +53,8 @@ const BikeCard = ({ bike }: { bike: Bike }) => {
           </Box>
         </Typography>
 
-        <Typography variant="body2">Model : Model 1</Typography>
+        <Typography variant="body2">Model : {bike.modelbike}</Typography>
+        <Typography variant="body2">Brand : {bike.brand}</Typography>
         <Typography variant="body2">Country : Sweden</Typography>
 
         <Box

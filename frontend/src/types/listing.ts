@@ -44,7 +44,9 @@ export interface Bike {
   depositAmount: number;
   location: {
     address?: string;
-    city: string;
+    city?: string;
+    country?: string;
+    street?: string;
     coordinates: [number, number];
   };
   createdAt: string;
@@ -172,6 +174,7 @@ export interface Booking {
       city: string;
       coordinates?: [number, number];
     };
+    pickupPoint?: string;
   };
 
   /** ✅ NORMAL PAYMENT (completed rides) */

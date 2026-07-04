@@ -11,6 +11,7 @@ const Hero = () => {
         position: "relative",
       }}
     >
+      {/* Overlay */}
       <Box
         sx={{
           position: "absolute",
@@ -28,33 +29,53 @@ const Hero = () => {
         alignItems="center"
         px={2}
       >
-        {/* Background Panel */}
+        {/* Content Panel */}
         <Box
           sx={{
-            backgroundColor: "rgba(0, 0, 0, 0.6)", // opacity: 0.600
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
             width: { xs: "100%", md: 660 },
             borderRadius: "6px",
             p: { xs: 3, md: 3 },
-            border: "0px solid #000",
-            mt: 10
+            mt: 10,
           }}
         >
           <Box color="white">
-            <Typography variant="h3" fontWeight="bold">
+            <Typography
+              sx={{
+                fontSize: { xs: "26px", md: "36px" },
+                fontWeight: 700,
+                lineHeight: 1.2,
+              }}
+            >
               Discover Smart Bike
             </Typography>
 
-            <Typography variant="h6" mt={1}>
+            {/* 🔥 FIXED RESPONSIVE TEXT */}
+            <Typography
+              sx={{
+                mt: 1,
+                fontSize: { xs: "26px", sm: "32px", md: "36px" },
+                fontWeight: 700,
+                opacity: 0.9,
+                letterSpacing: "0.4px",
+              }}
+            >
               Sharing On Your Terms.
             </Typography>
 
-            <Typography variant="h3" fontWeight="bold" mt={2}>
+            <Typography
+              sx={{
+                mt: 2,
+                fontSize: { xs: "24px", md: "40px" },
+                fontWeight: 700,
+                lineHeight: 1.2,
+              }}
+            >
               WHENEVER. WHEREVER.
             </Typography>
           </Box>
         </Box>
       </Box>
-
     </Box>
   );
 };

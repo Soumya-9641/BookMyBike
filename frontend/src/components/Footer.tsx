@@ -62,7 +62,7 @@ const Footer = () => {
                     {item === "Home" ? (
                       <Link
                         component={RouterLink}
-                        to="/home"
+                        to="/"
                         underline="none"
                         color="inherit"
                       >

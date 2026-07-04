@@ -1,9 +1,4 @@
-import {
-  Box,
-  Typography,
-  Stack,
-  Button,
-} from "@mui/material";
+import { Box, Typography, Stack, Button } from "@mui/material";
 import { useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { useNavigate } from "react-router-dom";
@@ -15,17 +10,15 @@ import { toast } from "react-hot-toast";
 const SearchPanel = () => {
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
-
-  const [city] = useState("Sweden");
   const [location, setLocation] = useState("");
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
 
   const [startDateTime, setStartDateTime] = useState<Dayjs>(
-    dayjs().add(1, "hour")
+    dayjs().add(1, "hour"),
   );
-  const [endDateTime, setEndDateTime] = useState<Dayjs>(
-    dayjs().add(5, "hour")
-  );
+  const [endDateTime, setEndDateTime] = useState<Dayjs>(dayjs().add(5, "hour"));
 
   const [searchBikes, { isLoading }] = useSearchBikesMutation();
 
@@ -48,9 +41,8 @@ const SearchPanel = () => {
       }
 
       navigate(
-        `/browse-bikes?lat=${coords.lat}&lng=${coords.lng}&start=${startDateTime.toISOString()}&end=${endDateTime.toISOString()}`
+        `/browse-bikes?lat=${coords.lat}&lng=${coords.lng}&start=${startDateTime.toISOString()}&end=${endDateTime.toISOString()}`,
       );
-
     } catch (err: any) {
       toast.error(err?.data?.message || "Search failed");
     }
@@ -70,10 +62,6 @@ const SearchPanel = () => {
       </Typography>
 
       <Stack spacing={2}>
-        {/* City */}
-        <Typography fontWeight={600}>City</Typography>
-        <Typography>Sweden</Typography>
-
         {/* Location */}
         <LocationAutocomplete
           label="Location"

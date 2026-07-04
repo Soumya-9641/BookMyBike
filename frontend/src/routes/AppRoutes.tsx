@@ -51,7 +51,6 @@ import HowItWorksFooter from "../components/HowItWorksFooter";
 const AppRoutes = () => {
   return (
     <Routes>
-
       {/* ================= ADMIN ROUTES ================= */}
       <Route path="/admin/login" element={<AdminLogin />} />
 
@@ -84,7 +83,7 @@ const AppRoutes = () => {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
         </Route>
 
-        <Route path="/home" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/browse-bikes" element={<BrowseBikes />} />
         <Route path="/bikes/:id" element={<BikeDetails />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -96,7 +95,9 @@ const AppRoutes = () => {
         <Route path="/how-it-works" element={<HowItWorksFooter />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/create-listing" element={<CreateListing />} />
+          <Route element={<ProtectedRoute requireOnboarded />}>
+            <Route path="/create-listing" element={<CreateListing />} />
+          </Route>
           <Route path="/my-account" element={<MyProfile />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/owner-bookings" element={<OwnerBookings />} />
@@ -111,15 +112,9 @@ const AppRoutes = () => {
           <Route path="/my-listings" element={<MyListings />} />
 
           {/* ✅ USER EDIT LISTING (WITH HEADER & FOOTER) */}
-          <Route
-            path="/edit-listing/:listingId"
-            element={<EditListing />}
-          />
+          <Route path="/edit-listing/:listingId" element={<EditListing />} />
         </Route>
       </Route>
-
-      {/* ---------- FALLBACK ---------- */}
-      <Route path="/" element={<ComingSoon />} />
     </Routes>
   );
 };

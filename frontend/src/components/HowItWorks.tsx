@@ -1,130 +1,61 @@
 import { Box, Typography, Stack, Button, Alert } from "@mui/material";
-import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
-
 import { useState } from "react";
+import HowItWorksAccordion from "../components/HowItWorksAccordian";
+import { renterSteps, listerSteps } from "../constant/howItWorks";
 
-const steps = [
-  "Sign up & verify your account",
-  "Choose a bike from the catalog",
-  "Select dates to rent from a calendar",
-  "Complete your booking with payment & deposit",
-  "Payment is released on bike return",
-  "Secure payments with Stripe, trusted by millions of users worldwide.",
-  "Deposit is released back to you when the bike is returned in good condition.",
-];
-const listerTextSteps = [
-  "Sign up & verify your identity",
-  "List your bike with pricing & photos",
-  "Approve or reject booking requests",
-  "Hand over the bike securely",
-  "Get paid after ride completion",
-  "All payments are secured by Stripe",
-  "Confirm return to release deposit",
-];
 const HowItWorks = () => {
   const [active, setActive] = useState<"renter" | "lister">("renter");
-  const textSteps = active === "renter" ? steps : listerTextSteps;
+
+  const steps = active === "renter" ? renterSteps : listerSteps;
+
   return (
-    <Box>
-      {/* Header */}
+    <Box maxWidth="lg" mx="auto" px={2}>
+      {/* HEADER */}
       <Stack
         direction="row"
-        alignItems="center"
         justifyContent="space-between"
-        mb={3}
+        alignItems="center"
+        mb={4}
       >
         <Typography variant="h4" fontWeight={600} color="#22a652">
           How it works
         </Typography>
 
-        {/* Segmented Toggle */}
         <Box
-          sx={{
-            display: "flex",
-            p: "4px",
-            bgcolor: "#f1f1f1",
-            borderRadius: 1,
-          }}
+          sx={{ display: "flex", bgcolor: "#f1f1f1", p: 0.5, borderRadius: 1 }}
         >
           <Button
             onClick={() => setActive("renter")}
             sx={{
-              minWidth: 100,
-              height: 32,
-              borderRadius: 1,
-              textTransform: "none",
               fontWeight: 600,
+              textTransform: "none",
               bgcolor: active === "renter" ? "#22a652" : "#fff",
               color: active === "renter" ? "#fff" : "#000",
-              "&:hover": {
-                bgcolor: active === "renter" ? "#1e8e4a" : "#fff",
-              },
             }}
           >
-            For Renter
+            Renter
           </Button>
 
           <Button
             onClick={() => setActive("lister")}
             sx={{
-              minWidth: 100,
-              height: 32,
-              borderRadius: 1,
-              textTransform: "none",
               fontWeight: 600,
+              textTransform: "none",
               bgcolor: active === "lister" ? "#22a652" : "#fff",
               color: active === "lister" ? "#fff" : "#000",
-              "&:hover": {
-                bgcolor: active === "lister" ? "#1e8e4a" : "#fff",
-              },
             }}
           >
-            For Lister
+            Lister
           </Button>
         </Box>
       </Stack>
 
-      {/* Content */}
-      <Typography fontWeight={600} mb={2}>
-        RENT A BIKE
-      </Typography>
+      {/* ACCORDION */}
+      <HowItWorksAccordion steps={steps} />
 
-      <Stack spacing={1.5}>
-        {textSteps.map((step, index) => (
-          <Stack
-            key={index}
-            direction="row"
-            spacing={1}
-            alignItems="flex-start"
-          >
-            <Box
-              sx={{
-                width: 18,
-                height: 18,
-                borderRadius: "50%",
-                backgroundColor: "#22a652", // same green as heading
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mt: "3px",
-                flexShrink: 0,
-              }}
-            >
-              <KeyboardDoubleArrowRightIcon
-                sx={{
-                  fontSize: 12,
-                  color: "#ffffff",
-                }}
-              />
-            </Box>
-
-            <Typography variant="body2">{step}</Typography>
-          </Stack>
-        ))}
-      </Stack>
-      <Alert variant="filled" severity="info" sx={{ mt: 3, fontWeight: 700 }}>
+      <Alert sx={{ mt: 4 }} severity="info" variant="filled">
         Confirm Pick-up in “My Rides” to activate your ride” & “Confirm Drop-off
-        in “My Rides” to end your ride and initiate your payout
+        in “My Rides” to end your ride and initiate your payout.
       </Alert>
     </Box>
   );
