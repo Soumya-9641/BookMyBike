@@ -26,10 +26,9 @@ export const adminRegisterService = async ({
     throw error;
   }
 
-  // ── Hash password ──
   const hashedPassword = await bcrypt.hash(password, 12);
  let verificationToken = crypto.randomBytes(32).toString("hex");
-  // ── Use new User() + save() to avoid TypeScript overload error with User.create({}) ──
+  
   const user= await User.create({
         email,
         password: hashedPassword,

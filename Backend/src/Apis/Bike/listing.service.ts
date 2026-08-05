@@ -59,7 +59,7 @@ interface FilterPayload {
 export const createListingService = async (
   data: CreateListingInput
 ) => {
-  
+
   if (
     !data.rates ||
     (!data.rates.hourly &&
@@ -731,9 +731,13 @@ export const blockUnblockListingService = async (
   //   throw new Error("You are not authorized to modify this listing");
   // }
 
-  // toggle block status
+  // toggle block status  
   listing.isBlocked = !listing.isBlocked;
-  listing.isPublished = listing.isBlocked ? false : listing.isPublished;
+  if (listing.isBlocked) {
+    listing.isPublished = false;
+  } else {
+    listing.isPublished = true;
+  }
   await listing.save();
 
   return listing;

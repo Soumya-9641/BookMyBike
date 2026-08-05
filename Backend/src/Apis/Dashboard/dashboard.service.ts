@@ -33,6 +33,10 @@ export const getRenterBookingsService = async (userId: Types.ObjectId) => {
   const bookings = await Booking.find({ renterId: userId })
     .populate("bikeId")
     .populate("ownerId", "email personalProfile.firstName personalProfile.lastName personalProfile.phone")
+      .populate(
+    "renterId",
+    "email personalProfile.firstName personalProfile.lastName personalProfile.phone"
+  )
     .populate(
       "paymentId",
       "status amount currency depositAmount platformFee vatAmount platformNet ownerPayout stripePaymentIntentId refundAmount refundReason refundedAt paidAt"
@@ -44,7 +48,7 @@ export const getRenterBookingsService = async (userId: Types.ObjectId) => {
     const owner = booking.ownerId as any;
     const bike = booking.bikeId as any;
     const payment = booking.paymentId as any;
-
+const renter = booking.renterId as any;
     return {
       // ── Booking Core ──
       bookingId: booking._id,
@@ -106,6 +110,16 @@ export const getRenterBookingsService = async (userId: Types.ObjectId) => {
           phone: owner.personalProfile?.phone ?? null,
         }
         : null,
+         renter: renter
+        ? {
+          renterId: renter._id,
+          email: renter.email,
+          firstName: renter.personalProfile?.firstName ?? null,
+          lastName: renter.personalProfile?.lastName ?? null,
+          phone: renter.personalProfile?.phone ?? null,
+        }
+        : null,
+
 
       // ── Listing (Bike) Info ──
       bike: bike
@@ -119,6 +133,8 @@ export const getRenterBookingsService = async (userId: Types.ObjectId) => {
           size: bike.size ?? null,
           rates: bike.rates ?? null,
           depositAmount: bike.depositAmount ?? 0,
+          pickupPoint: bike.pickupPoint ?? null,
+          accessories: bike.accessories ?? [],
           location: {
             address: bike.location?.address ?? null,
             city: bike.location?.city ?? null,
@@ -155,6 +171,7 @@ export const getOwnerBookingsService = async (userId: Types.ObjectId) => {
   const bookings = await Booking.find({ ownerId: userId })
     .populate("bikeId")
     .populate("renterId", "email personalProfile.firstName personalProfile.lastName personalProfile.phone")
+    .populate("ownerId", "email personalProfile.firstName personalProfile.lastName personalProfile.phone")
     .populate(
       "paymentId",
       "status amount currency depositAmount platformFee vatAmount platformNet ownerPayout stripePaymentIntentId refundAmount refundReason refundedAt paidAt"
@@ -172,6 +189,7 @@ export const getOwnerBookingsService = async (userId: Types.ObjectId) => {
 
   return bookings.map((booking) => {
     const renter = booking.renterId as any;
+    const owner = booking.ownerId as any;
     const bike = booking.bikeId as any;
     const payment = booking.paymentId as any;
   const dispute          = disputeMap.get(booking._id.toString()) ?? null;
@@ -251,6 +269,15 @@ export const getOwnerBookingsService = async (userId: Types.ObjectId) => {
         }
         : null,
 
+           owner: owner
+        ? {
+          ownerId: owner._id,
+          email: owner.email,
+          firstName: owner.personalProfile?.firstName ?? null,
+          lastName: owner.personalProfile?.lastName ?? null,
+          phone: owner.personalProfile?.phone ?? null,
+        }
+        : null,
       // ── Listing (Bike) Info ──
       bike: bike
         ? {
@@ -263,7 +290,13 @@ export const getOwnerBookingsService = async (userId: Types.ObjectId) => {
           size: bike.size ?? null,
           rates: bike.rates ?? null,
           depositAmount: bike.depositAmount ?? 0,
-          location: bike.location ?? null,
+          pickupPoint: bike.pickupPoint ?? null,
+          accessories: bike.accessories ?? [],
+          location: {
+            address: bike.location?.address ?? null,
+            city: bike.location?.city ?? null,
+            coordinates: bike.location?.coordinates ?? null,
+          },
         }
         : null,
 

@@ -292,7 +292,7 @@ export const checkAvailability = async (
   // Check if any active booking overlaps with the requested date range
   const conflictingBooking = await Booking.findOne({
     bikeId: listingId,
-    status: { $in: ["upcoming", "active"] }, // only block on live bookings
+    status: { $in: ["upcoming", "inprogress"] }, // only block on live bookings
     $or: [
       // Case 1: existing booking starts inside requested range
       { startDate: { $gte: startDate, $lt: endDate } },
@@ -381,7 +381,6 @@ export const createBookingPaymentService = async ({
     customer: stripeCustomerId,
     automatic_payment_methods: {
       enabled: true,
-      allow_redirects: "never",
     },
     metadata: {
       listingId,
@@ -512,13 +511,28 @@ export const confirmBookingService = async (
   booking.paymentId = payment._id as Types.ObjectId;
   await booking.save();
   const listing = await Listing.findById(m.listingId).lean();
-  const firstName = renter.personalProfile?.firstName ?? "there";
+  if (!listing) {
+  throw new Error("Listing not found");
+}
+
+const owner = await User.findById(listing.ownerId);
+
+if (!owner) {
+  throw new Error("Bike owner not found");
+}
+  const firstName = `${renter.personalProfile?.firstName || ""} ${renter.personalProfile?.lastName || ""}`.trim() ||
+  renter.email || "there";
   const startDate = new Date(m.startDate);
   const endDate = new Date(m.endDate);
   const bikeName = listing?.title ?? "Your booked bike";
   const startDateFormatted = new Date(m.startDate).toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
   const endDateFormatted = new Date(m.endDate).toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
   const bookingShortId = booking._id.toString().slice(-8).toUpperCase();
+  const ownerFirstName =
+  owner.personalProfile?.firstName ||
+  owner.businessProfile?.businessName ||
+  "Owner";
+
   await sendEmail(
     renter.email,
     "Booking Confirmed 🎉",
@@ -636,6 +650,102 @@ export const confirmBookingService = async (
     </body>
     </html>`
   );
+  await sendEmail(
+  owner.email,
+  "New Booking Received 🚴",
+  `<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>New Booking Received</title>
+  </head>
+  <body style="background:#fff; margin:0; padding:0; font-family:Arial,sans-serif;">
+    <table style="width:80%; max-width:800px; margin:30px auto;">
+      <tr>
+        <td>
+          <div style="background:#F6F6F6; padding:30px; border-top:8px solid #17a34a; border-radius:5px; text-align:center;">
+
+            <img
+              src="${process.env.LOGO_URL}"
+              width="140"
+              alt="Logo"
+              style="display:block; margin:0 auto 20px;"
+            />
+
+            <h2 style="margin-bottom:10px;">
+              Hi ${ownerFirstName},
+            </h2>
+
+            <p style="font-size:18px;">
+              Your bike has been booked successfully 🎉
+            </p>
+
+            <h3 style="margin-top:25px;">
+              Booking Details
+            </h3>
+
+            <table style="width:100%; max-width:500px; margin:20px auto; border:1px solid #ddd; border-collapse:collapse;">
+              <tr>
+                <td style="padding:12px; border:1px solid #ddd;">Booking ID</td>
+                <td style="padding:12px; border:1px solid #ddd; font-weight:bold;">
+                  #${bookingShortId}
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:12px; border:1px solid #ddd;">Bike</td>
+                <td style="padding:12px; border:1px solid #ddd;">
+                  ${bikeName}
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:12px; border:1px solid #ddd;">Renter</td>
+                <td style="padding:12px; border:1px solid #ddd;">
+                  ${firstName}
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:12px; border:1px solid #ddd;">Start Date</td>
+                <td style="padding:12px; border:1px solid #ddd;">
+                  ${startDateFormatted}
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:12px; border:1px solid #ddd;">End Date</td>
+                <td style="padding:12px; border:1px solid #ddd;">
+                  ${endDateFormatted}
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:12px; border:1px solid #ddd;">Rental Amount</td>
+                <td style="padding:12px; border:1px solid #ddd;">
+                  ${Number(m.rentalAmount).toFixed(2)} SEK
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:12px; border:1px solid #ddd;">Owner Earnings</td>
+                <td style="padding:12px; border:1px solid #ddd; color:#17a34a; font-weight:bold;">
+                  ${Number(m.ownerPayout).toFixed(2)} SEK
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin-top:20px; color:#666;">
+              Please be prepared to hand over the bike to the renter on the scheduled start date.
+            </p>
+
+          </div>
+        </td>
+      </tr>
+    </table>
+  </body>
+  </html>`
+);
   return {
     bookingId: booking._id,
     paymentId: payment._id,
@@ -730,39 +840,39 @@ export const completeRideService = async (bookingId: string, status: "inprogress
   if (!ownerAccount.payouts_enabled) {
     throw new Error("Owner has not completed KYC verification");
   }
-  const depositAmount = payment.depositAmount ?? 0;  // refunded to renter
-  const ownerPayout = payment.ownerPayout ?? 0;  // transferred to owner
+  const depositAmount = payment.depositAmount ?? 0;
+  const ownerPayout = payment.ownerPayout ?? 0; 
 
   const dispute = await Dispute.findOne({ bookingId: booking._id });
-  let renterRefund = depositAmount;   // default: full deposit back to renter
+  let renterRefund = depositAmount;   
   let adjustedOwnerPayout = ownerPayout;
   if (dispute) {
     if (dispute.status === "rejected") {
-      // ── Dispute rejected → full deposit refunded to renter, normal owner payout ──
+     
       renterRefund = depositAmount;
       adjustedOwnerPayout = ownerPayout;
 
     } else if (dispute.status === "resolved") {
-      // ── Dispute resolved → deduct disputeAmount from deposit, add to owner payout ──
+   
       const penaltyAmount = dispute.disputeAmount ?? 0;
       renterRefund = Math.max(0, depositAmount - penaltyAmount);
       adjustedOwnerPayout = ownerPayout + penaltyAmount;
 
     } else if (dispute.status === "open") {
-      // ── Dispute still open → block completion until resolved ──
+   
       throw new Error("Cannot complete ride. Dispute is still open and pending resolution.");
     }
   }
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
-    amount: renterRefund * 100,        // convert to öre
+    amount: renterRefund * 100,       
     reason: "requested_by_customer",
   });
   const transfer = await stripe.transfers.create({
-    amount: adjustedOwnerPayout * 100,          // convert to öre
+    amount: adjustedOwnerPayout * 100,          
     currency: "sek",
     destination: owner.businessProfile.stripeIdentityId,
-    source_transaction: paymentIntent.latest_charge as string, // 🔑 THE FIX
+    source_transaction: paymentIntent.latest_charge as string, 
     metadata: {
       bookingId: booking._id.toString(),
       paymentId: payment._id.toString(),
@@ -773,13 +883,13 @@ export const completeRideService = async (bookingId: string, status: "inprogress
   payment.status = "succeeded";
   payment.stripeChargeId = paymentIntent.latest_charge as string;
   payment.stripeRefundId = refund.id;
-  payment.refundAmount = depositAmount;
+  payment.refundAmount = renterRefund;
   payment.refundReason = "Deposit returned after ride completion";
   payment.refundedAt = new Date();
   payment.paidAt = new Date();
   await payment.save();
 
-  // STEP 4: Update Booking record
+
   booking.status = "completed";
   booking.actualEndTime = new Date();
   booking.isSettlementDone = true;
@@ -983,23 +1093,18 @@ export const completeRideService = async (bookingId: string, status: "inprogress
   };
 };
 
-// ─────────────────────────────────────────────────────────────
-// KEPT — for cancellations only (ride never started)
-// Refunds deposit only. Owner gets nothing.
-// ─────────────────────────────────────────────────────────────
+
 export const refundDepositService = async (bookingId: string) => {
-  // ── Fetch Booking ──
-  //const booking = await Booking.findById(bookingId);
+
   const [booking, dispute] = await Promise.all([
     Booking.findById(bookingId).lean(),
     Dispute.findOne({
       bookingId,
-      status: "resolved",   // only apply penalty if dispute is resolved
+      status: "resolved",   
     }).lean(),
   ]);
   if (!booking) throw new Error("Booking not found");
 
-  // ── Fetch linked Payment record ──
   const payment = await Payment.findOne({
     bookingId: booking._id,
     type: "booking",
@@ -1007,10 +1112,8 @@ export const refundDepositService = async (bookingId: string) => {
   if (!payment) throw new Error("Payment record not found for this booking");
   if (!payment.stripePaymentIntentId) throw new Error("Stripe PaymentIntent ID missing on payment record");
 
-  // ── Guard: already refunded ──
   if (payment.stripeRefundId) throw new Error("Deposit already refunded");
 
-  // ── Verify charge exists ──
   const paymentIntent = await stripe.paymentIntents.retrieve(
     payment.stripePaymentIntentId
   );
@@ -1021,13 +1124,11 @@ export const refundDepositService = async (bookingId: string) => {
 
   const depositAmount = payment.depositAmount ?? 0;
 
-  // STEP 1: Refund deposit → renter
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
-    amount: depositAmount * 100,        // convert to öre
+    amount: depositAmount * 100,       
   });
 
-  // STEP 2: Update Payment record
   payment.status = "refunded";
   payment.stripeRefundId = refund.id;
   payment.refundAmount = depositAmount;
@@ -1035,7 +1136,6 @@ export const refundDepositService = async (bookingId: string) => {
   payment.refundedAt = new Date();
   await payment.save();
 
-  // STEP 3: Update Booking record
   booking.status = "cancelled";
   booking.cancelledBy = "renter";
   booking.cancellationReason = "Cancelled before ride started";
@@ -1049,9 +1149,6 @@ export const refundDepositService = async (bookingId: string) => {
   };
 };
 
-// NOTE: payoutToOwnerService has been removed.
-// Owner payout now happens inside completeRideService above.
-// This prevents the insufficient balance error caused by missing source_transaction.
 
 export const checkStripeOnboardingStatus = async (userId: Types.ObjectId) => {
   const user = await User.findById(userId);
@@ -1065,7 +1162,7 @@ export const checkStripeOnboardingStatus = async (userId: Types.ObjectId) => {
     };
   }
 
-  // 🔍 Fetch account details from Stripe using stripeIdentityId
+
   const account = await stripe.accounts.retrieve(stripeAccountId);
 
   const isOnboarded =
@@ -1073,7 +1170,7 @@ export const checkStripeOnboardingStatus = async (userId: Types.ObjectId) => {
     account.payouts_enabled &&
     account.details_submitted;
   console.log(isOnboarded);
-  // Sync DB if status changed
+
   if (isOnboarded && !user.businessProfile!.isVerified) {
     user.businessProfile!.isVerified = true;
     user.businessProfile!.isActive = true;
@@ -1085,7 +1182,6 @@ export const checkStripeOnboardingStatus = async (userId: Types.ObjectId) => {
     charges_enabled: account.charges_enabled,
     payouts_enabled: account.payouts_enabled,
     details_submitted: account.details_submitted,
-    // Stripe tells you exactly what's still missing
     currently_due: account.requirements?.currently_due ?? [],
     eventually_due: account.requirements?.eventually_due ?? [],
     disabled_reason: account.requirements?.disabled_reason ?? null,
@@ -1101,7 +1197,7 @@ export const cancelBookingService = async (
   const booking = await Booking.findById(bookingId);
   if (!booking) throw new Error("Booking not found");
 
-  // ── Who is cancelling ──
+
   const isRenter = booking.renterId.toString() === userId;
   const isOwner = booking.ownerId.toString() === userId;
 
@@ -1109,12 +1205,11 @@ export const cancelBookingService = async (
     throw new Error("Only the renter or owner can cancel this booking");
   }
 
-  // ── Can only cancel if upcoming or startRequested ──
   if (!["upcoming", "startRequested"].includes(booking.status)) {
     throw new Error(`Cannot cancel. Current status: ${booking.status}`);
   }
 
-  // ── Get payment record ──
+
   const payment = await Payment.findOne({
     bookingId: booking._id,
     type: "booking",
@@ -1122,7 +1217,7 @@ export const cancelBookingService = async (
   if (!payment) throw new Error("Payment record not found for this booking");
   if (!payment.stripePaymentIntentId) throw new Error("Stripe PaymentIntent ID missing");
 
-  // ── Verify Stripe PaymentIntent ──
+
   const paymentIntent = await stripe.paymentIntents.retrieve(
     payment.stripePaymentIntentId
   );
@@ -1133,7 +1228,7 @@ export const cancelBookingService = async (
     throw new Error("No charge found on this payment");
   }
 
-  // ── Check owner KYC (needed for transfer) ──
+
   const owner = await User.findById(booking.ownerId);
   if (!owner?.businessProfile?.stripeIdentityId) {
     throw new Error("Owner Stripe account missing");
@@ -1145,19 +1240,19 @@ export const cancelBookingService = async (
     throw new Error("Owner has not completed KYC verification");
   }
 
-  const depositAmount = payment.depositAmount ?? 0;   // refunded to renter
-  const ownerPayout = payment.ownerPayout ?? 0;   // sent to owner
+  const depositAmount = payment.depositAmount ?? 0;
+  const ownerPayout = payment.ownerPayout ?? 0; 
   const fullRefundAmount = payment.amount ?? 0;
 
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
-    amount: fullRefundAmount * 100,                      // only deposit in öre
+    amount: fullRefundAmount * 100,                   
     reason: "requested_by_customer",
   });
 
 
   // const transfer = await stripe.transfers.create({
-  //   amount: ownerPayout * 100,                        // rental portion in öre
+  //   amount: ownerPayout * 100,               
   //   currency: "sek",
   //   destination: owner.businessProfile.stripeIdentityId,
   //   source_transaction: paymentIntent.latest_charge as string,
@@ -1171,7 +1266,7 @@ export const cancelBookingService = async (
   payment.status = "refunded";
   payment.stripeChargeId = paymentIntent.latest_charge as string;
   payment.stripeRefundId = refund.id;
-  payment.refundAmount = depositAmount;
+  payment.refundAmount = fullRefundAmount;
   payment.refundReason = `Booking cancelled by ${isRenter ? "renter" : "owner"}`;
   payment.refundedAt = new Date();
   payment.paidAt = new Date();

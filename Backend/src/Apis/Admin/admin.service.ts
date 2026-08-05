@@ -713,10 +713,9 @@ export const initiateAdminRefundService = async (
     );
   }
 
-  // Ride period not yet over
-  if (new Date() < booking.endDate) {
+  if (new Date() < booking.startDate) {
     throw new Error(
-      "Ride period has not ended yet."
+      "Ride period has not started yet."
     );
   }
 
@@ -746,7 +745,7 @@ export const initiateAdminRefundService = async (
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
     amount: payment.amount * 100,
-     reason: "requested_by_admin",
+    reason: "requested_by_customer",
   });
 
   const now = new Date();
@@ -772,7 +771,6 @@ export const initiateAdminRefundService = async (
   booking.cancelledAt = now;
   booking.cancellationReason =
     "Booking automatically cancelled. Owner never accepted ride start request before ride end time.";
-
   await booking.save();
 
   return {
@@ -801,7 +799,7 @@ export const getAdminRefundEligibleBookingsService = async (
 
   const bookings = await Booking.find({
     ownerAcceptedStart: false,
-    endDate: { $lt: currentDate },
+    startDate: { $lt: currentDate },
   })
     .select("_id")
     .lean();

@@ -148,6 +148,9 @@ router.post(
         Riders can now discover and book your bike.
       </p>
 
+       <p style="font-size:16px; color:#444; line-height:1.7;">
+            <strong>Tip:</strong> Remember to unpublished your bike in “My Listings” when it is not available.
+            Bike listings that are live and published are bookable.      </p>
       <p style="font-size:16px; color:#444; line-height:1.7;">
         If you have any questions, contact us at
         <a

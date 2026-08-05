@@ -76,8 +76,8 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
     if (!isAvailable) return void res.status(409).json({ message: "Listing is not available for selected dates" });
 
     const { rentalAmount, pricePerDay, totalDays } = calculateRentalAmount(listing, hours);
-    const amount = rentalAmount; 
-    
+    const amount = rentalAmount;
+
     const depositAmount = to2dp(listing.depositAmount ?? 0);
     const chargeAmount = to2dp(rentalAmount + depositAmount);
     const platformFee = to2dp(rentalAmount * PLATFORM_FEE_RATE);
@@ -114,8 +114,7 @@ router.post("/create-payment-intent", authMiddleware, async (req: AuthRequest, r
       customer: stripeCustomerId,
       automatic_payment_methods: {
         enabled: true,
-        allow_redirects: "never",
-      }, 
+      },
       metadata: {
         listingId,
         renterId,
@@ -267,7 +266,7 @@ router.post("/:id/complete-ride", authMiddleware, async (req: AuthRequest, res: 
     //     message: "Invalid status. Allowed values: 'inprogress' | 'completed'",
     //   });
     // }
-    const result = await completeRideService(req.params.id, status,   req.user!.userId.toString());
+    const result = await completeRideService(req.params.id, status, req.user!.userId.toString());
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ message: err.message });
@@ -285,9 +284,6 @@ router.post("/:id/refund-deposit", authMiddleware, isBikeOwner, async (req: Auth
   }
 });
 
-// ── REMOVED: /payout-owner/:bookingId ─────────────────────
-// This caused the insufficient balance error.
-// Owner payout now happens inside /:id/complete-ride above.
 
 // ── Dev only ─────────────────────────────────────────────
 router.post("/dev/complete-payment", async (req: Request, res: Response) => {
@@ -424,7 +420,7 @@ router.patch(
 router.post("/price-breakdown", async (req: AuthRequest, res: Response) => {
   try {
     const { listingId, startDate, endDate, hours } = req.body;
-   const to2dp = (n: number) => Math.round(n * 100) / 100;
+    const to2dp = (n: number) => Math.round(n * 100) / 100;
     if (!listingId || !startDate || !endDate || !hours) {
       return void res.status(400).json({ message: "listingId, startDate, endDate and hours are required" });
     }
@@ -432,29 +428,29 @@ router.post("/price-breakdown", async (req: AuthRequest, res: Response) => {
     const listing = await Listing.findById(listingId);
     if (!listing) return void res.status(404).json({ message: "Listing not found" });
 
-  
+
     const isAvailable = await checkAvailability(listingId, new Date(startDate), new Date(endDate));
     if (!isAvailable) return void res.status(409).json({ message: "Listing is not available for selected dates" });
 
-    
+
     const { rentalAmount, pricePerDay, totalDays } = calculateRentalAmount(listing, hours);
 
     const depositAmount = to2dp(listing.depositAmount ?? 0);
-    const chargeAmount  = to2dp(rentalAmount + depositAmount);
-    const platformFee   = to2dp(rentalAmount * PLATFORM_FEE_RATE);
-    const vatAmount     = to2dp(platformFee - platformFee / (1 + VAT_RATE));
-    const platformNet   = to2dp(platformFee - vatAmount);
-    const ownerPayout   = to2dp(rentalAmount - platformFee);
+    const chargeAmount = to2dp(rentalAmount + depositAmount);
+    const platformFee = to2dp(rentalAmount * PLATFORM_FEE_RATE);
+    const vatAmount = to2dp(platformFee - platformFee / (1 + VAT_RATE));
+    const platformNet = to2dp(platformFee - vatAmount);
+    const ownerPayout = to2dp(rentalAmount - platformFee);
 
     return void res.status(200).json({
       success: true,
       breakdown: {
-        hours:         Number(hours),
+        hours: Number(hours),
         totalDays,
         pricePerDay,
         rentalAmount,
 
-      
+
         depositAmount,
 
         chargeAmount,
