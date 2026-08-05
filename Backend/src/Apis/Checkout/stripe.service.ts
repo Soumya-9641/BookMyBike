@@ -6,7 +6,6 @@ import { Types } from "mongoose";
 import Payment from "../../Models/Payment";
 import Dispute from "../../Models/Dispute";
 import { sendEmail } from "../../Utils/sendEmail";
-
 // ─────────────────────────────────────────────────────────────
 // UNCHANGED from your original
 // ─────────────────────────────────────────────────────────────
@@ -133,9 +132,9 @@ const VAT_RATE = 0.25; // 25% Swedish VAT , included in the 18%
 export const calculateRentalAmount = (
   listing: {
     rates?: {
-      hourly?:  number;
-      daily?:   number;
-      weekly?:  number;
+      hourly?: number;
+      daily?: number;
+      weekly?: number;
       monthly?: number;
     };
     depositAmount?: number;
@@ -145,18 +144,18 @@ export const calculateRentalAmount = (
 
   const { hourly, daily, weekly, monthly } = listing.rates ?? {};
 
-  const HOURLY_THRESHOLD  = 24;
-  const DAILY_THRESHOLD   = 7  * 24;   // 168h
-  const WEEKLY_THRESHOLD  = 30 * 24;   // 720h
+  const HOURLY_THRESHOLD = 24;
+  const DAILY_THRESHOLD = 7 * 24;   // 168h
+  const WEEKLY_THRESHOLD = 30 * 24;   // 720h
 
   const totalDays = Math.ceil(hours / 24);
 
   // ── Helper: calculate amount for a given combination ──
   const calcAmount = (
-    months:  number,
-    weeks:   number,
-    days:    number,
-    hrs:     number
+    months: number,
+    weeks: number,
+    days: number,
+    hrs: number
   ): number | null => {
     let amount = 0;
     if (months > 0) {
@@ -198,14 +197,14 @@ export const calculateRentalAmount = (
 
     return {
       rentalAmount: lowest(candidates),
-      pricePerDay:  hourly * 24,
-      totalDays:    1,
+      pricePerDay: hourly * 24,
+      totalDays: 1,
     };
   }
 
   // ── Daily range: 24h to <168h (1 day to <7 days) ──
   if (hours < DAILY_THRESHOLD) {
-    const fullDays       = Math.floor(hours / HOURLY_THRESHOLD);
+    const fullDays = Math.floor(hours / HOURLY_THRESHOLD);
     const remainingHours = hours % HOURLY_THRESHOLD;
 
     const candidates: (number | null)[] = [
@@ -213,21 +212,22 @@ export const calculateRentalAmount = (
       calcAmount(0, 0, fullDays, remainingHours),
       // Special: ceil days (round up to next full day)
       calcAmount(0, 0, fullDays + (remainingHours > 0 ? 1 : 0), 0),
+      calcAmount(0, 1, 0, 0),
     ];
 
     return {
       rentalAmount: lowest(candidates),
-      pricePerDay:  daily ?? 0,
+      pricePerDay: daily ?? 0,
       totalDays,
     };
   }
 
   // ── Weekly range: 168h to <720h (7 days to <30 days) ──
   if (hours < WEEKLY_THRESHOLD) {
-    const fullWeeks          = Math.floor(hours / DAILY_THRESHOLD);
+    const fullWeeks = Math.floor(hours / DAILY_THRESHOLD);
     const remainingAfterWeek = hours % DAILY_THRESHOLD;
-    const fullDays           = Math.floor(remainingAfterWeek / HOURLY_THRESHOLD);
-    const remainingHours     = remainingAfterWeek % HOURLY_THRESHOLD;
+    const fullDays = Math.floor(remainingAfterWeek / HOURLY_THRESHOLD);
+    const remainingHours = remainingAfterWeek % HOURLY_THRESHOLD;
 
     const candidates: (number | null)[] = [
       // General: fullWeeks weeks + fullDays days + remaining hours
@@ -238,25 +238,25 @@ export const calculateRentalAmount = (
 
       // Special case 2: fullWeeks weeks + (fullDays + 1) days
       calcAmount(0, fullWeeks, fullDays + (remainingHours > 0 ? 1 : 0), 0),
-
+      calcAmount(1, 0, 0, 0)
       // Special case 3: pure days (no weeks)
-     // calcAmount(0, 0, Math.ceil(hours / HOURLY_THRESHOLD), 0),
+      // calcAmount(0, 0, Math.ceil(hours / HOURLY_THRESHOLD), 0),
     ];
 
     return {
       rentalAmount: lowest(candidates),
-      pricePerDay:  weekly ? weekly / 7 : (daily ?? 0),
+      pricePerDay: weekly ? weekly / 7 : (daily ?? 0),
       totalDays,
     };
   }
 
   // ── Monthly range: 720h+ (30+ days) ──
-  const fullMonths          = Math.floor(hours / WEEKLY_THRESHOLD);
+  const fullMonths = Math.floor(hours / WEEKLY_THRESHOLD);
   const remainingAfterMonth = hours % WEEKLY_THRESHOLD;
-  const fullWeeks           = Math.floor(remainingAfterMonth / DAILY_THRESHOLD);
-  const remainingAfterWeek  = remainingAfterMonth % DAILY_THRESHOLD;
-  const fullDays            = Math.floor(remainingAfterWeek / HOURLY_THRESHOLD);
-  const remainingHours      = remainingAfterWeek % HOURLY_THRESHOLD;
+  const fullWeeks = Math.floor(remainingAfterMonth / DAILY_THRESHOLD);
+  const remainingAfterWeek = remainingAfterMonth % DAILY_THRESHOLD;
+  const fullDays = Math.floor(remainingAfterWeek / HOURLY_THRESHOLD);
+  const remainingHours = remainingAfterWeek % HOURLY_THRESHOLD;
 
   const candidates: (number | null)[] = [
     // General: fullMonths + fullWeeks + fullDays + remaining hours
@@ -272,15 +272,15 @@ export const calculateRentalAmount = (
     calcAmount(fullMonths, fullWeeks, fullDays + (remainingHours > 0 ? 1 : 0), 0),
 
     // Special case 4: pure months + weeks (no leftover days)
-  //  calcAmount(fullMonths, fullWeeks, fullDays, 0),
+    //  calcAmount(fullMonths, fullWeeks, fullDays, 0),
 
     // Special case 5: (fullMonths + 1) months, no weeks/days
-  //  calcAmount(fullMonths + 1, 0, 0, 0),
+    //  calcAmount(fullMonths + 1, 0, 0, 0),
   ];
 
   return {
     rentalAmount: lowest(candidates),
-    pricePerDay:  monthly ? monthly / 30 : (weekly ? weekly / 7 : (daily ?? 0)),
+    pricePerDay: monthly ? monthly / 30 : (weekly ? weekly / 7 : (daily ?? 0)),
     totalDays,
   };
 };
@@ -485,7 +485,7 @@ export const confirmBookingService = async (
     totalAmount: Number(m.chargeAmount),
     securityDeposit: Number(m.depositAmount),
     currency: "SEK",
-    status: "upcoming",
+    status: "upcoming"
   });
 
   // ── Create Payment record ──
@@ -512,26 +512,27 @@ export const confirmBookingService = async (
   await booking.save();
   const listing = await Listing.findById(m.listingId).lean();
   if (!listing) {
-  throw new Error("Listing not found");
-}
+    throw new Error("Listing not found");
+  }
 
-const owner = await User.findById(listing.ownerId);
+  const owner = await User.findById(listing.ownerId);
 
-if (!owner) {
-  throw new Error("Bike owner not found");
-}
+  if (!owner) {
+    throw new Error("Bike owner not found");
+  }
   const firstName = `${renter.personalProfile?.firstName || ""} ${renter.personalProfile?.lastName || ""}`.trim() ||
-  renter.email || "there";
+    renter.email || "there";
   const startDate = new Date(m.startDate);
   const endDate = new Date(m.endDate);
   const bikeName = listing?.title ?? "Your booked bike";
+  const pickupPoint = listing?.pickupPoint ?? "the pickup location";
   const startDateFormatted = new Date(m.startDate).toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
   const endDateFormatted = new Date(m.endDate).toLocaleDateString("en-SE", { day: "numeric", month: "long", year: "numeric" });
   const bookingShortId = booking._id.toString().slice(-8).toUpperCase();
   const ownerFirstName =
-  owner.personalProfile?.firstName ||
-  owner.businessProfile?.businessName ||
-  "Owner";
+    owner.personalProfile?.firstName ||
+    owner.businessProfile?.businessName ||
+    "Owner";
 
   await sendEmail(
     renter.email,
@@ -606,13 +607,21 @@ if (!owner) {
                   </tr>
                   <tr style="background:#ffffff;">
                     <td style="padding:12px 20px; font-size:15px; color:#666; text-align:left; border-bottom:1px solid #eeeeee;">
+                      Pickup Point
+                    </td>
+                    <td style="padding:12px 20px; font-size:15px; font-weight:600; color:#1a1a1a; text-align:right; border-bottom:1px solid #eeeeee;">
+                      ${pickupPoint}
+                    </td>
+                  </tr>
+                  <tr style="background:#f9f9f9;">
+                    <td style="padding:12px 20px; font-size:15px; color:#666; text-align:left; border-bottom:1px solid #eeeeee;">
                       Total Days
                     </td>
                     <td style="padding:12px 20px; font-size:15px; font-weight:600; color:#1a1a1a; text-align:right; border-bottom:1px solid #eeeeee;">
                       ${m.totalDays} day(s)
                     </td>
                   </tr>
-                  <tr style="background:#f9f9f9;">
+                  <tr style="background:#ffffff;">
                     <td style="padding:12px 20px; font-size:15px; color:#666; text-align:left; border-bottom:1px solid #eeeeee;">
                       Rental Amount
                     </td>
@@ -620,7 +629,7 @@ if (!owner) {
                       ${Number(m.rentalAmount).toFixed(2)} SEK
                     </td>
                   </tr>
-                  <tr style="background:#ffffff;">
+                  <tr style="background:#f9f9f9;">
                     <td style="padding:12px 20px; font-size:15px; color:#666; text-align:left; border-bottom:1px solid #eeeeee;">
                       Security Deposit
                     </td>
@@ -628,7 +637,7 @@ if (!owner) {
                       ${Number(m.depositAmount).toFixed(2)} SEK
                     </td>
                   </tr>
-                  <tr style="background:#f9f9f9;">
+                  <tr style="background:#ffffff;">
                     <td style="padding:12px 20px; font-size:16px; font-weight:700; color:#1a1a1a; text-align:left;">
                       Total Charged
                     </td>
@@ -651,9 +660,9 @@ if (!owner) {
     </html>`
   );
   await sendEmail(
-  owner.email,
-  "New Booking Received 🚴",
-  `<!DOCTYPE html>
+    owner.email,
+    "New Booking Received 🚴",
+    `<!DOCTYPE html>
   <html>
   <head>
     <meta charset="utf-8">
@@ -745,7 +754,7 @@ if (!owner) {
     </table>
   </body>
   </html>`
-);
+  );
   return {
     bookingId: booking._id,
     paymentId: payment._id,
@@ -759,7 +768,7 @@ if (!owner) {
       ownerPayout: Number(m.ownerPayout),
     },
   };
-};
+}
 
 // ─────────────────────────────────────────────────────────────
 // NEW — call this single function when ride ends.
@@ -780,6 +789,7 @@ if (!owner) {
 //                   → no dependency on available balance → WORKS ✅
 // ─────────────────────────────────────────────────────────────
 export const completeRideService = async (bookingId: string, status: "inprogress" | "completed", userId: string) => {
+
   const booking = await Booking.findById(bookingId);
   if (!booking) throw new Error("Booking not found");
   // if (booking.status === "completed") throw new Error("Ride already completed");
@@ -795,7 +805,7 @@ export const completeRideService = async (bookingId: string, status: "inprogress
   // //     status: booking.status,
   // //   };
   // // }
-   const user = await User.findById(userId);
+  const user = await User.findById(userId);
 
   if (!user) {
     throw new Error("User not found");
@@ -825,9 +835,22 @@ export const completeRideService = async (bookingId: string, status: "inprogress
     throw new Error("Payment has not been confirmed yet");
   }
 
-  if (!paymentIntent.latest_charge) {
-    throw new Error("No charge found on this payment");
+  if (
+    !paymentIntent.latest_charge ||
+    typeof paymentIntent.latest_charge !== "string"
+  ) {
+    throw new Error("Charge ID not found.");
   }
+
+  const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+
+  const balanceTransaction = await stripe.balanceTransactions.retrieve(
+    charge.balance_transaction as string
+  );
+
+
+  const feeInCents = balanceTransaction.fee;
+  const fee = feeInCents / 100;
 
 
   const owner = await User.findById(booking.ownerId);
@@ -841,38 +864,38 @@ export const completeRideService = async (bookingId: string, status: "inprogress
     throw new Error("Owner has not completed KYC verification");
   }
   const depositAmount = payment.depositAmount ?? 0;
-  const ownerPayout = payment.ownerPayout ?? 0; 
+  const ownerPayout = payment.ownerPayout ?? 0;
 
   const dispute = await Dispute.findOne({ bookingId: booking._id });
-  let renterRefund = depositAmount;   
+  let renterRefund = depositAmount;
   let adjustedOwnerPayout = ownerPayout;
   if (dispute) {
     if (dispute.status === "rejected") {
-     
+
       renterRefund = depositAmount;
       adjustedOwnerPayout = ownerPayout;
 
     } else if (dispute.status === "resolved") {
-   
+
       const penaltyAmount = dispute.disputeAmount ?? 0;
       renterRefund = Math.max(0, depositAmount - penaltyAmount);
       adjustedOwnerPayout = ownerPayout + penaltyAmount;
 
     } else if (dispute.status === "open") {
-   
+
       throw new Error("Cannot complete ride. Dispute is still open and pending resolution.");
     }
   }
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
-    amount: renterRefund * 100,       
+    amount: Math.round(renterRefund * 100),
     reason: "requested_by_customer",
   });
   const transfer = await stripe.transfers.create({
-    amount: adjustedOwnerPayout * 100,          
+    amount: Math.round(adjustedOwnerPayout * 100),
     currency: "sek",
     destination: owner.businessProfile.stripeIdentityId,
-    source_transaction: paymentIntent.latest_charge as string, 
+    source_transaction: paymentIntent.latest_charge as string,
     metadata: {
       bookingId: booking._id.toString(),
       paymentId: payment._id.toString(),
@@ -892,8 +915,10 @@ export const completeRideService = async (bookingId: string, status: "inprogress
 
   booking.status = "completed";
   booking.actualEndTime = new Date();
+  booking.settlementDate = new Date();
   booking.isSettlementDone = true;
   booking.updatedBy = updatedBy;
+  booking.stripeFee = fee;
   await booking.save();
   const renter = await User.findById(booking.renterId);
   const firstName = renter?.personalProfile?.firstName ?? "there";
@@ -1100,7 +1125,7 @@ export const refundDepositService = async (bookingId: string) => {
     Booking.findById(bookingId).lean(),
     Dispute.findOne({
       bookingId,
-      status: "resolved",   
+      status: "resolved",
     }).lean(),
   ]);
   if (!booking) throw new Error("Booking not found");
@@ -1126,7 +1151,7 @@ export const refundDepositService = async (bookingId: string) => {
 
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
-    amount: depositAmount * 100,       
+    amount: depositAmount * 100,
   });
 
   payment.status = "refunded";
@@ -1144,7 +1169,7 @@ export const refundDepositService = async (bookingId: string) => {
 
   return {
     message: "Deposit refunded successfully",
-    refundId: refund.id,
+    // refundId: refund.id,
     amount: depositAmount,
   };
 };
@@ -1224,9 +1249,21 @@ export const cancelBookingService = async (
   if (paymentIntent.status !== "succeeded") {
     throw new Error("Payment has not been confirmed yet");
   }
-  if (!paymentIntent.latest_charge) {
-    throw new Error("No charge found on this payment");
+  if (
+    !paymentIntent.latest_charge ||
+    typeof paymentIntent.latest_charge !== "string"
+  ) {
+    throw new Error("Charge ID not found.");
   }
+  const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+
+  const balanceTransaction = await stripe.balanceTransactions.retrieve(
+    charge.balance_transaction as string
+  );
+
+
+  const feeInCents = balanceTransaction.fee;
+  const fee = feeInCents / 100;
 
 
   const owner = await User.findById(booking.ownerId);
@@ -1241,12 +1278,12 @@ export const cancelBookingService = async (
   }
 
   const depositAmount = payment.depositAmount ?? 0;
-  const ownerPayout = payment.ownerPayout ?? 0; 
-  const fullRefundAmount = payment.amount ?? 0;
+  const ownerPayout = payment.ownerPayout ?? 0;
+  const fullRefundAmount = depositAmount + ownerPayout;
 
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
-    amount: fullRefundAmount * 100,                   
+    amount: fullRefundAmount * 100,
     reason: "requested_by_customer",
   });
 
@@ -1277,6 +1314,7 @@ export const cancelBookingService = async (
   booking.cancelledBy = isRenter ? "renter" : "owner";
   booking.cancellationReason = reason ?? undefined;
   booking.cancelledAt = new Date();
+  booking.stripeFee = fee;
   await booking.save();
   const renter = await User.findById(booking.renterId);
   const firstName = renter?.personalProfile?.firstName ?? "there";

@@ -11,6 +11,7 @@ import AdminStatRoutes from "./Apis/Admin/admin.routes"
 import path from "path";
 import stripeWebhook from "./Apis/Checkout/stripe.webhook";
 import Dispute from "./Apis/Dispute/dispute.routes"
+import Audit from "./Apis/Audit/Audit.routes"
 const app: Application = express();
 app.use("/api/webhooks", stripeWebhook);
 app.use(cors());
@@ -29,6 +30,7 @@ app.use("/api/admin",AdminRoutes);
 app.use("/api/dashboard",DashboardRoutes);
 app.use("/api/adminstats",AdminStatRoutes);
 app.use("/api/disputes",Dispute);
+app.use("/api/audit",Audit);
 app.use(
   
   "/uploads",

@@ -56,7 +56,10 @@ export interface IBooking extends Document {
   ownerRequestedCompletion: boolean;
   renterConfirmedCompletion: boolean;
 
-  isSettlementDone?: boolean;          // whether payout/refund has been processed for this booking
+  isSettlementDone?: boolean;
+  stripeFee?: number;
+
+  settlementDate?: Date;       // whether payout/refund has been processed for this booking
 
   penaltyAmount?: number;
   penaltyReason?: string;
@@ -158,6 +161,15 @@ const BookingSchema = new Schema<IBooking>(
       type: Number,
       default: 0,
       min: 0,
+    },
+    stripeFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    settlementDate: {
+      type: Date,
+      default: null,
     },
     // ── Ride Start Flow ──
     startRequestedAt: { type: Date },
