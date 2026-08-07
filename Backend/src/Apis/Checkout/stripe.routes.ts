@@ -1,13 +1,14 @@
 import { Router, Request, Response } from "express";
 import stripe from "../../Utils/stripe";
+import Stripe from "stripe";
 import { authMiddleware, isBikeOwner } from "../../Middlewares/auth.middleware";
 import {
   createBookingPaymentService,
-  completeRideService,   // NEW
+  completeRideService,   
   refundDepositService,
   checkStripeOnboardingStatus,
   cancelBookingService, calculateRentalAmount,
-  checkAvailability, // kept for cancellations only
+  checkAvailability,
   confirmBookingService
 } from "./stripe.service";
 import { AuthRequest } from "../../types/auth-request";
@@ -467,6 +468,92 @@ router.post("/price-breakdown", async (req: AuthRequest, res: Response) => {
     });
   } catch (err: any) {
     res.status(400).json({ message: err.message });
+  }
+});
+
+router.get("/stripe/fee/:paymentIntentId", async (req: Request, res: Response) => {
+  try {
+    const { paymentIntentId } = req.params;
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+if (
+  !paymentIntent.latest_charge ||
+  typeof paymentIntent.latest_charge !== "string"
+) {
+  throw new Error("Charge ID not found.");
+}
+
+const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+
+const balanceTransaction = await stripe.balanceTransactions.retrieve(
+  charge.balance_transaction as string
+);
+
+//const fee = balanceTransaction.fee;
+
+    const feeInCents = balanceTransaction.fee;
+    const fee = feeInCents / 100;
+
+    return res.status(200).json({
+      success: true,
+      paymentIntentId,
+      currency: balanceTransaction.currency,
+      amount: paymentIntent.amount / 100,
+      stripeFee: fee,
+      stripeFeeInCents: feeInCents,
+    });
+  } catch (error:any) {
+    console.error("Error retrieving payment intent:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+router.get("/stripe/fee/v1/:paymentIntentId", async (req: Request, res: Response) => {
+  try {
+     const { paymentIntentId } = req.params;
+      const paymentIntent = await stripe.paymentIntents.retrieve(
+    paymentIntentId,
+    {
+      expand: ["latest_charge.balance_transaction"],
+    }
+  );
+
+  if (paymentIntent.status !== "succeeded") {
+    throw new Error(`Payment not completed. Status: ${paymentIntent.status}`);
+  }
+
+ 
+
+  // ── 3. Extract Stripe Fee safely from expanded object ──
+  let stripeFee = 0;
+  const latestCharge = paymentIntent.latest_charge as Stripe.Charge | null;
+
+  if (
+    latestCharge &&
+    typeof latestCharge !== "string" &&
+    latestCharge.balance_transaction &&
+    typeof latestCharge.balance_transaction !== "string"
+  ) {
+    stripeFee = (latestCharge.balance_transaction.fee || 0) / 100;
+  }
+return res.status(200).json({
+      success: true,
+      paymentIntentId,
+      amount: paymentIntent.amount / 100,
+      stripeFee: stripeFee,
+     
+    });
+  } catch (error:any) {
+    console.error("Error retrieving payment intent:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 });
 export default router;
