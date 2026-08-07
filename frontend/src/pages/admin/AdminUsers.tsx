@@ -17,7 +17,6 @@ import {
   useDeleteUserMutation,
 } from "../../services/adminApi";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 
 const IconYes = () => (
   <CheckCircleIcon sx={{ color: "success.main" }} />

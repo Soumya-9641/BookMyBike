@@ -48,9 +48,9 @@ export const listerSteps: StepItem[] = [
       "Upload photos, add bike details, and set your rental price & deposit.",
   },
   {
-    title: "Receive Booking Requests",
+    title: "Receive Booking Notifications",
     desc:
-      "Get notified, receive, and accept booking requests when your bike is requested.",
+      "Receive an email notification when your bike is booked.",
   },
   {
     title: "Handover & Start Ride",

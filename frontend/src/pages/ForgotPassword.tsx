@@ -5,10 +5,6 @@ import {
   TextField,
   Button,
   Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
 import { useForgotPasswordMutation } from "../services/authApi";
 import { Link as RouterLink } from "react-router-dom";
@@ -16,8 +12,6 @@ import { toast } from "react-hot-toast";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
 
   const [forgotPassword, { isLoading }] =
     useForgotPasswordMutation();
@@ -32,15 +26,11 @@ const ForgotPassword = () => {
     try {
       const res = await forgotPassword({ email }).unwrap();
       toast.success(res.message);
-      setIsSuccess(true);
-      setDialogOpen(true);
       setEmail("");
     } catch (err: any) {
       toast.error(
         err?.data?.message || "Something went wrong"
       );
-      setIsSuccess(false);
-      setDialogOpen(true);
     }
   };
 

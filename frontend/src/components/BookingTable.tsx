@@ -337,7 +337,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
                               setOpenDispute(true);
                             }}
                           >
-                            Settlement
+                            Initiate Payment
                           </Button>
                         )}
 

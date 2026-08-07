@@ -15,6 +15,13 @@ export interface OnboardResponse {
   url: string;
 }
 
+type CompleteRidePayload = {
+  bookingId: string;
+  status: "inprogress" | "completed";
+};
+
+type CompleteRideArg = string | CompleteRidePayload;
+
 export const stripeApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     /** ───────────── RENTER ───────────── */
@@ -43,15 +50,17 @@ export const stripeApi = baseApi.injectEndpoints({
     }),
 
     // services/stripeApi.ts
-    completeRide: builder.mutation<
-      { success: boolean },
-      { bookingId: string; status: "inprogress" | "completed" }
-    >({
-      query: ({ bookingId, status }) => ({
-        url: `checkout/${bookingId}/complete-ride`,
-        method: "POST",
-        body: { status },
-      }),
+    completeRide: builder.mutation<{ success: boolean }, CompleteRideArg>({
+      query: (arg) => {
+        const bookingId = typeof arg === "string" ? arg : arg.bookingId;
+        const status = typeof arg === "string" ? "completed" : arg.status;
+
+        return {
+          url: `checkout/${bookingId}/complete-ride`,
+          method: "POST",
+          body: { status },
+        };
+      },
     }),
     getStripeStatus: builder.query<
       {

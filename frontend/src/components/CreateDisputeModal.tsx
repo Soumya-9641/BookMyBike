@@ -26,8 +26,9 @@ interface Props {
 }
 
 const CreateDisputeModal = ({ open, onClose, onSubmit }: Props) => {
-  const [type, setType] =
-    useState<"APPLICABLE" | "NOT_APPLICABLE">("APPLICABLE");
+  const [type, setType] = useState<"APPLICABLE" | "NOT_APPLICABLE">(
+    "APPLICABLE",
+  );
   const [disputeAmount, setDisputeAmount] = useState("");
   const [reason, setReason] = useState("");
   const [image, setImage] = useState<File | undefined>();
@@ -52,7 +53,10 @@ const CreateDisputeModal = ({ open, onClose, onSubmit }: Props) => {
     setImage(file);
     setImagePreview(URL.createObjectURL(file));
   };
-
+  const disputeOptions = [
+    { label: "Yes", value: "APPLICABLE" },
+    { label: "No", value: "NOT_APPLICABLE" },
+  ];
   const handleSubmit = () => {
     onSubmit({
       disputeAmount: type === "NOT_APPLICABLE" ? 0 : Number(disputeAmount),
@@ -83,14 +87,17 @@ const CreateDisputeModal = ({ open, onClose, onSubmit }: Props) => {
           {/* TYPE */}
           <TextField
             select
-            label="Settlement Type"
+            label="Raise dispute options"
             value={type}
             onChange={(e) =>
               setType(e.target.value as "APPLICABLE" | "NOT_APPLICABLE")
             }
           >
-            <MenuItem value="APPLICABLE">Applicable</MenuItem>
-            <MenuItem value="NOT_APPLICABLE">Not Applicable</MenuItem>
+            {disputeOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
           </TextField>
 
           {/* AMOUNT */}

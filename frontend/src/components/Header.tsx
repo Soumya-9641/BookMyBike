@@ -183,7 +183,7 @@ const Header = () => {
                       to="/my-refunds"
                       onClick={closeAccountMenu}
                     >
-                      My Refunds
+                      My Payments
                     </MenuItem>
                   {canCreateListing && (
                     <MenuItem
@@ -293,7 +293,7 @@ const Header = () => {
                   to="/my-refunds"
                   onClick={closeAccountMenu}
                 >
-                  My Refunds
+                  My Payments
                 </Button>
                 {canCreateListing && (
                   <Button

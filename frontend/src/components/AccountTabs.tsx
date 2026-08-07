@@ -15,7 +15,7 @@ const AccountTabs = () => {
       { label: "My Rentals", path: "/owner-bookings" },
       { label: "My Listings", path: "/my-listings" },
     ] : []),
-    { label: "My Refunds", path: "/my-refunds" },
+    { label: "My Payments", path: "/my-refunds" },
     { label: "Change Password", path: "/change-password" },
   ];
 

@@ -25,7 +25,6 @@ import VerifyProfile from "../pages/VerifyProfile";
 import OnboardingSuccess from "../pages/onboarding/success";
 import OnboardingRefresh from "../pages/onboarding/refresh";
 import OnboardReturn from "../pages/onboarding/onboardReturn";
-import ComingSoon from "../pages/ComingSoon";
 import MyRefunds from "../pages/MyRefunds";
 import MyListings from "../pages/MyListing";
 import EditListing from "../pages/EditListings";
@@ -47,6 +46,8 @@ import AdminBookings from "../pages/admin/AdminBookings";
 import AdminEditListingModal from "../pages/admin/AdminEditListingModal";
 import PrivacyPolicy from "../components/legal/PrivacyPolicy";
 import HowItWorksFooter from "../components/HowItWorksFooter";
+import CookiePolicy from "../pages/CookiePolicy";
+import RevenueAudit from "../pages/admin/RevenueAudit";
 
 const AppRoutes = () => {
   return (
@@ -63,6 +64,7 @@ const AppRoutes = () => {
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="listings" element={<AdminListings />} />
           <Route path="change-password" element={<AdminChangePassword />} />
+          <Route path="audit" element={<RevenueAudit />} />
           <Route path="disputes" element={<AdminDisputes />} />
           <Route path="disputes/:disputeId" element={<AdminDisputeDetail />} />
 
@@ -81,6 +83,7 @@ const AppRoutes = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/cookie-policy" element={<CookiePolicy />} />
         </Route>
 
         <Route path="/" element={<Home />} />

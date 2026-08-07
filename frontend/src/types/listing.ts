@@ -259,3 +259,29 @@ export interface PriceBreakdownResponse {
     currency: string;
   };
 }
+
+export interface AuditMonth {
+
+   year:number;
+
+   month:number;
+
+   monthName:string;
+
+   totalBookings:number;
+
+   completedBookings:number;
+
+   cancelledBookings:number;
+
+   totalAdminAmount:number;
+
+   stripeFee:number;
+
+   platformProfit:number;
+
+   isPayoutEligible:boolean;
+
+   isPayoutDone:boolean;
+
+}
