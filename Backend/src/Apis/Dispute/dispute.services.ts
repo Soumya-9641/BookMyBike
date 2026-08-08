@@ -42,7 +42,7 @@ export const createDisputeService = async (
     error.dispute = existingDispute;     // ← attach existing dispute
     throw error;
   }
-   const status = type === "NOT_APPLICABLE" ? "rejected" : "open";
+   const status = type === "NOT_APPLICABLE" ? "resolved" : "open";
   const dispute = await Dispute.create({
     bikeId:        booking.bikeId,
     sellerId:      booking.ownerId,
@@ -268,6 +268,11 @@ export const getDisputeDetailService = async (disputeId: string) => {
 };
 
 export const getAllDisputesService = async () => {
-  const disputes = await Dispute.find().sort({ createdAt: -1 }).lean();
+  const disputes = await Dispute.find({
+    type: "APPLICABLE",
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
   return disputes;
 };
