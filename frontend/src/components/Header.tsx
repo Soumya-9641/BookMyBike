@@ -23,7 +23,7 @@ import { useGetProfileQuery } from "../services/bookingApi";
 
 const Header = () => {
   const dispatch = useDispatch();
-  const { token, isOnboarded } = useSelector((state: RootState) => state.auth);
+  const { token, user, isOnboarded } = useSelector((state: RootState) => state.auth);
   const isLoggedIn = Boolean(token);
   const { data, isLoading } = useGetStripeStatusQuery(undefined, {
     skip: !token, // 🔥 important
@@ -39,7 +39,9 @@ const Header = () => {
     }
   }, [isLoading, data]);
 
-  const canCreateListing = Boolean(token) && isOnboarded;
+  const canCreateListing =
+    Boolean(token) &&
+    (isOnboarded || Boolean(user?.hasBusinessProfile));
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

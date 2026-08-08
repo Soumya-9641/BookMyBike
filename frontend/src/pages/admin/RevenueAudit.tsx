@@ -37,19 +37,11 @@ interface AuditMonth {
 }
 
 const RevenueAudit = () => {
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
+  const [year, setYear] = useState(new Date().getFullYear());
 
-  const [year, setYear] = useState(currentYear);
+  const { data, isLoading, refetch } = useGetAuditQuery(year);
 
-  const {
-    data,
-    isLoading,
-    refetch,
-  } = useGetAuditQuery(year);
-
-  const [createAudit, { isLoading: creating }] =
-    useCreateAuditMutation();
+  const [createAudit, { isLoading: creating }] = useCreateAuditMutation();
 
   const handleGenerate = async (row: AuditMonth) => {
     try {
@@ -72,13 +64,10 @@ const RevenueAudit = () => {
       toast.error(err?.data?.message || "Failed to generate audit");
     }
   };
+  // header does not depend on a specific row
 
   return (
-    <Box
-      maxWidth="xl"
-      mx="auto"
-      p={3}
-    >
+    <Box maxWidth="xl" mx="auto" p={3}>
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -92,9 +81,7 @@ const RevenueAudit = () => {
         <FormControl size="small">
           <Select
             value={year}
-            onChange={(e) =>
-              setYear(Number(e.target.value))
-            }
+            onChange={(e) => setYear(Number(e.target.value))}
           >
             {[2024, 2025, 2026, 2027, 2028].map((y) => (
               <MenuItem key={y} value={y}>
@@ -107,11 +94,7 @@ const RevenueAudit = () => {
 
       <Paper elevation={3}>
         {isLoading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            py={8}
-          >
+          <Box display="flex" justifyContent="center" py={8}>
             <CircularProgress />
           </Box>
         ) : (
@@ -126,38 +109,35 @@ const RevenueAudit = () => {
                   Month
                 </TableCell>
 
-                <TableCell sx={{ color: "#fff" }}>
+                <TableCell sx={{ color: "#fff" }} align="center">
                   Total
                 </TableCell>
 
-                <TableCell sx={{ color: "#fff" }}>
+                <TableCell sx={{ color: "#fff" }} align="center">
                   Completed
                 </TableCell>
 
-                <TableCell sx={{ color: "#fff" }}>
+                <TableCell sx={{ color: "#fff" }} align="center">
                   Cancelled
                 </TableCell>
 
-                <TableCell sx={{ color: "#fff" }}>
+                <TableCell sx={{ color: "#fff" }} align="center">
                   Admin Amount
                 </TableCell>
 
-                <TableCell sx={{ color: "#fff" }}>
+                <TableCell sx={{ color: "#fff" }} align="center">
                   Stripe Fee
                 </TableCell>
 
-                <TableCell sx={{ color: "#fff" }}>
+                <TableCell sx={{ color: "#fff" }} align="center">
                   Platform Profit
                 </TableCell>
 
-                <TableCell sx={{ color: "#fff" }}>
+                <TableCell sx={{ color: "#fff" }} align="center">
                   Status
                 </TableCell>
 
-                <TableCell
-                  align="center"
-                  sx={{ color: "#fff" }}
-                >
+                <TableCell align="center" sx={{ color: "#fff" }}>
                   Action
                 </TableCell>
               </TableRow>
@@ -165,56 +145,60 @@ const RevenueAudit = () => {
 
             <TableBody>
               {data?.data?.map((row: AuditMonth) => {
-                const disabled =
+                const currentYear = new Date().getFullYear();
+                const currentMonth = new Date().getMonth() + 1;
+
+                const isCurrentOrFutureMonth =
                   row.year > currentYear ||
-                  (row.year === currentYear &&
-                    row.month >= currentMonth);
+                  (row.year === currentYear && row.month >= currentMonth);
+
+                const isCompleted = row.isPayoutDone;
+                const isRowDisabled = isCurrentOrFutureMonth && !isCompleted;
 
                 return (
-                  <TableRow key={row.month}>
-                    <TableCell>
-                      {row.monthName}
-                    </TableCell>
+                  <TableRow
+                    key={`${row.year}-${row.month}`}
+                    sx={{
+                      opacity: isRowDisabled ? 0.5 : 1,
+                      backgroundColor: isRowDisabled
+                        ? "#f5f5f5"
+                        : isCompleted
+                        ? "#d1e7dd"
+                        : "inherit",
+                      pointerEvents: isRowDisabled ? "none" : "auto",
+                    }}
+                  >
+                    <TableCell align="center">{row.monthName}</TableCell>
 
-                    <TableCell>
-                      {row.totalBookings}
-                    </TableCell>
+                    <TableCell align="center">{row.totalBookings}</TableCell>
 
-                    <TableCell>
+                    <TableCell align="center">
                       {row.completedBookings}
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell align="center">
                       {row.cancelledBookings}
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell align="center">
                       {"SEK "}
                       {row.totalAdminAmount.toFixed(2)}
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell align="center">
                       {"SEK "}
                       {row.stripeFee.toFixed(2)}
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell align="center">
                       {"SEK "}
                       {row.platformProfit.toFixed(2)}
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell align="center">
                       <Chip
-                        label={
-                          row.isPayoutDone
-                            ? "Completed"
-                            : "Pending"
-                        }
-                        color={
-                          row.isPayoutDone
-                            ? "success"
-                            : "warning"
-                        }
+                        label={row.isPayoutDone ? "Completed" : "Pending"}
+                        color={row.isPayoutDone ? "success" : "warning"}
                         size="small"
                       />
                     </TableCell>
@@ -224,18 +208,13 @@ const RevenueAudit = () => {
                         variant="contained"
                         size="small"
                         disabled={
-                          disabled ||
-                          row.isPayoutDone ||
-                          !row.isPayoutEligible ||
+                          isCompleted ||
+                          isRowDisabled ||
                           creating
                         }
-                        onClick={() =>
-                          handleGenerate(row)
-                        }
+                        onClick={() => handleGenerate(row)}
                       >
-                        {row.isPayoutDone
-                          ? "Completed"
-                          : "Generate"}
+                        {row.isPayoutDone ? "Completed" : "Payout"}
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -29,7 +29,7 @@ const initialState: AuthState = {
   token: !isExpired ? token : null,
   user: !isExpired ? storedUser : null,
   isOnboarded: !isExpired
-    ? storedUser?.isOnboarded ?? false
+    ? storedUser?.isOnboarded ?? storedUser?.hasBusinessProfile ?? false
     : false,
 };
 
@@ -51,7 +51,9 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.user = action.payload.user;
       state.isOnboarded =
-        action.payload.user?.isOnboarded ?? false;
+        action.payload.user?.isOnboarded ??
+        action.payload.user?.hasBusinessProfile ??
+        false;
 
       // persist
       localStorage.setItem("token", action.payload.token);
