@@ -739,6 +739,30 @@ export const initiateAdminRefundService = async (
   if (!payment.stripePaymentIntentId) {
     throw new Error("Stripe Payment Intent not found");
   }
+  const paymentIntent = await stripe.paymentIntents.retrieve(
+      payment.stripePaymentIntentId
+    );
+  
+    if (paymentIntent.status !== "succeeded") {
+      throw new Error("Payment has not been confirmed yet");
+    }
+  
+    if (
+      !paymentIntent.latest_charge ||
+      typeof paymentIntent.latest_charge !== "string"
+    ) {
+      throw new Error("Charge ID not found.");
+    }
+  
+    const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+  
+    const balanceTransaction = await stripe.balanceTransactions.retrieve(
+      charge.balance_transaction as string
+    );
+  
+  
+    const feeInCents = balanceTransaction.fee;
+    const fee = feeInCents / 100;
 
 
   // Create Stripe Refund
@@ -769,6 +793,7 @@ export const initiateAdminRefundService = async (
   booking.status = "cancelled";
   booking.cancelledBy = "admin";
   booking.cancelledAt = now;
+  booking.stripeFee = fee;
   booking.cancellationReason =
     "Booking automatically cancelled. Owner never accepted ride start request before ride end time.";
   await booking.save();
