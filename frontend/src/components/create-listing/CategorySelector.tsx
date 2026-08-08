@@ -6,6 +6,7 @@ import {
   MenuItem,
   Stack,
 } from "@mui/material";
+import { memo, useCallback } from "react";
 import { BIKE_CATEGORIES } from "../../constant/bikecategories"; // import categories from CreateListing
 
 interface Props {
@@ -15,12 +16,25 @@ interface Props {
   onSubChange: (val: string) => void;
 }
 
-const CategorySelector = ({
+const CategorySelector = memo(function CategorySelector({
   mainCategory,
   subCategory,
   onMainChange,
   onSubChange,
-}: Props) => {
+}: Props) {
+  const handleMainChange = useCallback(
+    (event: any) => {
+      onMainChange(event.target.value);
+      onSubChange("");
+    },
+    [onMainChange, onSubChange],
+  );
+
+  const handleSubChange = useCallback(
+    (event: any) => onSubChange(event.target.value),
+    [onSubChange],
+  );
+
   return (
     <Stack spacing={2}>
       {/* MAIN CATEGORY */}
@@ -29,10 +43,7 @@ const CategorySelector = ({
         <Select
           label="Main Category *"
           value={mainCategory}
-          onChange={(e) => {
-            onMainChange(e.target.value);
-            onSubChange(""); // reset sub
-          }}
+          onChange={handleMainChange}
         >
           {Object.keys(BIKE_CATEGORIES).map((cat) => (
             <MenuItem key={cat} value={cat}>
@@ -48,7 +59,7 @@ const CategorySelector = ({
         <Select
           label="Sub Category *"
           value={subCategory}
-          onChange={(e) => onSubChange(e.target.value)}
+          onChange={handleSubChange}
         >
           {mainCategory &&
             BIKE_CATEGORIES[
@@ -62,6 +73,6 @@ const CategorySelector = ({
       </FormControl>
     </Stack>
   );
-};
+});
 
 export default CategorySelector;

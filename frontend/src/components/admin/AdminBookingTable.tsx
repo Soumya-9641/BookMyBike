@@ -143,7 +143,7 @@ const AdminBookingTable = ({ bookings, refetch }: Props) => {
 
               return (
                 <TableRow
-                  key={b._id}
+                  key={bookingId}
                   sx={{
                     backgroundColor: idx % 2 === 0 ? "#f9f9f9" : "#ebebeb",
                   }}
@@ -207,7 +207,7 @@ const AdminBookingTable = ({ bookings, refetch }: Props) => {
                             variant="outlined"
                             onClick={() => handleAdminSettlement(b)}
                           >
-                            Settlement
+                            Initiate Payment
                           </Button>
                         )}
                     </Stack>

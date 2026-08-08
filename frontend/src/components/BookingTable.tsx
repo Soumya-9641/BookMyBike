@@ -58,7 +58,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
   /* -------------------- CANCEL -------------------- */
   const handleCancelBooking = async (booking: Booking) => {
     const confirmed = window.confirm(
-      "Are you sure you want to cancel this booking?"
+      "Are you sure you want to cancel this booking?",
     );
     if (!confirmed) return;
 
@@ -100,7 +100,11 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
 
     try {
       await createDispute(formData).unwrap();
-      toast.success("Dispute created");
+      if (data.type === "APPLICABLE") {
+        toast.success(
+          "Dispute created successfully. Contact support for assistance.",
+        );
+      }
 
       // ONLY for NOT_APPLICABLE → complete ride
       if (data.type === "NOT_APPLICABLE") {
@@ -109,7 +113,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
           status: "completed",
         }).unwrap();
 
-        toast.success("Ride completed");
+        toast.success("The ride has been completed.");
       }
 
       // ✅ close modal ONLY on success
@@ -154,7 +158,8 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
           <TableBody>
             {bookings.map((b, idx) => {
               const flags = b.flags || {};
-              const paymentStatus = b.payment?.status || b.refund?.paymentStatus || "pending";
+              const paymentStatus =
+                b.payment?.status || b.refund?.paymentStatus || "pending";
               const displayStatus = getDisplayStatus(b.status);
 
               const amountToShow =
@@ -164,8 +169,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
 
               // ✅ NEW settlement hide logic (ONLY ADDITION)
               const hideSettlementButton =
-                (b.dispute?.type === "APPLICABLE" &&
-                  flags.isDisputeCreated) ||
+                (b.dispute?.type === "APPLICABLE" && flags.isDisputeCreated) ||
                 (b.dispute?.type === "NOT_APPLICABLE" &&
                   flags.isDisputeCreated &&
                   flags.isSettlementDone);
@@ -180,9 +184,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
                   <TableCell>
                     {new Date(b.startDate).toLocaleString()}
                   </TableCell>
-                  <TableCell>
-                    {new Date(b.endDate).toLocaleString()}
-                  </TableCell>
+                  <TableCell>{new Date(b.endDate).toLocaleString()}</TableCell>
                   <TableCell>{b.bike?.title}</TableCell>
                   <TableCell>SEK {amountToShow}</TableCell>
 
@@ -217,7 +219,6 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
 
                   <TableCell>
                     <Stack direction="row" spacing={1} flexWrap="wrap">
-
                       {/* RENTER → REQUEST START */}
                       {!editable &&
                         b.status === "upcoming" &&
@@ -234,8 +235,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
                                 refetch?.();
                               } catch (e: any) {
                                 toast.error(
-                                  e?.data?.message ||
-                                  "Failed to request start"
+                                  e?.data?.message || "Failed to request start",
                                 );
                               }
                             }}
@@ -261,8 +261,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
                                 refetch?.();
                               } catch (e: any) {
                                 toast.error(
-                                  e?.data?.message ||
-                                  "Failed to accept start"
+                                  e?.data?.message || "Failed to accept start",
                                 );
                               }
                             }}
@@ -289,7 +288,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
                               } catch (e: any) {
                                 toast.error(
                                   e?.data?.message ||
-                                  "Failed to request completion"
+                                    "Failed to request completion",
                                 );
                               }
                             }}
@@ -316,7 +315,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
                               } catch (e: any) {
                                 toast.error(
                                   e?.data?.message ||
-                                  "Failed to confirm completion"
+                                    "Failed to confirm completion",
                                 );
                               }
                             }}
@@ -338,7 +337,7 @@ const BookingTable = ({ bookings, editable = false, refetch }: Props) => {
                               setOpenDispute(true);
                             }}
                           >
-                            Settlement
+                            Initiate Payment
                           </Button>
                         )}
 

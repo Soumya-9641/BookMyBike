@@ -25,7 +25,6 @@ import VerifyProfile from "../pages/VerifyProfile";
 import OnboardingSuccess from "../pages/onboarding/success";
 import OnboardingRefresh from "../pages/onboarding/refresh";
 import OnboardReturn from "../pages/onboarding/onboardReturn";
-import ComingSoon from "../pages/ComingSoon";
 import MyRefunds from "../pages/MyRefunds";
 import MyListings from "../pages/MyListing";
 import EditListing from "../pages/EditListings";
@@ -47,11 +46,12 @@ import AdminBookings from "../pages/admin/AdminBookings";
 import AdminEditListingModal from "../pages/admin/AdminEditListingModal";
 import PrivacyPolicy from "../components/legal/PrivacyPolicy";
 import HowItWorksFooter from "../components/HowItWorksFooter";
+import CookiePolicy from "../pages/CookiePolicy";
+import RevenueAudit from "../pages/admin/RevenueAudit";
 
 const AppRoutes = () => {
   return (
     <Routes>
-
       {/* ================= ADMIN ROUTES ================= */}
       <Route path="/admin/login" element={<AdminLogin />} />
 
@@ -64,6 +64,7 @@ const AppRoutes = () => {
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="listings" element={<AdminListings />} />
           <Route path="change-password" element={<AdminChangePassword />} />
+          <Route path="audit" element={<RevenueAudit />} />
           <Route path="disputes" element={<AdminDisputes />} />
           <Route path="disputes/:disputeId" element={<AdminDisputeDetail />} />
 
@@ -82,9 +83,10 @@ const AppRoutes = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/cookie-policy" element={<CookiePolicy />} />
         </Route>
 
-        <Route path="/home" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/browse-bikes" element={<BrowseBikes />} />
         <Route path="/bikes/:id" element={<BikeDetails />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -96,7 +98,9 @@ const AppRoutes = () => {
         <Route path="/how-it-works" element={<HowItWorksFooter />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/create-listing" element={<CreateListing />} />
+          <Route element={<ProtectedRoute requireOnboarded />}>
+            <Route path="/create-listing" element={<CreateListing />} />
+          </Route>
           <Route path="/my-account" element={<MyProfile />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/owner-bookings" element={<OwnerBookings />} />
@@ -111,15 +115,9 @@ const AppRoutes = () => {
           <Route path="/my-listings" element={<MyListings />} />
 
           {/* ✅ USER EDIT LISTING (WITH HEADER & FOOTER) */}
-          <Route
-            path="/edit-listing/:listingId"
-            element={<EditListing />}
-          />
+          <Route path="/edit-listing/:listingId" element={<EditListing />} />
         </Route>
       </Route>
-
-      {/* ---------- FALLBACK ---------- */}
-      <Route path="/" element={<ComingSoon />} />
     </Routes>
   );
 };

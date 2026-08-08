@@ -69,7 +69,7 @@ const ListingCard = ({ listing, isAdmin = false, refetch }: Props) => {
           {/* STATUS */}
           <Stack direction="row" spacing={1} mt={2}>
             <Chip
-              label={listing?.isPublished ? "Published" : "Draft"}
+              label={listing?.isPublished ? "Published" : "Paused"}
               color={listing?.isPublished ? "success" : "default"}
               size="small"
             />
@@ -120,8 +120,8 @@ const ListingCard = ({ listing, isAdmin = false, refetch }: Props) => {
                 refetch?.();
                 toast.success(
                   listing?.isBlocked
-                    ? "Listing unblocked successfully"
-                    : "Listing blocked successfully",
+                    ? "Your bike listing is now live"
+                    : "Your bike listing has been paused",
                 );
               } catch (error: any) {
                 toast.error(

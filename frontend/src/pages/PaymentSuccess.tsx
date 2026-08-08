@@ -8,9 +8,7 @@ const PaymentSuccess = () => {
 
   const paymentIntentId = searchParams.get("payment_intent");
 
-  const {
-    data,
-  } = useVerifyPaymentQuery(paymentIntentId!, {
+  useVerifyPaymentQuery(paymentIntentId!, {
     skip: !paymentIntentId,
   });
 

@@ -27,6 +27,8 @@ const accessoriesList = [
   "Basket",
   "Pump",
   "Repair Kit",
+  "Child Seat",
+  "Trailer",
 ];
 
 const CreateListing = () => {
@@ -109,13 +111,13 @@ const CreateListing = () => {
       return false;
     }
 
-    const hasRate =
-      !isPositiveNumber(form.rates.hourly) ||
-      !isPositiveNumber(form.rates.daily) ||
-      !isPositiveNumber(form.rates.weekly) ||
-      !isPositiveNumber(form.rates.monthly);
+    const hasValidRates =
+      isPositiveNumber(form.rates.hourly) &&
+      isPositiveNumber(form.rates.daily) &&
+      isPositiveNumber(form.rates.weekly) &&
+      isPositiveNumber(form.rates.monthly);
 
-    return Boolean(hasRate);
+    return hasValidRates;
   }, [form, mainCategory, subCategory, location, photos]);
   /* -------------------- Submit -------------------- */
   const handleSubmit = async () => {

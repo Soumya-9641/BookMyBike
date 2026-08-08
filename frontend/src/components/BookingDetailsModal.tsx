@@ -105,6 +105,10 @@ const BookingDetailsModal = ({ open, booking, onClose }: Props) => {
               <strong>Location:</strong>{" "}
               {booking.bike.location.address}
             </Typography>
+            <Typography>
+              <strong>Pickup Point:</strong>{" "}
+              {booking.bike.pickupPoint || "—"}
+            </Typography>
           </Stack>
 
           {/* ───────────── PRICING ───────────── */}

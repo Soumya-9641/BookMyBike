@@ -44,7 +44,9 @@ export interface Bike {
   depositAmount: number;
   location: {
     address?: string;
-    city: string;
+    city?: string;
+    country?: string;
+    street?: string;
     coordinates: [number, number];
   };
   createdAt: string;
@@ -172,6 +174,7 @@ export interface Booking {
       city: string;
       coordinates?: [number, number];
     };
+    pickupPoint?: string;
   };
 
   /** ✅ NORMAL PAYMENT (completed rides) */
@@ -255,4 +258,30 @@ export interface PriceBreakdownResponse {
     ownerPayout: number;
     currency: string;
   };
+}
+
+export interface AuditMonth {
+
+   year:number;
+
+   month:number;
+
+   monthName:string;
+
+   totalBookings:number;
+
+   completedBookings:number;
+
+   cancelledBookings:number;
+
+   totalAdminAmount:number;
+
+   stripeFee:number;
+
+   platformProfit:number;
+
+   isPayoutEligible:boolean;
+
+   isPayoutDone:boolean;
+
 }

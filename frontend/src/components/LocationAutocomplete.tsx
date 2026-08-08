@@ -1,6 +1,6 @@
 import { Autocomplete } from "@react-google-maps/api";
 import { TextField } from "@mui/material";
-import { useRef } from "react";
+import { memo, useCallback, useMemo, useRef } from "react";
 
 interface Props {
   label: string;
@@ -16,21 +16,21 @@ interface Props {
   }) => void;
 }
 
-const LocationAutocomplete = ({
+const LocationAutocomplete = memo(function LocationAutocomplete({
   label,
   value,
   disabled = false,
   onChange,
   onSelect,
-}: Props) => {
+}: Props) {
   const autocompleteRef =
     useRef<google.maps.places.Autocomplete | null>(null);
 
-  const handleLoad = (autocomplete: google.maps.places.Autocomplete) => {
+  const handleLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
     autocompleteRef.current = autocomplete;
-  };
+  }, []);
 
-  const handlePlaceChanged = () => {
+  const handlePlaceChanged = useCallback(() => {
     const place = autocompleteRef.current?.getPlace();
     if (!place?.geometry?.location) return;
 
@@ -41,8 +41,17 @@ const LocationAutocomplete = ({
     let country = "";
 
     place.address_components?.forEach((comp) => {
-      if (comp.types.includes("locality")) city = comp.long_name;
-      if (comp.types.includes("country")) country = comp.long_name;
+      if (comp.types.includes("locality")) {
+        city = comp.long_name;
+      } else if (!city && comp.types.includes("administrative_area_level_3")) {
+        city = comp.long_name;
+      } else if (!city && comp.types.includes("sublocality_level_1")) {
+        city = comp.long_name;
+      }
+
+      if (comp.types.includes("country")) {
+        country = comp.long_name;
+      }
     });
 
     onSelect({
@@ -52,27 +61,37 @@ const LocationAutocomplete = ({
       city,
       country,
     });
-  };
+  }, [onSelect]);
+
+  const autocompleteOptions = useMemo(
+    () => ({
+      componentRestrictions: { country: "se" },
+      types: ["geocode"],
+    }),
+    [],
+  );
+
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value),
+    [onChange],
+  );
 
   return (
     <Autocomplete
       onLoad={handleLoad}
       onPlaceChanged={handlePlaceChanged}
-      options={{
-        componentRestrictions: { country: "se" }, // 🇸🇪 Sweden
-        types: ["geocode"],
-      }}
+      options={autocompleteOptions}
     >
       <TextField
         label={label}
         size="small"
         fullWidth
         value={value}
-        disabled={disabled}          // ✅ disable support
-        onChange={(e) => onChange(e.target.value)} // ✅ manual typing works
+        disabled={disabled}
+        onChange={handleTextChange}
       />
     </Autocomplete>
   );
-};
+});
 
 export default LocationAutocomplete;

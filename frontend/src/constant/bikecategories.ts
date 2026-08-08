@@ -58,7 +58,7 @@ export const BIKE_CATEGORIES = {
   ],
 } as const;
 
-export const VITE_STRIPE_PUBLISHABLE_KEY="pk_test_51T2ZyYFKajzpqrJX6m5igAosXUmy14lf7pvLOVMwn6x5oMQbY6xPzAbN8qRb40HWNQlNNdtfejl1fOgl2lmeEHnh00PdAVWmQV";
+export const VITE_STRIPE_PUBLISHABLE_KEY="pk_live_51SzNosFUhtek91M3q0sg8ThSGqItJ2z7p8Ehm0NmWsmaeGdhOI1nvaxPglsGG9mYhxZlGqojtCMX3wcWqFM5XAk800GDTyMzPc";
 
 export const VITE_GOOGLE_MAPS_API_KEY="AIzaSyAJG-R81cH4goveRZ6Bl3O_J_0vjR_6bIQ";
 

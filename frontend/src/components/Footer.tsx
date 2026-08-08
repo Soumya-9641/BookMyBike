@@ -12,89 +12,140 @@ import XIcon from "@mui/icons-material/X";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 
+const Logo = () => (
+  <Box>
+    <img
+      src="/images/icons/logo_footer.png"
+      alt="RentMyBike"
+      style={{ height: 50, width: "auto" }}
+    />
+  </Box>
+);
+
 const Footer = () => {
   return (
     <Box sx={{ bgcolor: "#1f1f1f", color: "#bdbdbd" }}>
-      {/* Main Footer Content */}
       <Box maxWidth="lg" mx="auto" px={3} py={6}>
         <Stack
           direction={{ xs: "column", md: "row" }}
-          spacing={6}
+          spacing={5}
           justifyContent="space-between"
         >
-          {/* LEFT: Logo + Company Info */}
-          <Stack spacing={1} maxWidth={360}>
-            <Box>
-              <img
-                src="/images/icons/logo_footer.png"
-                alt="RentMyBike"
-                style={{ height: 50, width: "auto" }}
-              />
+          {/* ================= MOBILE LOGO ================= */}
+          <Box
+            sx={{
+              display: { xs: "block", md: "none" },
+              order: 1,
+            }}
+          >
+            <Logo />
+          </Box>
+
+          {/* ================= COMPANY INFO ================= */}
+          <Stack
+            spacing={1}
+            maxWidth={360}
+            sx={{
+              order: { xs: 3, md: 1 },
+            }}
+          >
+            {/* Desktop Logo */}
+            <Box
+              sx={{
+                display: { xs: "none", md: "block" },
+              }}
+            >
+              <Logo />
             </Box>
 
             <Typography variant="body2">
-              <span style={{ color: "#22a652", fontWeight: 600 }}>
+              <span
+                style={{
+                  color: "#22a652",
+                  fontWeight: 600,
+                }}
+              >
                 RentMyBike™
               </span>{" "}
               is operated by RM Platforms
             </Typography>
 
             <Typography variant="body2">
-              AB Org.nr: <span style={{ color: "#22a652" }}>559542-5843</span>
+              AB Org.nr:{" "}
+              <span style={{ color: "#22a652" }}>
+                559542-5843
+              </span>
             </Typography>
 
-            <Typography variant="body2">Registered in Sweden</Typography>
+            <Typography variant="body2">
+              Registered in Sweden
+            </Typography>
 
-            <Typography variant="body2">All rights reserved.</Typography>
+            <Typography variant="body2">
+              All rights reserved.
+            </Typography>
           </Stack>
 
-          {/* CENTER: Important Links */}
-          <Stack spacing={2}>
-            <Typography sx={{ color: "#22a652", fontWeight: 600 }}>
+          {/* ================= IMPORTANT LINKS ================= */}
+          <Stack
+            spacing={2}
+            sx={{
+              order: { xs: 2, md: 2 },
+            }}
+          >
+            <Typography
+              sx={{
+                color: "#22a652",
+                fontWeight: 600,
+              }}
+            >
               IMPORTANT LINKS
             </Typography>
 
-            <Stack direction="row" spacing={6}>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={{ xs: 2, md: 6 }}
+            >
+              {/* Left Links */}
               <Stack spacing={1}>
-                {["Home", "How it works", "Browse bikes"].map((item) => (
-                  <Typography key={item} variant="body2">
-                    »{" "}
-                    {item === "Home" ? (
-                      <Link
-                        component={RouterLink}
-                        to="/home"
-                        underline="none"
-                        color="inherit"
-                      >
-                        {item}
-                      </Link>
-                    ) : item === "Browse bikes" ? (
-                      <Link
-                        component={RouterLink}
-                        to="/browse-bikes"
-                        underline="none"
-                        color="inherit"
-                      >
-                        {item}
-                      </Link>
-                    ) : item === "How it works" ? (
-                      <Link
-                        component={RouterLink}
-                        to="/how-it-works"
-                        underline="none"
-                        color="inherit"
-                      >
-                        {item}
-                      </Link>
-                    ) : (
-                      <Link href="#" underline="none" color="inherit">
-                        {item}
-                      </Link>
-                    )}
-                  </Typography>
-                ))}
+                <Typography variant="body2">
+                  »{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/"
+                    underline="none"
+                    color="inherit"
+                  >
+                    Home
+                  </Link>
+                </Typography>
+
+                <Typography variant="body2">
+                  »{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/how-it-works"
+                    underline="none"
+                    color="inherit"
+                  >
+                    How it works
+                  </Link>
+                </Typography>
+
+                <Typography variant="body2">
+                  »{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/browse-bikes"
+                    underline="none"
+                    color="inherit"
+                  >
+                    Browse bikes
+                  </Link>
+                </Typography>
               </Stack>
 
+              {/* Right Links */}
               <Stack spacing={1}>
                 <Typography variant="body2">
                   »{" "}
@@ -107,6 +158,7 @@ const Footer = () => {
                     User agreement
                   </Link>
                 </Typography>
+
                 <Typography variant="body2">
                   »{" "}
                   <Link
@@ -118,6 +170,7 @@ const Footer = () => {
                     Privacy policy
                   </Link>
                 </Typography>
+
                 <Typography variant="body2">
                   »{" "}
                   <Link
@@ -129,6 +182,7 @@ const Footer = () => {
                     Terms and conditions
                   </Link>
                 </Typography>
+
                 <Typography variant="body2">
                   »{" "}
                   <Link
@@ -140,6 +194,7 @@ const Footer = () => {
                     Cancellation policy
                   </Link>
                 </Typography>
+
                 <Typography variant="body2">
                   »{" "}
                   <Link
@@ -155,9 +210,19 @@ const Footer = () => {
             </Stack>
           </Stack>
 
-          {/* RIGHT: Social Links */}
-          <Stack spacing={2}>
-            <Typography sx={{ color: "#22a652", fontWeight: 600 }}>
+          {/* ================= SOCIAL ================= */}
+          <Stack
+            spacing={2}
+            sx={{
+              order: { xs: 4, md: 3 },
+            }}
+          >
+            <Typography
+              sx={{
+                color: "#22a652",
+                fontWeight: 600,
+              }}
+            >
               FOLLOW US ON
             </Typography>
 
@@ -165,9 +230,11 @@ const Footer = () => {
               <IconButton sx={{ color: "#9e9e9e" }}>
                 <FacebookIcon />
               </IconButton>
+
               <IconButton sx={{ color: "#9e9e9e" }}>
                 <XIcon />
               </IconButton>
+
               <IconButton
                 component="a"
                 href="https://www.instagram.com/rentmy.bike?utm_source=qr"
@@ -177,6 +244,7 @@ const Footer = () => {
               >
                 <InstagramIcon />
               </IconButton>
+
               <IconButton
                 component="a"
                 href="https://www.linkedin.com/company/rentmybike/"
@@ -191,7 +259,6 @@ const Footer = () => {
         </Stack>
       </Box>
 
-      {/* Bottom Copyright Bar */}
       <Divider sx={{ bgcolor: "#2e2e2e" }} />
 
       <Box textAlign="center" py={2} bgcolor="#000">

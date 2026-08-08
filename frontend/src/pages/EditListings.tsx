@@ -35,6 +35,8 @@ const accessoriesList = [
   "Basket",
   "Pump",
   "Repair Kit",
+  "Child Seat",
+  "Trailer"
 ];
 
 const MAX_PHOTOS = 6;

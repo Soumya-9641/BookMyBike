@@ -92,7 +92,7 @@ const Header = () => {
 
           {/* ---------------- Desktop Navigation ---------------- */}
           <Box display={{ xs: "none", md: "flex" }} alignItems="center" gap={2}>
-            <Button component={RouterLink} to="/home">
+            <Button component={RouterLink} to="/">
               Home
             </Button>
 
@@ -183,7 +183,7 @@ const Header = () => {
                       to="/my-refunds"
                       onClick={closeAccountMenu}
                     >
-                      My Refunds
+                      My Payments
                     </MenuItem>
                   {canCreateListing && (
                     <MenuItem
@@ -229,7 +229,7 @@ const Header = () => {
           <Stack spacing={2}>
             <Button
               component={RouterLink}
-              to="/home"
+              to="/"
               onClick={() => setDrawerOpen(false)}
             >
               Home
@@ -293,7 +293,7 @@ const Header = () => {
                   to="/my-refunds"
                   onClick={closeAccountMenu}
                 >
-                  My Refunds
+                  My Payments
                 </Button>
                 {canCreateListing && (
                   <Button

@@ -25,7 +25,7 @@ const MyRefunds = () => {
       <AccountTabs />
       {/* Header */}
       <Typography variant="h5" fontWeight={700} mb={2}>
-        My Refunds
+        My Payments
       </Typography>
 
       <Typography variant="body2" color="text.secondary" mb={3}>

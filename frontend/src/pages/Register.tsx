@@ -10,11 +10,51 @@ import {
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useSignupMutation } from "../services/authApi";
 import { useSendOtpMutation, useVerifyOtpMutation } from "../services/authApi";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import toast from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/material.css";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { isValidPhoneNumber } from "libphonenumber-js";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const REGISTER_FORM_STORAGE_KEY = "register-form-state";
+
+const getInitialRegisterForm = () => {
+  if (typeof window === "undefined") {
+    return {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+    };
+  }
+
+  try {
+    const stored = window.sessionStorage.getItem(REGISTER_FORM_STORAGE_KEY);
+    if (!stored) return {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+    };
+
+    return JSON.parse(stored);
+  } catch {
+    return {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+    };
+  }
+};
 
 const Register = () => {
   const navigate = useNavigate();
@@ -23,42 +63,60 @@ const Register = () => {
   const [sendOtp, { isLoading: sendingOtp }] = useSendOtpMutation();
   const [verifyOtp, { isLoading: verifyingOtp }] = useVerifyOtpMutation();
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "", // international format without +
-    password: "",
-  });
+  const [formData, setFormData] = useState(() => getInitialRegisterForm());
+  const [showPassword, setShowPassword] = useState(false);
 
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
 
-  /* -------------------- VALIDATION -------------------- */
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const isEmailValid = emailRegex.test(formData.email);
-  const fullPhoneNumber = `+${formData.phone}`;
-  const isPhoneValid = isValidPhoneNumber(fullPhoneNumber);
+  useEffect(() => {
+    window.sessionStorage.setItem(
+      REGISTER_FORM_STORAGE_KEY,
+      JSON.stringify({
+        ...formData,
+        otp,
+        otpSent,
+        otpVerified,
+        termsChecked,
+      }),
+    );
+  }, [formData, otp, otpSent, otpVerified, termsChecked]);
 
-  const isFormValid =
-    formData.firstName.trim() &&
-    formData.lastName.trim() &&
-    formData.password.trim() &&
-    isEmailValid &&
-    isPhoneValid &&
-    otpVerified &&
-    termsChecked;
+  useEffect(() => {
+    return () => {
+      window.sessionStorage.removeItem(REGISTER_FORM_STORAGE_KEY);
+    };
+  }, []);
+
+  /* -------------------- VALIDATION -------------------- */
+  const isEmailValid = useMemo(() => EMAIL_REGEX.test(formData.email), [formData.email]);
+  const fullPhoneNumber = useMemo(() => `+${formData.phone}`, [formData.phone]);
+  const isPhoneValid = useMemo(() => isValidPhoneNumber(fullPhoneNumber), [fullPhoneNumber]);
+
+  const isFormValid = useMemo(
+    () =>
+      formData.firstName.trim() &&
+      formData.lastName.trim() &&
+      formData.password.trim() &&
+      isEmailValid &&
+      isPhoneValid &&
+      otpVerified &&
+      termsChecked,
+    [formData.firstName, formData.lastName, formData.password, isEmailValid, isPhoneValid, otpVerified, termsChecked],
+  );
 
   /* -------------------- HANDLERS -------------------- */
-  const handleChange =
+  const handleChange = useCallback(
     (field: keyof typeof formData) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData({ ...formData, [field]: e.target.value });
-    };
+      (e: ChangeEvent<HTMLInputElement>) => {
+        setFormData((prev: typeof formData) => ({ ...prev, [field]: e.target.value }));
+      },
+    [],
+  );
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = useCallback(async () => {
     try {
       await sendOtp({ phoneNumber: fullPhoneNumber }).unwrap();
       setOtpSent(true);
@@ -66,9 +124,9 @@ const Register = () => {
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to send OTP");
     }
-  };
+  }, [fullPhoneNumber, sendOtp]);
 
-  const handleVerifyOtp = async () => {
+  const handleVerifyOtp = useCallback(async () => {
     try {
       await verifyOtp({
         phoneNumber: fullPhoneNumber,
@@ -79,9 +137,9 @@ const Register = () => {
     } catch (err: any) {
       toast.error(err?.data?.message || "Invalid OTP");
     }
-  };
+  }, [fullPhoneNumber, otp, verifyOtp]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!isFormValid) return;
 
     try {
@@ -96,11 +154,27 @@ const Register = () => {
       toast.success(
         "Registration successful. Verify your email before logging in.",
       );
+      window.sessionStorage.removeItem(REGISTER_FORM_STORAGE_KEY);
       navigate("/login");
     } catch (err: any) {
       toast.error(err?.data?.message || "Registration failed");
     }
-  };
+  }, [formData, isFormValid, navigate, signup]);
+
+  const togglePasswordVisibility = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
+
+  const handleOtpChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setOtp(e.target.value);
+  }, []);
+
+  const handlePhoneChange = useCallback(
+    (value: string) => {
+      setFormData((prev: typeof formData) => ({ ...prev, phone: value }));
+    },
+    [],
+  );
 
   /* -------------------- UI -------------------- */
   return (
@@ -154,9 +228,7 @@ const Register = () => {
                 <PhoneInput
                   country={"se"}
                   value={formData.phone}
-                  onChange={(value) =>
-                    setFormData({ ...formData, phone: value })
-                  }
+                  onChange={handlePhoneChange}
                   inputStyle={{
                     width: "100%",
                     fontSize: "16px", // prevents mobile zoom
@@ -209,16 +281,29 @@ const Register = () => {
                 label="Enter OTP"
                 fullWidth
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                onChange={handleOtpChange}
               />
             )}
 
             <TextField
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               fullWidth
               value={formData.password}
               onChange={handleChange("password")}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={togglePasswordVisibility}
+                      edge="end"
+                      aria-label="toggle password visibility"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             <Stack direction="row" spacing={1} alignItems="flex-start">
               <Checkbox

@@ -16,6 +16,7 @@ const links = [
   { label: "Bookings", path: "/admin/bookings" },
   { label: "Listings", path: "/admin/listings" },
   { label: "Disputes", path: "/admin/disputes" },
+  { label: "Revenue Audit", path: "/admin/audit" },
 ];
 
 const AdminSidebar = () => {
