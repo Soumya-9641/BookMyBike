@@ -68,8 +68,9 @@ export const getYearlyAuditService = async (
         {
             $match: {
                 $or: [
-                    // Settled bookings
+                    // Successful/completed bookings
                     {
+                        status: "completed",
                         settlementDate: {
                             $gte: yearStart,
                             $lt: yearEnd,
@@ -137,10 +138,12 @@ export const getYearlyAuditService = async (
                     $month: "$auditDate",
                 },
 
+                // Completed + Cancelled
                 totalBookings: {
                     $sum: 1,
                 },
 
+                // Only completed
                 completedBookings: {
                     $sum: {
                         $cond: [
@@ -151,6 +154,7 @@ export const getYearlyAuditService = async (
                     },
                 },
 
+                // Only cancelled
                 cancelledBookings: {
                     $sum: {
                         $cond: [
@@ -161,14 +165,18 @@ export const getYearlyAuditService = async (
                     },
                 },
 
-                // Sum Payment.platformFee
+                // Platform fee ONLY from completed bookings
                 totalAdminAmount: {
                     $sum: {
-                        $ifNull: ["$payment.platformFee", 0],
+                        $cond: [
+                            { $eq: ["$status", "completed"] },
+                            { $ifNull: ["$payment.platformFee", 0] },
+                            0,
+                        ],
                     },
                 },
 
-                // Sum Booking.stripeFee
+                // Stripe fee from BOTH completed + cancelled
                 stripeFee: {
                     $sum: {
                         $ifNull: ["$stripeFee", 0],
@@ -347,7 +355,7 @@ export const createMonthlyAuditService = async (
     // Month Name
     // ─────────────────────────────────────────────
 
-   
+
 
     // ─────────────────────────────────────────────
     // Check existing audit

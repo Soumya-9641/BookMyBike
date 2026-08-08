@@ -648,7 +648,9 @@ export const confirmBookingService = async (
                 </table>
 
                 <p style="font-size:14px; color:#999999; margin:20px 0 10px;">
-                  If you have any questions, please contact our support team.
+                  Make sure to collect the bike on the scheduled rental start date / time, 
+                  and make contact with the lister using their provided contact details in your booking under 
+                  ‘My Rides’ to arrange collection.
                 </p>
 
               </div>
@@ -745,7 +747,8 @@ export const confirmBookingService = async (
             </table>
 
             <p style="margin-top:20px; color:#666;">
-              Please be prepared to hand over the bike to the renter on the scheduled start date.
+              Make sure to prepare the bike for the scheduled rental start time / date and make contact with 
+              the renter using their contact details provided in the booking under ‘My Rentals’ to arrange a smooth and convenient handover.
             </p>
 
           </div>
@@ -1279,7 +1282,7 @@ export const cancelBookingService = async (
 
   const depositAmount = payment.depositAmount ?? 0;
   const ownerPayout = payment.ownerPayout ?? 0;
-  const fullRefundAmount = depositAmount + ownerPayout;
+  const fullRefundAmount =payment.amount ?? 0; // Total amount paid by renter (rental + deposit)
 
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripePaymentIntentId,
