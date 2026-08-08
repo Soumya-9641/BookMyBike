@@ -85,6 +85,7 @@ const SignIn = () => {
           user: {
             email,
             hasBusinessProfile: res.hasBusinessProfile,
+            isOnboarded: res.hasBusinessProfile,
           },
         }),
       );
