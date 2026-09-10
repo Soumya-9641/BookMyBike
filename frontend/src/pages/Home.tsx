@@ -3,8 +3,10 @@ import SearchPanel from "../components/SearchPanel";
 import HowItWorks from "../components/HowItWorks";
 import ExploreBikes from "../components/ExploreBikes";
 import { Box, Stack } from "@mui/material";
+import AppLaunchBanner from "../components/AppLaunchBanner";
 
 const Home = () => {
+
   return (
     <>
       <Hero />
@@ -22,8 +24,14 @@ const Home = () => {
         </Box>
       </Box>
 
-
       <ExploreBikes />
+      {/* <AppLaunchDialog
+        open={showAppDialog}
+        onClose={() => setShowAppDialog(false)}
+      /> */}
+
+      {/* App promotion before footer */}
+      <AppLaunchBanner />
     </>
   );
 };

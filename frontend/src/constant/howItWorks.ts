@@ -17,13 +17,11 @@ export const renterSteps: StepItem[] = [
   },
   {
     title: "Complete Your Booking",
-    desc:
-      "Secure your booking with payment and a refundable deposit via Stripe.",
+    desc: "Secure your booking with payment and a refundable deposit via Stripe. Make contact with the Lister using their details provided in the booking summary to ensure a smooth handover. ",
   },
   {
     title: "Start Ride",
-    desc:
-      'When you receive the bike, both renter and lister must confirm "Start Ride" in the app under "My Rides".',
+    desc: 'When you receive the bike, both renter and lister must confirm "Start Ride" in the app under "My Rides".',
   },
   {
     title: "Ride & Return",
@@ -31,40 +29,33 @@ export const renterSteps: StepItem[] = [
   },
   {
     title: "End Ride",
-    desc:
-      'Once the bike is returned, both parties confirm "End Ride" to complete the rental and trigger payout processing.',
+    desc: 'Once the bike is returned, both parties confirm "End Ride" to complete the rental and trigger payout processing.',
   },
 ];
 
 export const listerSteps: StepItem[] = [
   {
     title: "Sign Up & Verify Your Identity",
-    desc:
-      "Create your account and complete identity verification with Stripe to start listing bikes.",
+    desc: "Create your account and complete identity verification with Stripe to start listing bikes.",
   },
   {
     title: "Create Your Listing",
-    desc:
-      "Upload photos, add bike details, and set your rental price & deposit.",
+    desc: "Upload photos, add bike details, and set your rental price & deposit.",
   },
   {
     title: "Receive Booking Notifications",
-    desc:
-      "Receive an email notification when your bike is booked.",
+    desc: "Receive an email notification when your bike is booked.",
   },
   {
     title: "Handover & Start Ride",
-    desc:
-      'When handing over the bike, both renter and lister confirm "Start Ride" in the app under "My Rides".',
+    desc: 'When handing over the bike, both renter and lister confirm "Start Ride" in the app under "My Rides". Make contact with the Renter using their contact details provided in the booking summary to ensure a smooth handover.',
   },
   {
     title: "End Ride & Confirm Return",
-    desc:
-      'After the bike is returned, both parties confirm "End Ride" to complete the rental and trigger payout processing.',
+    desc: 'After the bike is returned, both parties confirm "End Ride" to complete the rental and trigger payout processing.',
   },
   {
     title: "Get Paid Securely",
-    desc:
-      "Payments are automatically released by Stripe after the rental is completed and confirmed by both parties.",
+    desc: "Payments are automatically released by Stripe after the rental is completed and confirmed by both parties.",
   },
 ];

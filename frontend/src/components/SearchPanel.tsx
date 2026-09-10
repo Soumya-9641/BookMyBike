@@ -9,18 +9,25 @@ import { toast } from "react-hot-toast";
 
 const SearchPanel = () => {
   const navigate = useNavigate();
+
   const [openDialog, setOpenDialog] = useState(false);
   const [location, setLocation] = useState("");
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    null,
-  );
+
+  const [coords, setCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const [startDateTime, setStartDateTime] = useState<Dayjs>(
     dayjs().add(1, "hour"),
   );
-  const [endDateTime, setEndDateTime] = useState<Dayjs>(dayjs().add(5, "hour"));
 
-  const [searchBikes, { isLoading }] = useSearchBikesMutation();
+  const [endDateTime, setEndDateTime] = useState<Dayjs>(
+    dayjs().add(5, "hour"),
+  );
+
+  const [searchBikes, { isLoading }] =
+    useSearchBikesMutation();
 
   const handleSearch = async () => {
     if (!coords) {
@@ -44,70 +51,182 @@ const SearchPanel = () => {
         `/browse-bikes?lat=${coords.lat}&lng=${coords.lng}&start=${startDateTime.toISOString()}&end=${endDateTime.toISOString()}`,
       );
     } catch (err: any) {
-      toast.error(err?.data?.message || "Search failed");
+      toast.error(
+        err?.data?.message || "Search failed",
+      );
     }
   };
+
   return (
     <Box
       sx={{
-        bgcolor: "#fff",
-        p: 3,
-        borderRadius: 2,
-        width: 360,
-        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        px: {
+          xs: 1.5,
+          sm: 2,
+          md: 0,
+        },
+        boxSizing: "border-box",
       }}
     >
-      <Typography variant="h6" fontWeight={700} mb={2}>
-        Search for Bike Rentals
-      </Typography>
+      <Box
+        sx={{
+          bgcolor: "#fff",
+          p: {
+            xs: 2,
+            sm: 3,
+          },
 
-      <Stack spacing={2}>
-        {/* Location */}
-        <LocationAutocomplete
-          label="Location"
-          value={location}
-          onChange={(val) => {
-            setLocation(val);
-            setCoords(null); // ❗ force user to select from dropdown
+          /*
+           * Responsive width:
+           * Mobile -> almost full width
+           * Tablet/Desktop -> fixed comfortable width
+           */
+          width: {
+            xs: "100%",
+            sm: 380,
+            md: 360,
+          },
+
+          maxWidth: {
+            xs: "100%",
+            sm: 380,
+          },
+
+          boxSizing: "border-box",
+
+          borderRadius: 2,
+
+          boxShadow:
+            "0 8px 24px rgba(0,0,0,0.15)",
+        }}
+      >
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          mb={2}
+          sx={{
+            fontSize: {
+              xs: "1.1rem",
+              sm: "1.25rem",
+            },
           }}
-          onSelect={(data) => {
-            setLocation(data.address);
-            setCoords({ lat: data.lat, lng: data.lng });
+        >
+          Search for Bike Rentals
+        </Typography>
+
+        <Stack spacing={2}>
+
+          {/* ================= LOCATION ================= */}
+
+          <LocationAutocomplete
+            label="Location"
+            value={location}
+            onChange={(val) => {
+              setLocation(val);
+
+              // Force user to select
+              // an actual location suggestion
+              setCoords(null);
+            }}
+            onSelect={(data) => {
+              setLocation(data.address);
+
+              setCoords({
+                lat: data.lat,
+                lng: data.lng,
+              });
+            }}
+          />
+
+          {/* ================= TRIP START ================= */}
+
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={() =>
+              setOpenDialog(true)
+            }
+            sx={{
+              minHeight: 48,
+              textTransform: "none",
+              justifyContent: "flex-start",
+              px: 2,
+              whiteSpace: "normal",
+              textAlign: "left",
+            }}
+          >
+            Trip Starts:{" "}
+            {startDateTime.format(
+              "DD MMM YY, HH:mm",
+            )}
+          </Button>
+
+          {/* ================= TRIP END ================= */}
+
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={() =>
+              setOpenDialog(true)
+            }
+            sx={{
+              minHeight: 48,
+              textTransform: "none",
+              justifyContent: "flex-start",
+              px: 2,
+              whiteSpace: "normal",
+              textAlign: "left",
+            }}
+          >
+            Trip Ends:{" "}
+            {endDateTime.format(
+              "DD MMM YY, HH:mm",
+            )}
+          </Button>
+
+          {/* ================= SEARCH ================= */}
+
+          <Button
+            fullWidth
+            variant="contained"
+            sx={{
+              bgcolor: "#22a652",
+              fontWeight: 600,
+              minHeight: 48,
+
+              "&:hover": {
+                bgcolor: "#1e9449",
+              },
+            }}
+            onClick={handleSearch}
+            disabled={isLoading}
+          >
+            {isLoading
+              ? "Searching..."
+              : "SEARCH"}
+          </Button>
+        </Stack>
+
+        {/* ================= DATE/TIME DIALOG ================= */}
+
+        <DateTimeDialog
+          open={openDialog}
+          startDateTime={startDateTime}
+          endDateTime={endDateTime}
+          onClose={() =>
+            setOpenDialog(false)
+          }
+          onApply={(start, end) => {
+            setStartDateTime(start);
+            setEndDateTime(end);
+            setOpenDialog(false);
           }}
         />
-
-        {/* Trip Start */}
-        <Button variant="outlined" onClick={() => setOpenDialog(true)}>
-          Trip Starts: {startDateTime.format("DD MMM YY, HH:mm")}
-        </Button>
-
-        {/* Trip End */}
-        <Button variant="outlined" onClick={() => setOpenDialog(true)}>
-          Trip Ends: {endDateTime.format("DD MMM YY, HH:mm")}
-        </Button>
-
-        <Button
-          fullWidth
-          variant="contained"
-          sx={{ bgcolor: "#22a652", fontWeight: 600 }}
-          onClick={handleSearch}
-          disabled={isLoading}
-        >
-          {isLoading ? "Searching..." : "SEARCH"}
-        </Button>
-      </Stack>
-
-      <DateTimeDialog
-        open={openDialog}
-        startDateTime={startDateTime}
-        endDateTime={endDateTime}
-        onClose={() => setOpenDialog(false)}
-        onApply={(start, end) => {
-          setStartDateTime(start);
-          setEndDateTime(end);
-          setOpenDialog(false);
-        }}
-      />
+      </Box>
     </Box>
   );
 };

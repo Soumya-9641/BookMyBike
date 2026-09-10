@@ -30,7 +30,7 @@ createRoot(document.getElementById('root')!).render(
             libraries={GOOGLE_LIBRARIES}
           >
             <App />
-            <Toaster position="top-right" />
+            <Toaster position="top-center" />
           </LoadScript>
         </LocalizationProvider>
       </ThemeProvider>

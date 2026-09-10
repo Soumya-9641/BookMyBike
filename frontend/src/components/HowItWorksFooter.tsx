@@ -7,6 +7,10 @@ const HowItWorksFooter = () => {
   const [active, setActive] = useState<"renter" | "lister">("renter");
 
   const steps = active === "renter" ? renterSteps : listerSteps;
+  const infoMessage =
+    active === "renter"
+      ? 'Confirm Pick-up in "My Rides" to activate your ride & Confirm Drop-off in "My Rides" to end your ride and initiate your deposit return.'
+      : 'Confirm Pick-up in "My Rentals" to activate the ride & Confirm Drop-off in "My Rentals" to end the ride so you can initiate your payout.';
 
   return (
     <Box px={{ xs: 2, md: 4 }} py={4} maxWidth="lg" mx="auto">
@@ -52,8 +56,7 @@ const HowItWorksFooter = () => {
       <HowItWorksAccordion steps={steps} />
 
       <Alert sx={{ mt: 3 }} severity="info" variant="filled">
-        Confirm pick-up & drop-off in “My Rides” to activate and complete
-        rentals
+        {infoMessage}
       </Alert>
     </Box>
   );
