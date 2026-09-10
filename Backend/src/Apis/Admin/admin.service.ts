@@ -15,35 +15,35 @@ export const getAllUsersService = async () => {
     .select("-password -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -__v")
     .sort({ memberSince: -1 })
     .lean();
- 
+
   return users.map((user) => ({
-    userId:        user._id,
-    email:         user.email,
-    systemRole:    user.systemRole,
+    userId: user._id,
+    email: user.email,
+    systemRole: user.systemRole,
     emailVerified: user.emailVerified,
-    isBlocked:     user.isBlocked,
-    memberSince:   user.memberSince,
-    isLister:      user.businessProfile?.isVerified === true,  // ← new field
+    isBlocked: user.isBlocked,
+    memberSince: user.memberSince,
+    isLister: user.businessProfile?.isVerified === true,  // ← new field
 
     personalProfile: {
-      firstName:  user.personalProfile?.firstName  ?? null,
+      firstName: user.personalProfile?.firstName ?? null,
       middlename: user.personalProfile?.middlename ?? null,
-      lastName:   user.personalProfile?.lastName   ?? null,
-      phone:      user.personalProfile?.phone      ?? null,
-      city:       user.personalProfile?.city       ?? null,
-      address:    user.personalProfile?.address    ?? null,
+      lastName: user.personalProfile?.lastName ?? null,
+      phone: user.personalProfile?.phone ?? null,
+      city: user.personalProfile?.city ?? null,
+      address: user.personalProfile?.address ?? null,
       isVerified: user.personalProfile?.isVerified ?? false,
     },
- 
+
     businessProfile: user.businessProfile
       ? {
-          businessName: user.businessProfile.businessName ?? null,
-          orgNumber:    user.businessProfile.orgNumber    ?? null,
-          location:     user.businessProfile.location     ?? null,
-          phone:        user.businessProfile.phone        ?? null,
-          isVerified:   user.businessProfile.isVerified   ?? false,
-          isActive:     user.businessProfile.isActive     ?? false,
-        }
+        businessName: user.businessProfile.businessName ?? null,
+        orgNumber: user.businessProfile.orgNumber ?? null,
+        location: user.businessProfile.location ?? null,
+        phone: user.businessProfile.phone ?? null,
+        isVerified: user.businessProfile.isVerified ?? false,
+        isActive: user.businessProfile.isActive ?? false,
+      }
       : null,
   }));
 };
@@ -60,78 +60,78 @@ export const getAllBookingsService = async () => {
     .sort({ createdAt: -1 })
     .lean();
 
-    const bookingIds = bookings.map((b) => b._id);
-      const disputes   = await Dispute.find({ bookingId: { $in: bookingIds } }).lean();
-    
-      const disputeMap = new Map(
-        disputes.map((d:any) => [d.bookingId.toString(), d])
-      );
+  const bookingIds = bookings.map((b) => b._id);
+  const disputes = await Dispute.find({ bookingId: { $in: bookingIds } }).lean();
+
+  const disputeMap = new Map(
+    disputes.map((d: any) => [d.bookingId.toString(), d])
+  );
   return bookings.map((booking) => {
-    const renter  = booking.renterId as any;
-    const owner   = booking.ownerId as any;
-    const bike    = booking.bikeId as any;
+    const renter = booking.renterId as any;
+    const owner = booking.ownerId as any;
+    const bike = booking.bikeId as any;
     const payment = booking.paymentId as any;
 
-    const dispute          = disputeMap.get(booking._id.toString()) ?? null;
-  const isDisputeCreated = !!dispute;
-  
+    const dispute = disputeMap.get(booking._id.toString()) ?? null;
+    const isDisputeCreated = !!dispute;
+
     return {
       // ── Booking Core ──
       bookingId: booking._id,
-      status:    booking.status,
+      status: booking.status,
       startDate: booking.startDate,
-      endDate:   booking.endDate,
+      endDate: booking.endDate,
       totalDays: booking.totalDays,
-      notes:     booking.notes ?? null,
+      notes: booking.notes ?? null,
       createdAt: booking.createdAt,
 
       // ── Pricing Snapshot ──
       pricing: {
-        pricePerDay:    bike?.rates?.daily,
-        totalAmount:     booking.totalAmount,
+        pricePerDay: bike?.rates?.daily,
+        totalAmount: booking.totalAmount,
         securityDeposit: booking.securityDeposit ?? 0,
-        currency:        booking.currency,
+        currency: booking.currency,
       },
 
       // ── Ride Info ──
       ride: {
-        actualStartTime:  booking.actualStartTime ?? null,
-        actualEndTime:    booking.actualEndTime ?? null,
-        penaltyAmount:    booking.penaltyAmount ?? 0,
-        penaltyReason:    booking.penaltyReason ?? null,
+        actualStartTime: booking.actualStartTime ?? null,
+        actualEndTime: booking.actualEndTime ?? null,
+        penaltyAmount: booking.penaltyAmount ?? 0,
+        penaltyReason: booking.penaltyReason ?? null,
       },
 
       // ── Flags ──
       flags: {
 
-        renterRequestedStart:     booking.renterRequestedStart ?? false,
-        ownerAcceptedStart:       booking.ownerAcceptedStart ?? false,
+        renterRequestedStart: booking.renterRequestedStart ?? false,
+        ownerAcceptedStart: booking.ownerAcceptedStart ?? false,
         ownerRequestedCompletion: booking.ownerRequestedCompletion ?? false,
         renterConfirmedCompletion: booking.renterConfirmedCompletion ?? false,
-        isSettlementDone:         booking.isSettlementDone ?? false,
+        isSettlementDone: booking.isSettlementDone ?? false,
         isDisputeCreated: isDisputeCreated,
       },
-       dispute: dispute
+      dispute: dispute
         ? {
-            disputeId:     dispute._id,
-            status:        dispute.status,
-            type:          dispute.type,
-            disputeAmount: dispute.disputeAmount,
-            reason:        dispute.reason,
-            date:          dispute.date,
-            time:          dispute.time,
-            images:        dispute.images ?? [],
-            resolvedAt:    dispute.resolvedAt ?? null,
-            createdAt:     dispute.createdAt,
-          }
+          disputeId: dispute._id,
+          status: dispute.status,
+          type: dispute.type,
+          disputeAmount: dispute.disputeAmount,
+          reason: dispute.reason,
+          date: dispute.date,
+          time: dispute.time,
+          images: dispute.images ?? [],
+          resolvedAt: dispute.resolvedAt ?? null,
+          createdAt: dispute.createdAt,
+        }
         : null,
 
       // ── Cancellation (only if cancelled) ──
       ...(booking.status === "cancelled" && {
         cancellation: {
-          cancelledBy:        booking.cancelledBy ?? null,
+          cancelledBy: booking.cancelledBy ?? null,
           cancellationReason: booking.cancellationReason ?? null,
-          cancelledAt:        booking.cancelledAt ?? null,
+          cancelledAt: booking.cancelledAt ?? null,
         },
       }),
 
@@ -145,63 +145,63 @@ export const getAllBookingsService = async () => {
       // ── Renter Info ──
       renter: renter
         ? {
-            renterId:  renter._id,
-            email:     renter.email,
-            firstName: renter.personalProfile?.firstName ?? null,
-            lastName:  renter.personalProfile?.lastName ?? null,
-            phone:     renter.personalProfile?.phone ?? null,
-          }
+          renterId: renter._id,
+          email: renter.email,
+          firstName: renter.personalProfile?.firstName ?? null,
+          lastName: renter.personalProfile?.lastName ?? null,
+          phone: renter.personalProfile?.phone ?? null,
+        }
         : null,
 
       // ── Owner Info ──
       owner: owner
         ? {
-            ownerId:   owner._id,
-            email:     owner.email,
-            firstName: owner.personalProfile?.firstName ?? null,
-            lastName:  owner.personalProfile?.lastName ?? null,
-            phone:     owner.personalProfile?.phone ?? null,
-          }
+          ownerId: owner._id,
+          email: owner.email,
+          firstName: owner.personalProfile?.firstName ?? null,
+          lastName: owner.personalProfile?.lastName ?? null,
+          phone: owner.personalProfile?.phone ?? null,
+        }
         : null,
 
       // ── Listing (Bike) Info ──
       bike: bike
         ? {
-            bikeId:        bike._id,
-            title:         bike.title ?? null,
-            photos:        bike.photos ?? [],
-            brand:         bike.brand ?? null,
-            modelbike:     bike.modelbike ?? null,
-            category:      bike.category ?? null,
-            size:          bike.size ?? null,
-            rates:         bike.rates ?? null,
-            depositAmount: bike.depositAmount ?? 0,
-            location: {
-              address:     bike.location?.address ?? null,
-              city:        bike.location?.city ?? null,
-              coordinates: bike.location?.coordinates ?? null,
-            },
-          }
+          bikeId: bike._id,
+          title: bike.title ?? null,
+          photos: bike.photos ?? [],
+          brand: bike.brand ?? null,
+          modelbike: bike.modelbike ?? null,
+          category: bike.category ?? null,
+          size: bike.size ?? null,
+          rates: bike.rates ?? null,
+          depositAmount: bike.depositAmount ?? 0,
+          location: {
+            address: bike.location?.address ?? null,
+            city: bike.location?.city ?? null,
+            coordinates: bike.location?.coordinates ?? null,
+          },
+        }
         : null,
 
       // ── Payment Info ──
       payment: payment
         ? {
-            paymentId:            payment._id,
-            status:               payment.status,
-            amount:               payment.amount,
-            currency:             payment.currency,
-            depositAmount:        payment.depositAmount ?? 0,
-            platformFee:          payment.platformFee ?? 0,
-            vatAmount:            payment.vatAmount ?? 0,
-            platformNet:          payment.platformNet ?? 0,
-            ownerPayout:          payment.ownerPayout ?? 0,
-            stripePaymentIntentId: payment.stripePaymentIntentId ?? null,
-            refundAmount:         payment.refundAmount ?? null,
-            refundReason:         payment.refundReason ?? null,
-            refundedAt:           payment.refundedAt ?? null,
-            paidAt:               payment.paidAt ?? null,
-          }
+          paymentId: payment._id,
+          status: payment.status,
+          amount: payment.amount,
+          currency: payment.currency,
+          depositAmount: payment.depositAmount ?? 0,
+          platformFee: payment.platformFee ?? 0,
+          vatAmount: payment.vatAmount ?? 0,
+          platformNet: payment.platformNet ?? 0,
+          ownerPayout: payment.ownerPayout ?? 0,
+          stripePaymentIntentId: payment.stripePaymentIntentId ?? null,
+          refundAmount: payment.refundAmount ?? null,
+          refundReason: payment.refundReason ?? null,
+          refundedAt: payment.refundedAt ?? null,
+          paidAt: payment.paidAt ?? null,
+        }
         : null,
     };
   });
@@ -219,54 +219,314 @@ export const getAdminStatsService = async () => {
     totalBookings,
     bookingsByStatus,
     totalPayments,
-    totalRevenue,
+    revenueResult,
   ] = await Promise.all([
-    User.countDocuments({ systemRole: "user" }),
-    User.countDocuments({ isBlocked: true }),
+    // ─────────────────────────────────────────────
+    // Users
+    // ─────────────────────────────────────────────
+
+    User.countDocuments({
+      systemRole: "user",
+    }),
+
+    User.countDocuments({
+      isBlocked: true,
+    }),
+
+    // ─────────────────────────────────────────────
+    // Listings
+    // ─────────────────────────────────────────────
+
     Listing.countDocuments(),
-    Listing.countDocuments({ isPublished: true }),
+
+    Listing.countDocuments({
+      isPublished: true,
+    }),
+
+    // ─────────────────────────────────────────────
+    // Bookings
+    // ─────────────────────────────────────────────
+
     Booking.countDocuments(),
+
     Booking.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
+      {
+        $group: {
+          _id: "$status",
+          count: {
+            $sum: 1,
+          },
+        },
+      },
     ]),
-    Payment.countDocuments({ status: "succeeded" }),
-    Payment.aggregate([
-      { $match: { status: "succeeded" } },
-      { $group: { _id: null, total: { $sum: "$platformNet" } } },
+
+    // ─────────────────────────────────────────────
+    // Successful Payments
+    // ─────────────────────────────────────────────
+
+    Payment.countDocuments({
+      status: "succeeded",
+    }),
+
+    // ─────────────────────────────────────────────
+    // TOTAL PLATFORM REVENUE
+    // ─────────────────────────────────────────────
+    //
+    // Completed:
+    //   + platformFee
+    //   - stripeFee
+    //
+    // Cancelled:
+    //   + no platformFee
+    //   - stripeFee
+    //
+    // Therefore:
+    //
+    // Platform Revenue =
+    // Completed Platform Fees
+    // - All Stripe Fees
+    // ─────────────────────────────────────────────
+
+    Booking.aggregate([
+      // ───────────────────────────────────────────
+      // Only financially relevant bookings
+      // ───────────────────────────────────────────
+
+      {
+        $match: {
+          $or: [
+            {
+              status: "completed",
+              isSettlementDone: true,
+            },
+            {
+              status: "cancelled",
+            },
+          ],
+        },
+      },
+
+      // ───────────────────────────────────────────
+      // Join Payment
+      // ───────────────────────────────────────────
+
+      {
+        $lookup: {
+          from: "payments",
+          localField: "paymentId",
+          foreignField: "_id",
+          as: "payment",
+        },
+      },
+
+      // ───────────────────────────────────────────
+      // Convert payment array to object
+      // ───────────────────────────────────────────
+
+      {
+        $unwind: {
+          path: "$payment",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // ───────────────────────────────────────────
+      // Calculate financial values
+      // ───────────────────────────────────────────
+
+      {
+        $group: {
+          _id: null,
+
+          // Platform fee ONLY from completed bookings
+          totalPlatformFee: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: ["$status", "completed"],
+                },
+                {
+                  $ifNull: [
+                    "$payment.platformFee",
+                    0,
+                  ],
+                },
+                0,
+              ],
+            },
+          },
+
+          // Stripe fee from completed + cancelled
+          totalStripeFee: {
+            $sum: {
+              $ifNull: [
+                "$stripeFee",
+                0,
+              ],
+            },
+          },
+        },
+      },
+
+      // ───────────────────────────────────────────
+      // Calculate final platform revenue
+      // ───────────────────────────────────────────
+
+      {
+        $project: {
+          _id: 0,
+
+          totalPlatformFee: 1,
+
+          totalStripeFee: 1,
+
+          platformRevenue: {
+            $subtract: [
+              "$totalPlatformFee",
+              "$totalStripeFee",
+            ],
+          },
+        },
+      },
     ]),
   ]);
- 
-  const statusMap = bookingsByStatus.reduce((acc: any, cur: any) => {
-    acc[cur._id] = cur.count;
-    return acc;
-  }, {});
- 
+
+  // ─────────────────────────────────────────────
+  // Booking status map
+  // ─────────────────────────────────────────────
+
+  const statusMap = bookingsByStatus.reduce(
+    (acc: any, cur: any) => {
+      acc[cur._id] = cur.count;
+      return acc;
+    },
+    {}
+  );
+
+  // ─────────────────────────────────────────────
+  // Revenue
+  // ─────────────────────────────────────────────
+
+  const roundMoney = (amount: number): number => {
+    return Math.round((amount + Number.EPSILON) * 100) / 100;
+  };
+  const totalPlatformFee = roundMoney(
+    Number(revenueResult[0]?.totalPlatformFee ?? 0)
+  );
+
+  const totalStripeFee = roundMoney(
+    Number(revenueResult[0]?.totalStripeFee ?? 0)
+  );
+
+  const platformNetRevenue = roundMoney(
+    Number(revenueResult[0]?.platformRevenue ?? 0)
+  );
+
+
+  // ─────────────────────────────────────────────
+  // Final response
+  // ─────────────────────────────────────────────
+
   return {
     users: {
-      total:   totalUsers,
+      total: totalUsers,
       blocked: blockedUsers,
-      active:  totalUsers - blockedUsers,
+      active: totalUsers - blockedUsers,
     },
+
     listings: {
-      total:     totalListings,
+      total: totalListings,
       published: publishedListings,
-      draft:     totalListings - publishedListings,
+      draft: totalListings - publishedListings,
     },
+
     bookings: {
-      total:      totalBookings,
-      upcoming:   statusMap["upcoming"]   ?? 0,
-      inprogress: statusMap["inprogress"] ?? 0,
-      completed:  statusMap["completed"]  ?? 0,
-      cancelled:  statusMap["cancelled"]  ?? 0,
-      rejected:   statusMap["rejected"]   ?? 0,
+      total: totalBookings,
+      upcoming: statusMap["upcoming"] ?? 0,
+      startRequested:
+        statusMap["startRequested"] ?? 0,
+      inprogress:
+        statusMap["inprogress"] ?? 0,
+      completionRequested:
+        statusMap["completionRequested"] ?? 0,
+      completed:
+        statusMap["completed"] ?? 0,
+      cancelled:
+        statusMap["cancelled"] ?? 0,
+      rejected:
+        statusMap["rejected"] ?? 0,
     },
+
     revenue: {
       totalTransactions: totalPayments,
-      platformNetRevenue: totalRevenue[0]?.total ?? 0,  // excl. VAT
+
+      platformFee: totalPlatformFee,
+
+      stripeFee: totalStripeFee,
+
+      platformNetRevenue: platformNetRevenue,
+
       currency: "SEK",
     },
   };
 };
+// export const getAdminStatsService = async () => {
+//   const [
+//     totalUsers,
+//     blockedUsers,
+//     totalListings,
+//     publishedListings,
+//     totalBookings,
+//     bookingsByStatus,
+//     totalPayments,
+//     totalRevenue,
+//   ] = await Promise.all([
+//     User.countDocuments({ systemRole: "user" }),
+//     User.countDocuments({ isBlocked: true }),
+//     Listing.countDocuments(),
+//     Listing.countDocuments({ isPublished: true }),
+//     Booking.countDocuments(),
+//     Booking.aggregate([
+//       { $group: { _id: "$status", count: { $sum: 1 } } },
+//     ]),
+//     Payment.countDocuments({ status: "succeeded" }),
+//     Payment.aggregate([
+//       { $match: { status: "succeeded" } },
+//       { $group: { _id: null, total: { $sum: "$platformNet" } } },
+//     ]),
+//   ]);
+
+//   const statusMap = bookingsByStatus.reduce((acc: any, cur: any) => {
+//     acc[cur._id] = cur.count;
+//     return acc;
+//   }, {});
+
+//   return {
+//     users: {
+//       total:   totalUsers,
+//       blocked: blockedUsers,
+//       active:  totalUsers - blockedUsers,
+//     },
+//     listings: {
+//       total:     totalListings,
+//       published: publishedListings,
+//       draft:     totalListings - publishedListings,
+//     },
+//     bookings: {
+//       total:      totalBookings,
+//       upcoming:   statusMap["upcoming"]   ?? 0,
+//       inprogress: statusMap["inprogress"] ?? 0,
+//       completed:  statusMap["completed"]  ?? 0,
+//       cancelled:  statusMap["cancelled"]  ?? 0,
+//       rejected:   statusMap["rejected"]   ?? 0,
+//     },
+//     revenue: {
+//       totalTransactions: totalPayments,
+//       platformNetRevenue: totalRevenue[0]?.total ?? 0,  // excl. VAT
+//       currency: "SEK",
+//     },
+//   };
+// };
 
 // ─────────────────────────────────────────────────────────────
 // 4. DELETE USER ACCOUNT
@@ -280,22 +540,22 @@ export const deleteUserService = async (
     error.statusCode = 400;
     throw error;
   }
- 
+
   const user = await User.findById(targetUserId);
   if (!user) {
     const error: any = new Error("User not found");
     error.statusCode = 404;
     throw error;
   }
- 
+
   if (user.systemRole === "admin") {
     const error: any = new Error("Cannot delete another admin account");
     error.statusCode = 403;
     throw error;
   }
- 
+
   await User.findByIdAndDelete(targetUserId);
- 
+
   return {
     message: `User ${user.email} deleted successfully`,
     userId: targetUserId,
@@ -322,30 +582,30 @@ export const addAdminService = async ({
     error.statusCode = 409;
     throw error;
   }
- 
-   const hashedPassword = await bcrypt.hash(password, 12);
 
-    // ── Use new User() + save() to avoid TypeScript overload error with User.create({}) ──
-    const user= await User.create({
-          email,
-          password: hashedPassword,
-          emailVerified: false,
-          
-          systemRole: "admin",
-          emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          personalProfile: {
-  
-            firstName,
-            lastName,
-            isVerified: false
-          }
-        });
-    await user.save();
- 
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  // ── Use new User() + save() to avoid TypeScript overload error with User.create({}) ──
+  const user = await User.create({
+    email,
+    password: hashedPassword,
+    emailVerified: false,
+
+    systemRole: "admin",
+    emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    personalProfile: {
+
+      firstName,
+      lastName,
+      isVerified: false
+    }
+  });
+  await user.save();
+
   return {
-    message:  "Admin created successfully",
-    adminId:    user._id,
-    email:    user.email,
+    message: "Admin created successfully",
+    adminId: user._id,
+    email: user.email,
     systemRole: user.systemRole,
   };
 };
@@ -388,9 +648,9 @@ export const getUserBookingSummaryService = async (userId: string) => {
 
   const formatBooking = (booking: any) => {
 
-    const renter  = booking.renterId as any;
-    const owner   = booking.ownerId as any;
-    const bike    = booking.bikeId as any;
+    const renter = booking.renterId as any;
+    const owner = booking.ownerId as any;
+    const bike = booking.bikeId as any;
     const payment = booking.paymentId as any;
 
     return {
@@ -458,95 +718,95 @@ export const getUserBookingSummaryService = async (userId: string) => {
       // ── Renter Info ──
       renter: renter
         ? {
-            renterId: renter._id,
-            email: renter.email,
-            firstName:
-              renter.personalProfile?.firstName ?? null,
-            lastName:
-              renter.personalProfile?.lastName ?? null,
-            phone:
-              renter.personalProfile?.phone ?? null,
-          }
+          renterId: renter._id,
+          email: renter.email,
+          firstName:
+            renter.personalProfile?.firstName ?? null,
+          lastName:
+            renter.personalProfile?.lastName ?? null,
+          phone:
+            renter.personalProfile?.phone ?? null,
+        }
         : null,
 
       // ── Owner Info ──
       owner: owner
         ? {
-            ownerId: owner._id,
-            email: owner.email,
-            firstName:
-              owner.personalProfile?.firstName ?? null,
-            lastName:
-              owner.personalProfile?.lastName ?? null,
-            phone:
-              owner.personalProfile?.phone ?? null,
-          }
+          ownerId: owner._id,
+          email: owner.email,
+          firstName:
+            owner.personalProfile?.firstName ?? null,
+          lastName:
+            owner.personalProfile?.lastName ?? null,
+          phone:
+            owner.personalProfile?.phone ?? null,
+        }
         : null,
 
       // ── Bike Info ──
       bike: bike
         ? {
-            bikeId: bike._id,
-            title: bike.title ?? null,
-            photos: bike.photos ?? [],
-            brand: bike.brand ?? null,
-            modelbike: bike.modelbike ?? null,
-            category: bike.category ?? null,
-            size: bike.size ?? null,
-            rates: bike.rates ?? null,
-            depositAmount:
-              bike.depositAmount ?? 0,
+          bikeId: bike._id,
+          title: bike.title ?? null,
+          photos: bike.photos ?? [],
+          brand: bike.brand ?? null,
+          modelbike: bike.modelbike ?? null,
+          category: bike.category ?? null,
+          size: bike.size ?? null,
+          rates: bike.rates ?? null,
+          depositAmount:
+            bike.depositAmount ?? 0,
 
-            location: {
-              address:
-                bike.location?.address ?? null,
+          location: {
+            address:
+              bike.location?.address ?? null,
 
-              city:
-                bike.location?.city ?? null,
+            city:
+              bike.location?.city ?? null,
 
-              coordinates:
-                bike.location?.coordinates ?? null,
-            },
-          }
+            coordinates:
+              bike.location?.coordinates ?? null,
+          },
+        }
         : null,
 
       // ── Payment Info ──
       payment: payment
         ? {
-            paymentId: payment._id,
-            status: payment.status,
-            amount: payment.amount,
-            currency: payment.currency,
-            depositAmount:
-              payment.depositAmount ?? 0,
+          paymentId: payment._id,
+          status: payment.status,
+          amount: payment.amount,
+          currency: payment.currency,
+          depositAmount:
+            payment.depositAmount ?? 0,
 
-            platformFee:
-              payment.platformFee ?? 0,
+          platformFee:
+            payment.platformFee ?? 0,
 
-            vatAmount:
-              payment.vatAmount ?? 0,
+          vatAmount:
+            payment.vatAmount ?? 0,
 
-            platformNet:
-              payment.platformNet ?? 0,
+          platformNet:
+            payment.platformNet ?? 0,
 
-            ownerPayout:
-              payment.ownerPayout ?? 0,
+          ownerPayout:
+            payment.ownerPayout ?? 0,
 
-            stripePaymentIntentId:
-              payment.stripePaymentIntentId ?? null,
+          stripePaymentIntentId:
+            payment.stripePaymentIntentId ?? null,
 
-            refundAmount:
-              payment.refundAmount ?? null,
+          refundAmount:
+            payment.refundAmount ?? null,
 
-            refundReason:
-              payment.refundReason ?? null,
+          refundReason:
+            payment.refundReason ?? null,
 
-            refundedAt:
-              payment.refundedAt ?? null,
+          refundedAt:
+            payment.refundedAt ?? null,
 
-            paidAt:
-              payment.paidAt ?? null,
-          }
+          paidAt:
+            payment.paidAt ?? null,
+        }
         : null,
     };
   };
@@ -568,16 +828,17 @@ export const getUserBookingSummaryService = async (userId: string) => {
 };
 
 export const getAllAdminsService = async () => {
-  const admins = await User.find({ 
-systemRole
-: "admin" })
+  const admins = await User.find({
+    systemRole
+      : "admin"
+  })
     .sort({ createdAt: -1 })
     .lean();
   return admins;
 };
 
 export const blockUserService = async (userId: string) => {
-if (!mongoose.Types.ObjectId.isValid(userId)) {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
     throw new Error("Invalid userId");
   }
 
@@ -740,29 +1001,29 @@ export const initiateAdminRefundService = async (
     throw new Error("Stripe Payment Intent not found");
   }
   const paymentIntent = await stripe.paymentIntents.retrieve(
-      payment.stripePaymentIntentId
-    );
-  
-    if (paymentIntent.status !== "succeeded") {
-      throw new Error("Payment has not been confirmed yet");
-    }
-  
-    if (
-      !paymentIntent.latest_charge ||
-      typeof paymentIntent.latest_charge !== "string"
-    ) {
-      throw new Error("Charge ID not found.");
-    }
-  
-    const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
-  
-    const balanceTransaction = await stripe.balanceTransactions.retrieve(
-      charge.balance_transaction as string
-    );
-  
-  
-    const feeInCents = balanceTransaction.fee;
-    const fee = feeInCents / 100;
+    payment.stripePaymentIntentId
+  );
+
+  if (paymentIntent.status !== "succeeded") {
+    throw new Error("Payment has not been confirmed yet");
+  }
+
+  if (
+    !paymentIntent.latest_charge ||
+    typeof paymentIntent.latest_charge !== "string"
+  ) {
+    throw new Error("Charge ID not found.");
+  }
+
+  const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+
+  const balanceTransaction = await stripe.balanceTransactions.retrieve(
+    charge.balance_transaction as string
+  );
+
+
+  const feeInCents = balanceTransaction.fee;
+  const fee = feeInCents / 100;
 
 
   // Create Stripe Refund
@@ -782,7 +1043,7 @@ export const initiateAdminRefundService = async (
 
   payment.isRefundInitiatedByAdmin = true;
   payment.adminRefundInitiatedAt = now;
- 
+
 
   payment.refundReason =
     "Admin initiated refund because owner never accepted ride start request.";
